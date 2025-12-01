@@ -1,0 +1,134 @@
+---
+title: Étape 5 - Navigation & Blocs
+description: Configurer les menus, les régions et les blocs dans Drupal
+sidebar:
+  order: 0
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<div class="duration-badge">⏱️ Durée estimée : 3h</div>
+
+## 🎯 Objectifs de cette étape
+
+À la fin de cette étape, vous serez capable de :
+
+- ✅ Créer et gérer les menus de navigation
+- ✅ Comprendre le système de régions
+- ✅ Placer et configurer les blocs
+- ✅ Créer des blocs personnalisés
+- ✅ Gérer les rôles et permissions
+- ✅ Configurer la structure de TailStore
+
+## 📋 Prérequis
+
+- [x] Étape 4 terminée (vues créées)
+- [x] Contenu de démonstration existant
+
+## 📚 Sommaire
+
+<CardGrid>
+  <Card title="1. Menus" icon="list-format">
+    Créer et organiser les menus de navigation.
+    [Voir →](/etape-5-navigation/menus/)
+  </Card>
+  <Card title="2. Régions & Blocs" icon="puzzle">
+    Comprendre les régions et placer les blocs.
+    [Voir →](/etape-5-navigation/regions-blocs/)
+  </Card>
+  <Card title="3. Blocs personnalisés" icon="pencil">
+    Créer des blocs de contenu réutilisables.
+    [Voir →](/etape-5-navigation/blocs-personnalises/)
+  </Card>
+  <Card title="4. Rôles & Permissions" icon="setting">
+    Gérer les droits d'accès des utilisateurs.
+    [Voir →](/etape-5-navigation/roles-permissions/)
+  </Card>
+</CardGrid>
+
+## 🏪 Structure de navigation TailStore
+
+### Menus
+
+| Menu | Contenu | Emplacement |
+|------|---------|-------------|
+| Main navigation | Accueil, Boutique, Blog, Contact | Header |
+| Footer | Mentions légales, CGV, Politique confidentialité | Footer |
+| Account | Mon compte, Mes commandes, Déconnexion | Header (connecté) |
+| Categories | Catégories de produits | Sidebar boutique |
+
+### Régions du thème
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                       HEADER                                │
+│  Logo | Main Navigation | Search | Cart | Account           │
+├─────────────────────────────────────────────────────────────┤
+│                    HERO / SLIDER                            │
+├───────────────────────────────────┬─────────────────────────┤
+│                                   │                         │
+│            CONTENT                │      SIDEBAR            │
+│                                   │                         │
+│    Catalogue produits             │   Catégories           │
+│    Page produit                   │   Filtres              │
+│    Articles blog                  │   Produits récents     │
+│                                   │                         │
+├───────────────────────────────────┴─────────────────────────┤
+│                       FOOTER                                │
+│  Marques | Liens utiles | Newsletter | Social | Copyright   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Blocs personnalisés
+
+| Bloc | Type | Contenu |
+|------|------|---------|
+| Hero Homepage | Custom Block | Slider/Banner promotionnel |
+| Newsletter | Custom Block | Formulaire d'inscription |
+| Réseaux sociaux | Custom Block | Liens Facebook, Instagram, etc. |
+| Informations contact | Custom Block | Adresse, téléphone, email |
+| Bandeau promo | Custom Block | Message promotionnel |
+
+## 🔧 Concepts clés
+
+### Menus vs Blocs
+
+| Concept | Description | Gestion |
+|---------|-------------|---------|
+| **Menu** | Structure de liens hiérarchiques | Structure → Menus |
+| **Menu Block** | Affichage d'un menu dans une région | Structure → Block layout |
+| **Custom Block** | Bloc de contenu personnalisé | Structure → Block layout → Custom |
+
+### Visibilité des blocs
+
+Les blocs peuvent être conditionnés par :
+
+- **Pages** : URL spécifiques ou patterns
+- **Type de contenu** : Seulement sur les pages produit
+- **Rôle utilisateur** : Admin, Éditeur, Visiteur
+- **Langue** : Site multilingue
+
+## 📊 Workflow de cette étape
+
+```
+1. Créer les menus
+   └── Main, Footer, Account, Categories
+
+2. Configurer les régions du thème
+   └── Vérifier le .info.yml du thème
+
+3. Placer les blocs système
+   └── Logo, Menu, Breadcrumb
+
+4. Créer les blocs personnalisés
+   └── Hero, Newsletter, Contact
+
+5. Configurer les permissions
+   └── Rôles : Anonymous, Authenticated, Editor, Admin
+
+6. Exporter la configuration
+```
+
+## 🚀 C'est parti !
+
+Commencez par créer les [Menus](/etape-5-navigation/menus/).
