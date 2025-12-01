@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <!-- Drupal Drop Shape -->
+  <path d="M60 10C60 10 35 35 35 65C35 85 45 105 60 110C75 105 85 85 85 65C85 35 60 10 60 10Z" fill="#0678BE"/>
+  <!-- Inner highlights -->
+  <ellipse cx="50" cy="55" rx="8" ry="12" fill="#FFFFFF" opacity="0.3"/>
+  <ellipse cx="70" cy="75" rx="5" ry="8" fill="#FFFFFF" opacity="0.2"/>
+  <!-- Code brackets -->
+  <text x="42" y="75" font-family="monospace" font-size="24" font-weight="bold" fill="#FFFFFF">&lt;/&gt;</text>
+</svg>

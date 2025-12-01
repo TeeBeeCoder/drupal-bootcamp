@@ -1,0 +1,19 @@
+{
+  "rewrites": [
+    {
+      "source": "/downloads/:path*",
+      "destination": "/downloads/:path*"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/downloads/corrections/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    }
+  ]
+}

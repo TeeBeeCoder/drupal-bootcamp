@@ -1,40 +1,82 @@
 ---
-title: Welcome to Starlight
-description: Get started building your docs site with Starlight.
-template: splash # Remove or comment out this line to display the site sidebar on this page.
+title: Drupal 11 Bootcamp
+description: Formation complète Drupal 11 - Créez un site e-commerce de A à Z
+template: splash
 hero:
-  tagline: Congrats on setting up a new Starlight project!
+  tagline: Maîtrisez Drupal 11 en créant un site e-commerce complet avec paiement Stripe
   image:
-    file: ../../assets/houston.webp
+    file: ../../assets/logo.svg
   actions:
-    - text: Example Guide
-      link: /guides/example/
+    - text: Commencer la formation
+      link: /a-propos/
       icon: right-arrow
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
-      icon: external
-      variant: minimal
+      variant: primary
+    - text: Voir les prérequis
+      link: /prerequis/
+      icon: document
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
-## Next steps
+## 🎯 Ce que vous allez apprendre
 
 <CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Edit `src/content/docs/index.mdx` to see this page change.
-	</Card>
-	<Card title="Change page layout" icon="document">
-		Delete `template: splash` in `src/content/docs/index.mdx` to display a
-		sidebar on this page.
-	</Card>
-	<Card title="Add new content" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs` to create new pages.
-	</Card>
-	<Card title="Configure your site" icon="setting">
-		Edit your `sidebar` and other config in `astro.config.mjs`.
-	</Card>
-	<Card title="Read the docs" icon="open-book">
-		Learn more in [the Starlight Docs](https://starlight.astro.build/).
-	</Card>
+  <Card title="Installation & Configuration" icon="setting">
+    Installez Drupal 11 avec DDEV ou XAMPP, maîtrisez Composer et le système de configuration sync.
+  </Card>
+  <Card title="Modélisation de contenu" icon="document">
+    Créez des types de contenu personnalisés, configurez les champs, taxonomies et relations entre entités.
+  </Card>
+  <Card title="Views & Listes dynamiques" icon="list-format">
+    Construisez des vues puissantes avec filtres, pagination et affichages personnalisés.
+  </Card>
+  <Card title="Theming & Twig" icon="pencil">
+    Développez un thème custom avec Tailwind CSS, templates Twig et Alpine.js.
+  </Card>
+  <Card title="Développement personnalisé" icon="puzzle">
+    Créez votre propre module avec routing, controllers, Form API et injection de dépendances.
+  </Card>
+  <Card title="Intégration Stripe" icon="approve-check">
+    Implémentez un système de paiement fonctionnel avec Stripe Checkout.
+  </Card>
+</CardGrid>
+
+## 📦 Le Projet TailStore
+
+Cette formation est basée sur un projet fil rouge : **TailStore**, un template e-commerce moderne que vous allez recréer entièrement avec Drupal 11.
+
+### Fonctionnalités du projet final
+
+- 🛍️ Catalogue de produits avec filtres dynamiques
+- 🎠 Carrousels et sliders interactifs
+- 🛒 Panier dynamique avec htmx
+- 💳 Paiement sécurisé via Stripe
+- 👥 Gestion des utilisateurs et rôles
+- 📱 Design responsive avec Tailwind CSS
+
+## ⏱️ Durée estimée
+
+| Étape | Thème | Durée |
+|-------|-------|-------|
+| 1 | Installation & Configuration | ~3h30 |
+| 2 | Types de Contenu & Médias | ~3h30 |
+| 3 | Taxonomies & Relations | ~3h |
+| 4 | Vues & Listes | ~3h30 |
+| 5 | Navigation & Utilisateurs | ~3h |
+| 6 | Theming & Twig | ~4h |
+| 7 | Modules Contributifs | ~2h |
+| 8 | Développement Custom | ~6h30 |
+| **Total** | | **~32h** |
+
+## 🚀 Prêt à commencer ?
+
+<CardGrid>
+  <Card title="Prérequis" icon="laptop">
+    Vérifiez que votre environnement est prêt avant de commencer.
+    [Voir les prérequis →](/prerequis/)
+  </Card>
+  <Card title="Étape 1" icon="rocket">
+    Commencez par l'installation de Drupal 11.
+    [Démarrer →](/etape-1-installation/)
+  </Card>
 </CardGrid>
