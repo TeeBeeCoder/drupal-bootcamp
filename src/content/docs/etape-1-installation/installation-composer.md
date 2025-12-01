@@ -1,0 +1,314 @@
+---
+title: Installation avec Composer
+description: Comprendre et utiliser Composer pour gérer un projet Drupal 11
+sidebar:
+  order: 3
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+Composer est le gestionnaire de dépendances standard pour PHP. C'est l'outil **obligatoire** pour installer et maintenir un projet Drupal 11 moderne.
+
+## 🤔 Pourquoi Composer ?
+
+### Avant Composer (Drupal 7 et avant)
+
+- Téléchargement manuel des modules depuis drupal.org
+- Gestion manuelle des mises à jour
+- Conflits de dépendances fréquents
+- Pas de versionnement des dépendances
+
+### Avec Composer (Drupal 8+)
+
+- ✅ Installation automatique des modules et leurs dépendances
+- ✅ Mises à jour simples avec une seule commande
+- ✅ Versions verrouillées dans `composer.lock`
+- ✅ Reproducibilité parfaite entre environnements
+- ✅ Autoloading PSR-4 automatique
+
+## 📦 Les fichiers Composer
+
+### composer.json
+
+Le fichier de configuration principal qui décrit votre projet :
+
+```json
+{
+    "name": "drupal/recommended-project",
+    "description": "Project template for Drupal projects",
+    "type": "project",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "drupal/core-recommended": "^11.0",
+        "drupal/core-composer-scaffold": "^11.0",
+        "drush/drush": "^13.0"
+    },
+    "require-dev": {
+        "drupal/core-dev": "^11.0"
+    },
+    "extra": {
+        "drupal-scaffold": {
+            "locations": {
+                "web-root": "web/"
+            }
+        },
+        "installer-paths": {
+            "web/core": ["type:drupal-core"],
+            "web/modules/contrib/{$name}": ["type:drupal-module"],
+            "web/themes/contrib/{$name}": ["type:drupal-theme"],
+            "web/profiles/contrib/{$name}": ["type:drupal-profile"]
+        }
+    }
+}
+```
+
+#### Sections importantes
+
+| Section | Description |
+|---------|-------------|
+| `require` | Dépendances de production |
+| `require-dev` | Dépendances de développement uniquement |
+| `extra.installer-paths` | Où installer les packages Drupal |
+| `extra.drupal-scaffold` | Configuration du scaffolding |
+
+### composer.lock
+
+Fichier généré automatiquement qui verrouille les versions exactes de toutes les dépendances.
+
+:::caution[Important]
+**Toujours commiter** `composer.lock` dans Git ! Il garantit que tous les développeurs utilisent les mêmes versions.
+:::
+
+## 🛠️ Commandes Composer essentielles
+
+### Créer un nouveau projet
+
+```bash
+composer create-project drupal/recommended-project:^11.0 mon-projet
+```
+
+- `drupal/recommended-project` : Template officiel Drupal
+- `^11.0` : Version 11.x (dernière version 11)
+
+### Installer les dépendances
+
+```bash
+# Installer depuis composer.lock (recommandé en production)
+composer install
+
+# Mettre à jour les dépendances selon composer.json
+composer update
+```
+
+### Ajouter un module
+
+```bash
+# Ajouter un module Drupal
+composer require drupal/pathauto
+
+# Ajouter une version spécifique
+composer require drupal/pathauto:^1.12
+
+# Ajouter en dev uniquement
+composer require --dev drupal/devel
+```
+
+### Mettre à jour
+
+```bash
+# Mettre à jour tout
+composer update
+
+# Mettre à jour un package spécifique
+composer update drupal/core-recommended --with-dependencies
+
+# Voir les mises à jour disponibles
+composer outdated
+```
+
+### Supprimer un package
+
+```bash
+composer remove drupal/pathauto
+```
+
+### Commandes utiles
+
+```bash
+# Afficher les packages installés
+composer show
+
+# Afficher un package spécifique
+composer show drupal/core
+
+# Vérifier les problèmes
+composer diagnose
+
+# Vider le cache Composer
+composer clear-cache
+```
+
+## 🔒 Versionnement sémantique
+
+Composer utilise le [versionnement sémantique](https://semver.org/) :
+
+```
+MAJOR.MINOR.PATCH
+  11  .  0  .  1
+```
+
+| Préfixe | Signification | Exemple |
+|---------|---------------|---------|
+| `^` | Compatible MAJOR | `^11.0` → 11.x.x |
+| `~` | Compatible MINOR | `~11.0.1` → 11.0.x |
+| `>=` | Version minimale | `>=11.0` |
+| `*` | N'importe quelle version | Non recommandé |
+
+:::tip[Recommandation]
+Utilisez `^` (caret) pour la plupart des packages : `^11.0` acceptera les mises à jour mineures et de patch.
+:::
+
+## 📁 Structure après installation
+
+```
+tailstore/
+├── composer.json         # Configuration du projet
+├── composer.lock         # Versions verrouillées
+├── vendor/               # Dépendances (NE PAS MODIFIER)
+│   ├── autoload.php     # Autoloader généré
+│   ├── composer/
+│   ├── drupal/
+│   └── ...
+├── web/                  # Racine web
+│   ├── core/            # Drupal core
+│   ├── modules/
+│   │   ├── contrib/     # Modules téléchargés
+│   │   └── custom/      # Vos modules
+│   ├── themes/
+│   │   ├── contrib/     # Thèmes téléchargés
+│   │   └── custom/      # Vos thèmes
+│   └── sites/
+└── config/
+    └── sync/            # Configuration exportée
+```
+
+## 🎯 Installer les modules essentiels
+
+Pour notre projet TailStore, installons les modules de base :
+
+```bash
+# Dans le dossier du projet
+cd tailstore
+
+# Modules contributifs essentiels
+composer require drupal/admin_toolbar
+composer require drupal/pathauto
+composer require drupal/token
+composer require drupal/webform
+composer require drupal/metatag
+
+# Module de développement
+composer require --dev drupal/devel
+```
+
+## 🔄 Workflow quotidien
+
+<Steps>
+
+1. **Récupérer le code** (si vous travaillez en équipe)
+   ```bash
+   git pull
+   composer install
+   drush updb -y
+   drush cim -y
+   drush cr
+   ```
+
+2. **Ajouter une fonctionnalité**
+   ```bash
+   composer require drupal/nouveau_module
+   drush en nouveau_module -y
+   drush cex -y
+   git add -A
+   git commit -m "feat: add nouveau_module"
+   ```
+
+3. **Mettre à jour Drupal**
+   ```bash
+   composer update drupal/core-recommended --with-dependencies
+   drush updb -y
+   drush cr
+   # Tester le site
+   git add -A
+   git commit -m "chore: update Drupal core"
+   ```
+
+</Steps>
+
+## ⚠️ Bonnes pratiques
+
+### À faire ✅
+
+- Commiter `composer.json` ET `composer.lock`
+- Utiliser `composer install` en production
+- Verrouiller les versions majeures (`^11.0`)
+- Tester après chaque `composer update`
+
+### À éviter ❌
+
+- Ne jamais modifier les fichiers dans `vendor/`
+- Ne pas commiter le dossier `vendor/`
+- Ne pas utiliser `composer update` en production
+- Ne pas mélanger téléchargements manuels et Composer
+
+## 🐛 Résolution de problèmes
+
+### Conflit de dépendances
+
+```bash
+# Voir les conflits
+composer why-not drupal/some-module
+
+# Forcer une mise à jour
+composer update --with-all-dependencies
+```
+
+### Mémoire insuffisante
+
+```bash
+# Augmenter la limite mémoire pour cette commande
+php -d memory_limit=-1 /usr/local/bin/composer update
+```
+
+### Cache corrompu
+
+```bash
+composer clear-cache
+rm -rf vendor
+composer install
+```
+
+## ✅ Exercice pratique
+
+Installez les modules suivants avec Composer :
+
+1. `drupal/admin_toolbar` - Barre d'administration améliorée
+2. `drupal/pathauto` - URLs automatiques
+3. `drupal/token` - Jetons pour pathauto
+4. `drupal/metatag` - Méta-tags SEO
+
+Commandes :
+
+```bash
+composer require drupal/admin_toolbar drupal/pathauto drupal/token drupal/metatag
+```
+
+Vérifiez avec :
+
+```bash
+composer show drupal/*
+```
+
+## 🚀 Étape suivante
+
+Passez à la [Structure des fichiers](/etape-1-installation/structure-fichiers/) pour comprendre l'organisation d'un projet Drupal.

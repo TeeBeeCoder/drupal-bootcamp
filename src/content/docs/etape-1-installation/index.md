@@ -1,0 +1,114 @@
+---
+title: Étape 1 - Installation & Configuration
+description: Installez Drupal 11 et maîtrisez les fondamentaux de la configuration
+sidebar:
+  order: 0
+---
+
+import { Card, CardGrid, Tabs, TabItem } from '@astrojs/starlight/components';
+
+<div class="duration-badge">⏱️ Durée estimée : 3h30</div>
+
+## 🎯 Objectifs de cette étape
+
+À la fin de cette étape, vous serez capable de :
+
+- ✅ Installer un environnement de développement local (DDEV ou XAMPP)
+- ✅ Créer un nouveau projet Drupal 11 avec Composer
+- ✅ Comprendre la structure des fichiers Drupal
+- ✅ Maîtriser le système de configuration sync
+- ✅ Naviguer dans l'interface d'administration
+
+## 📋 Prérequis
+
+Avant de commencer, assurez-vous d'avoir :
+
+- [x] PHP 8.3+ installé
+- [x] Composer 2.x installé
+- [x] DDEV ou XAMPP configuré
+- [x] Git installé
+
+👉 Consultez les [prérequis techniques](/prerequis/) si ce n'est pas fait.
+
+## 📚 Sommaire
+
+<CardGrid>
+  <Card title="1. Environnement DDEV" icon="setting">
+    Installation et configuration de DDEV pour un environnement Docker isolé.
+    [Voir →](/etape-1-installation/environnement-ddev/)
+  </Card>
+  <Card title="2. Environnement XAMPP" icon="setting">
+    Alternative avec XAMPP pour un environnement tout-en-un.
+    [Voir →](/etape-1-installation/environnement-xampp/)
+  </Card>
+  <Card title="3. Installation Composer" icon="document">
+    Créer un projet Drupal 11 avec Composer.
+    [Voir →](/etape-1-installation/installation-composer/)
+  </Card>
+  <Card title="4. Structure des fichiers" icon="open-book">
+    Comprendre l'organisation d'un projet Drupal.
+    [Voir →](/etape-1-installation/structure-fichiers/)
+  </Card>
+  <Card title="5. Configuration Sync" icon="puzzle">
+    Maîtriser l'import/export de configuration.
+    [Voir →](/etape-1-installation/configuration-sync/)
+  </Card>
+  <Card title="6. Interface Admin" icon="laptop">
+    Premier tour de l'interface d'administration.
+    [Voir →](/etape-1-installation/interface-admin/)
+  </Card>
+</CardGrid>
+
+## 🛠️ Ce que nous allons construire
+
+À la fin de cette étape, vous aurez :
+
+```
+tailstore/                     # Votre projet Drupal
+├── web/                       # Racine web (docroot)
+│   ├── core/                  # Cœur de Drupal
+│   ├── modules/
+│   │   ├── contrib/          # Modules téléchargés
+│   │   └── custom/           # Vos modules personnalisés
+│   ├── themes/
+│   │   ├── contrib/
+│   │   └── custom/           # Votre thème TailStore
+│   └── sites/default/
+│       ├── settings.php
+│       └── files/            # Fichiers uploadés
+├── config/
+│   └── sync/                 # Configuration exportée
+├── vendor/                    # Dépendances Composer
+├── composer.json
+└── composer.lock
+```
+
+## ⚡ Commandes clés de cette étape
+
+```bash
+# Créer un projet Drupal
+composer create-project drupal/recommended-project tailstore
+
+# DDEV
+ddev config
+ddev start
+ddev drush site:install
+
+# Drush - Configuration
+drush cex -y    # Exporter la configuration
+drush cim -y    # Importer la configuration
+drush cr        # Vider le cache
+```
+
+## 🚀 C'est parti !
+
+Choisissez votre environnement de développement :
+
+<Tabs>
+  <TabItem label="DDEV (Recommandé)">
+    👉 [Commencer avec DDEV](/etape-1-installation/environnement-ddev/)
+  </TabItem>
+  <TabItem label="XAMPP">
+    👉 [Commencer avec XAMPP](/etape-1-installation/environnement-xampp/)
+  </TabItem>
+</Tabs>

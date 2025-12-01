@@ -1,0 +1,360 @@
+---
+title: Environnement XAMPP
+description: Installer et configurer XAMPP pour le développement Drupal 11
+sidebar:
+  order: 2
+---
+
+import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+
+XAMPP est une solution tout-en-un qui installe Apache, MySQL, PHP et phpMyAdmin. C'est une alternative plus simple à DDEV si vous ne souhaitez pas utiliser Docker.
+
+:::caution[Version PHP requise]
+Drupal 11 nécessite PHP 8.3+. Assurez-vous de télécharger une version de XAMPP qui inclut PHP 8.3 ou supérieur.
+:::
+
+## 📥 Installation de XAMPP
+
+<Tabs>
+  <TabItem label="macOS">
+    <Steps>
+    1. Télécharger XAMPP depuis [apachefriends.org](https://www.apachefriends.org/)
+    2. Choisir la version avec **PHP 8.3**
+    3. Ouvrir le fichier `.dmg` et glisser XAMPP dans Applications
+    4. Lancer XAMPP depuis Applications
+    5. Démarrer **Apache** et **MySQL** dans le panneau de contrôle
+    </Steps>
+  </TabItem>
+  <TabItem label="Windows">
+    <Steps>
+    1. Télécharger l'installateur depuis [apachefriends.org](https://www.apachefriends.org/)
+    2. Choisir la version avec **PHP 8.3**
+    3. Exécuter l'installateur (désactiver temporairement l'antivirus si nécessaire)
+    4. Installer dans `C:\xampp`
+    5. Lancer le panneau de contrôle XAMPP
+    6. Démarrer **Apache** et **MySQL**
+    </Steps>
+  </TabItem>
+  <TabItem label="Linux">
+    ```bash
+    # Télécharger depuis apachefriends.org
+    # Rendre le fichier exécutable
+    chmod +x xampp-linux-x64-8.3.x-installer.run
+    
+    # Installer
+    sudo ./xampp-linux-x64-8.3.x-installer.run
+    
+    # Démarrer les services
+    sudo /opt/lampp/lampp start
+    ```
+  </TabItem>
+</Tabs>
+
+## 🔧 Configuration PHP
+
+### Vérifier la version PHP
+
+```bash
+# macOS/Linux
+/Applications/XAMPP/bin/php -v
+# ou
+/opt/lampp/bin/php -v
+
+# Windows
+C:\xampp\php\php.exe -v
+```
+
+### Activer les extensions requises
+
+Éditez le fichier `php.ini` :
+
+- **macOS** : `/Applications/XAMPP/etc/php.ini`
+- **Windows** : `C:\xampp\php\php.ini`
+- **Linux** : `/opt/lampp/etc/php.ini`
+
+Décommentez (retirez le `;`) ces extensions :
+
+```ini
+extension=gd
+extension=pdo_mysql
+extension=mbstring
+extension=curl
+extension=xml
+extension=zip
+extension=intl
+extension=sodium
+```
+
+Augmentez les limites de mémoire :
+
+```ini
+memory_limit = 256M
+max_execution_time = 120
+upload_max_filesize = 64M
+post_max_size = 64M
+```
+
+**Redémarrez Apache** après les modifications.
+
+## 🗄️ Créer la base de données
+
+<Steps>
+
+1. Ouvrez phpMyAdmin : [http://localhost/phpmyadmin](http://localhost/phpmyadmin)
+
+2. Cliquez sur **"Nouvelle base de données"**
+
+3. Entrez les informations :
+   - Nom : `tailstore`
+   - Interclassement : `utf8mb4_general_ci`
+
+4. Cliquez sur **"Créer"**
+
+</Steps>
+
+:::tip[Identifiants par défaut]
+- **Utilisateur MySQL** : root
+- **Mot de passe** : (vide par défaut)
+:::
+
+## 📁 Créer le projet Drupal
+
+### Chemin du projet
+
+Placez votre projet dans le dossier `htdocs` :
+
+- **macOS** : `/Applications/XAMPP/htdocs/tailstore`
+- **Windows** : `C:\xampp\htdocs\tailstore`
+- **Linux** : `/opt/lampp/htdocs/tailstore`
+
+### Installation avec Composer
+
+<Tabs>
+  <TabItem label="macOS">
+    ```bash
+    cd /Applications/XAMPP/htdocs
+    composer create-project drupal/recommended-project:^11.0 tailstore
+    cd tailstore
+    ```
+  </TabItem>
+  <TabItem label="Windows">
+    ```powershell
+    cd C:\xampp\htdocs
+    composer create-project drupal/recommended-project:^11.0 tailstore
+    cd tailstore
+    ```
+  </TabItem>
+  <TabItem label="Linux">
+    ```bash
+    cd /opt/lampp/htdocs
+    composer create-project drupal/recommended-project:^11.0 tailstore
+    cd tailstore
+    ```
+  </TabItem>
+</Tabs>
+
+## 🌐 Configuration du Virtual Host (Recommandé)
+
+Plutôt que d'accéder via `http://localhost/tailstore/web`, configurez un virtual host.
+
+### 1. Modifier le fichier hosts
+
+<Tabs>
+  <TabItem label="macOS/Linux">
+    ```bash
+    sudo nano /etc/hosts
+    ```
+    
+    Ajoutez :
+    ```
+    127.0.0.1 tailstore.local
+    ```
+  </TabItem>
+  <TabItem label="Windows">
+    Éditez `C:\Windows\System32\drivers\etc\hosts` en tant qu'administrateur :
+    
+    ```
+    127.0.0.1 tailstore.local
+    ```
+  </TabItem>
+</Tabs>
+
+### 2. Configurer Apache
+
+Éditez `httpd-vhosts.conf` :
+
+- **macOS** : `/Applications/XAMPP/etc/extra/httpd-vhosts.conf`
+- **Windows** : `C:\xampp\apache\conf\extra\httpd-vhosts.conf`
+- **Linux** : `/opt/lampp/etc/extra/httpd-vhosts.conf`
+
+Ajoutez :
+
+```apache
+<VirtualHost *:80>
+    DocumentRoot "/Applications/XAMPP/htdocs/tailstore/web"
+    ServerName tailstore.local
+    
+    <Directory "/Applications/XAMPP/htdocs/tailstore/web">
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+    
+    ErrorLog "logs/tailstore-error.log"
+    CustomLog "logs/tailstore-access.log" common
+</VirtualHost>
+```
+
+:::note[Adaptez le chemin]
+Modifiez `DocumentRoot` et `Directory` selon votre système d'exploitation.
+:::
+
+### 3. Activer les virtual hosts
+
+Dans `httpd.conf`, décommentez :
+
+```apache
+Include etc/extra/httpd-vhosts.conf
+```
+
+**Redémarrez Apache.**
+
+## 🚀 Installation de Drupal
+
+<Steps>
+
+1. Accédez à votre site :
+   - Avec virtual host : `http://tailstore.local`
+   - Sans virtual host : `http://localhost/tailstore/web`
+
+2. Suivez l'assistant d'installation :
+
+   **Étape 1 - Langue** : Français
+
+   **Étape 2 - Profil** : Standard
+
+   **Étape 3 - Base de données** :
+   - Type : MySQL/MariaDB
+   - Nom : `tailstore`
+   - Utilisateur : `root`
+   - Mot de passe : (laisser vide)
+   - Hôte : `localhost`
+
+   **Étape 4 - Configuration du site** :
+   - Nom du site : TailStore
+   - Email : votre@email.com
+   - Utilisateur : admin
+   - Mot de passe : admin (ou plus sécurisé)
+
+3. Attendez la fin de l'installation
+
+</Steps>
+
+## 🔨 Installer Drush
+
+Drush est indispensable pour gérer Drupal en ligne de commande.
+
+```bash
+cd /Applications/XAMPP/htdocs/tailstore
+# ou C:\xampp\htdocs\tailstore sur Windows
+
+composer require drush/drush
+```
+
+### Utiliser Drush
+
+Avec XAMPP, vous devez utiliser le chemin complet du PHP de XAMPP ou configurer l'alias :
+
+```bash
+# Option 1 : Chemin complet
+/Applications/XAMPP/bin/php vendor/bin/drush status
+
+# Option 2 : Créer un alias (dans ~/.zshrc ou ~/.bashrc)
+alias drush='/Applications/XAMPP/bin/php vendor/bin/drush'
+```
+
+Test :
+
+```bash
+drush status
+```
+
+## 🔐 Configurer settings.php
+
+Le fichier `web/sites/default/settings.php` doit être correctement configuré.
+
+### Chemins de configuration
+
+Ajoutez à la fin du fichier `settings.php` :
+
+```php
+// Chemin vers le dossier de configuration sync
+$settings['config_sync_directory'] = '../config/sync';
+
+// Hash salt (généré automatiquement, mais vérifiez qu'il existe)
+$settings['hash_salt'] = 'votre-hash-unique-ici';
+
+// Trusted host patterns
+$settings['trusted_host_patterns'] = [
+  '^tailstore\.local$',
+  '^localhost$',
+];
+```
+
+### Créer le dossier de configuration
+
+```bash
+mkdir -p config/sync
+```
+
+## 🐛 Résolution de problèmes
+
+### Apache ne démarre pas
+
+**Port 80 déjà utilisé** :
+```bash
+# Trouver le processus utilisant le port 80
+# macOS/Linux
+sudo lsof -i :80
+
+# Windows
+netstat -ano | findstr :80
+```
+
+Solution : Arrêter le service conflictuel ou changer le port Apache.
+
+### Erreur "PDO MySQL extension not loaded"
+
+Vérifiez que l'extension est activée dans `php.ini` :
+```ini
+extension=pdo_mysql
+```
+
+### Erreur de permissions
+
+```bash
+# macOS/Linux
+chmod -R 755 web/sites/default/files
+chmod 644 web/sites/default/settings.php
+```
+
+### Page blanche
+
+Activez l'affichage des erreurs dans `settings.php` :
+```php
+$config['system.logging']['error_level'] = 'verbose';
+```
+
+## ✅ Vérification
+
+Votre installation est réussie si :
+
+- [ ] Apache et MySQL sont démarrés (voyants verts dans XAMPP)
+- [ ] Vous accédez à `http://tailstore.local` (ou localhost/tailstore/web)
+- [ ] Vous pouvez vous connecter avec vos identifiants admin
+- [ ] `drush status` affiche les informations du site
+- [ ] L'interface est en français
+
+## 🚀 Étape suivante
+
+Passez à l'[Installation avec Composer](/etape-1-installation/installation-composer/) pour comprendre la gestion des dépendances.

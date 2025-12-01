@@ -1,0 +1,300 @@
+---
+title: Environnement DDEV
+description: Installer et configurer DDEV pour le développement Drupal 11
+sidebar:
+  order: 1
+---
+
+import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+
+DDEV est un outil de développement local basé sur Docker. Il crée des environnements isolés et reproductibles, parfaits pour le développement Drupal.
+
+## 🔧 Prérequis DDEV
+
+### 1. Docker
+
+DDEV nécessite Docker pour fonctionner.
+
+<Tabs>
+  <TabItem label="macOS">
+    ```bash
+    # Installer Docker Desktop
+    brew install --cask docker
+    
+    # OU télécharger depuis https://www.docker.com/products/docker-desktop
+    
+    # Lancer Docker Desktop et attendre qu'il soit prêt
+    # L'icône Docker doit être stable dans la barre de menu
+    ```
+  </TabItem>
+  <TabItem label="Windows">
+    1. Activer WSL2 (Windows Subsystem for Linux 2)
+    2. Télécharger [Docker Desktop pour Windows](https://www.docker.com/products/docker-desktop)
+    3. Installer et redémarrer
+    4. Configurer Docker pour utiliser WSL2 dans les paramètres
+  </TabItem>
+  <TabItem label="Linux">
+    ```bash
+    # Ubuntu/Debian
+    sudo apt-get update
+    sudo apt-get install docker.io docker-compose-plugin
+    sudo systemctl start docker
+    sudo systemctl enable docker
+    
+    # Ajouter votre utilisateur au groupe docker
+    sudo usermod -aG docker $USER
+    # Déconnectez-vous et reconnectez-vous
+    ```
+  </TabItem>
+</Tabs>
+
+### 2. Installer DDEV
+
+<Tabs>
+  <TabItem label="macOS">
+    ```bash
+    # Avec Homebrew
+    brew install ddev/ddev/ddev
+    
+    # Configurer le provider DNS
+    mkcert -install
+    ```
+  </TabItem>
+  <TabItem label="Windows">
+    ```powershell
+    # Avec Chocolatey (en tant qu'administrateur)
+    choco install ddev
+    
+    # OU avec l'installateur
+    # Télécharger depuis https://github.com/ddev/ddev/releases
+    ```
+  </TabItem>
+  <TabItem label="Linux">
+    ```bash
+    # Script d'installation officiel
+    curl -fsSL https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev.sh | bash
+    
+    # Installer mkcert pour HTTPS local
+    mkcert -install
+    ```
+  </TabItem>
+</Tabs>
+
+### 3. Vérifier l'installation
+
+```bash
+ddev version
+```
+
+Vous devriez voir quelque chose comme :
+
+```
+DDEV version v1.23.x
+docker version 24.x.x
+docker-compose version v2.x.x
+```
+
+## 🚀 Créer un projet Drupal avec DDEV
+
+<Steps>
+
+1. **Créer le dossier du projet**
+
+   ```bash
+   mkdir tailstore
+   cd tailstore
+   ```
+
+2. **Configurer DDEV**
+
+   ```bash
+   ddev config --project-type=drupal --php-version=8.3 --docroot=web
+   ```
+
+   Cette commande crée un fichier `.ddev/config.yaml` avec :
+   - Type de projet : Drupal
+   - Version PHP : 8.3
+   - Racine web : `web/`
+
+3. **Démarrer l'environnement**
+
+   ```bash
+   ddev start
+   ```
+
+   DDEV va :
+   - Télécharger les images Docker nécessaires
+   - Créer les conteneurs (web, db)
+   - Configurer le réseau
+   - Générer les certificats HTTPS
+
+   :::tip[Première exécution]
+   La première fois, le téléchargement des images peut prendre quelques minutes.
+   :::
+
+4. **Créer le projet Drupal**
+
+   ```bash
+   ddev composer create drupal/recommended-project:^11.0 --no-install
+   ddev composer install
+   ```
+
+5. **Installer Drupal**
+
+   ```bash
+   ddev drush site:install standard \
+     --site-name="TailStore" \
+     --account-name=admin \
+     --account-pass=admin \
+     --locale=fr \
+     -y
+   ```
+
+   :::caution[Notez vos identifiants]
+   - **Utilisateur** : admin
+   - **Mot de passe** : admin
+   :::
+
+6. **Ouvrir le site**
+
+   ```bash
+   ddev launch
+   ```
+
+   Votre navigateur s'ouvre sur `https://tailstore.ddev.site`
+
+</Steps>
+
+## 📁 Structure du projet avec DDEV
+
+Après l'installation, votre projet ressemble à :
+
+```
+tailstore/
+├── .ddev/
+│   ├── config.yaml          # Configuration DDEV
+│   ├── docker-compose*.yaml # Configuration Docker
+│   └── commands/             # Commandes personnalisées
+├── web/                      # Racine web Drupal
+│   ├── core/
+│   ├── modules/
+│   ├── themes/
+│   └── sites/
+├── vendor/                   # Dépendances PHP
+├── composer.json
+├── composer.lock
+└── .gitignore
+```
+
+## ⌨️ Commandes DDEV essentielles
+
+| Commande | Description |
+|----------|-------------|
+| `ddev start` | Démarrer les conteneurs |
+| `ddev stop` | Arrêter les conteneurs |
+| `ddev restart` | Redémarrer |
+| `ddev poweroff` | Arrêter tous les projets DDEV |
+| `ddev describe` | Afficher les infos du projet |
+| `ddev launch` | Ouvrir le site dans le navigateur |
+| `ddev ssh` | Accéder au conteneur web |
+| `ddev composer <cmd>` | Exécuter Composer |
+| `ddev drush <cmd>` | Exécuter Drush |
+| `ddev logs` | Voir les logs |
+| `ddev import-db` | Importer une base de données |
+| `ddev export-db` | Exporter la base de données |
+
+## 🔧 Configuration avancée DDEV
+
+### Fichier .ddev/config.yaml
+
+```yaml
+name: tailstore
+type: drupal
+docroot: web
+php_version: "8.3"
+webserver_type: nginx-fpm
+database:
+  type: mariadb
+  version: "10.11"
+
+# Hooks personnalisés
+hooks:
+  post-start:
+    - exec: drush cr
+```
+
+### Ajouter des services
+
+```bash
+# Ajouter phpMyAdmin
+ddev get ddev/ddev-phpmyadmin
+
+# Ajouter Mailpit (capture des emails)
+ddev get ddev/ddev-mailpit
+
+# Redémarrer pour appliquer
+ddev restart
+```
+
+### Variables d'environnement
+
+Créer `.ddev/.env` :
+
+```bash
+# Variables personnalisées
+STRIPE_PUBLIC_KEY=pk_test_xxxxx
+STRIPE_SECRET_KEY=sk_test_xxxxx
+```
+
+## 🐛 Résolution de problèmes
+
+### Port déjà utilisé
+
+```bash
+# Changer le port HTTP
+ddev config --http-port=8080
+
+# Ou arrêter le service utilisant le port 80
+sudo lsof -i :80
+```
+
+### Problème de certificat
+
+```bash
+mkcert -install
+ddev restart
+```
+
+### Conteneur qui ne démarre pas
+
+```bash
+# Reconstruire les conteneurs
+ddev delete -O
+ddev start
+```
+
+### Logs pour debug
+
+```bash
+# Logs du serveur web
+ddev logs -f
+
+# Logs spécifiques
+ddev logs -s web
+ddev logs -s db
+```
+
+## ✅ Vérification
+
+Votre installation est réussie si :
+
+- [ ] `ddev describe` affiche les URLs du projet
+- [ ] `ddev launch` ouvre votre site Drupal
+- [ ] Vous pouvez vous connecter avec admin/admin
+- [ ] L'interface est en français
+
+## 🚀 Étape suivante
+
+Passez à l'[Installation avec Composer](/etape-1-installation/installation-composer/) pour comprendre la gestion des dépendances.
+
+Ou si vous préférez XAMPP, consultez [Environnement XAMPP](/etape-1-installation/environnement-xampp/).

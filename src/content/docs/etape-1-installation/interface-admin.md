@@ -1,0 +1,255 @@
+---
+title: Interface d'administration
+description: Découvrir et naviguer dans l'interface d'administration Drupal 11
+sidebar:
+  order: 6
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+L'interface d'administration de Drupal 11 utilise le thème **Claro**, moderne et accessible. Découvrons les principales sections.
+
+## 🔐 Connexion
+
+Accédez à l'administration via `/user/login` ou `/admin`.
+
+Identifiants par défaut (si vous avez suivi l'installation) :
+- **Utilisateur** : admin
+- **Mot de passe** : admin
+
+:::caution[Sécurité]
+En production, utilisez un mot de passe fort et unique !
+:::
+
+## 🎛️ La barre d'outils
+
+La barre d'outils (toolbar) apparaît en haut de page pour les utilisateurs authentifiés avec les bonnes permissions.
+
+### Éléments principaux
+
+| Élément | Description |
+|---------|-------------|
+| **Gérer** | Accès à toutes les sections d'administration |
+| **Raccourcis** | Liens personnalisables vers vos pages fréquentes |
+| **Nom d'utilisateur** | Menu de votre compte |
+
+### Module Admin Toolbar
+
+Installez `admin_toolbar` pour une navigation améliorée avec menus déroulants :
+
+```bash
+composer require drupal/admin_toolbar
+drush en admin_toolbar admin_toolbar_tools -y
+drush cr
+```
+
+## 📍 Les sections principales
+
+### Contenu (`/admin/content`)
+
+Gérez tous les contenus du site :
+
+- **Contenu** : Liste des nœuds (articles, pages, produits...)
+- **Fichiers** : Médias uploadés
+- **Médias** : Bibliothèque de médias
+
+Actions disponibles :
+- Créer du contenu
+- Éditer, supprimer
+- Publier/dépublier
+- Filtrer par type, statut, langue
+
+### Structure (`/admin/structure`)
+
+Configurez l'architecture du site :
+
+| Section | Description |
+|---------|-------------|
+| **Types de contenu** | Créer/gérer les types de nœuds |
+| **Types de médias** | Configurer les types de médias |
+| **Taxonomie** | Gérer les vocabulaires et termes |
+| **Mise en page des blocs** | Placer les blocs dans les régions |
+| **Menus** | Créer et organiser les menus |
+| **Modes d'affichage** | Gérer les view modes |
+| **Types de commentaires** | Configurer les commentaires |
+
+### Apparence (`/admin/appearance`)
+
+Gérez les thèmes :
+
+- **Thèmes installés** : Activer/désactiver
+- **Paramètres du thème** : Logo, favicon, couleurs
+- **Installer un nouveau thème**
+
+Thèmes par défaut de Drupal 11 :
+- **Olivero** : Thème front-end moderne
+- **Claro** : Thème d'administration
+- **Stark** : Thème minimal pour développement
+
+### Extension (`/admin/modules`)
+
+Gérez les modules :
+
+- **Liste des modules** : Activer/désactiver
+- **Mettre à jour** : Vérifier les mises à jour
+- **Désinstaller** : Supprimer proprement un module
+
+:::tip[Bonnes pratiques]
+Utilisez Composer pour installer les modules, pas l'interface d'upload.
+:::
+
+### Configuration (`/admin/config`)
+
+Paramètres du site organisés par catégorie :
+
+| Catégorie | Éléments clés |
+|-----------|---------------|
+| **Système** | Infos du site, Cron, Performances |
+| **Contenu** | Formats de texte, RSS |
+| **Utilisateurs** | Paramètres de compte |
+| **Médias** | Styles d'images, Systèmes de fichiers |
+| **Recherche** | Configuration de la recherche |
+| **Régional** | Langue, Date et heure |
+| **Développement** | Journalisation, Maintenance |
+
+### Personnes (`/admin/people`)
+
+Gérez les utilisateurs :
+
+- **Liste des utilisateurs** : CRUD utilisateurs
+- **Rôles** : Créer/gérer les rôles
+- **Permissions** : Attribuer les permissions par rôle
+
+### Rapports (`/admin/reports`)
+
+Surveillez votre site :
+
+| Rapport | Utilité |
+|---------|---------|
+| **Tableau de bord** | Vue d'ensemble |
+| **Messages récents** | Logs d'erreurs et d'événements |
+| **Rapport de statut** | Santé du site (à vérifier régulièrement !) |
+| **Mises à jour disponibles** | Modules/thèmes à mettre à jour |
+| **Champs** | Liste de tous les champs |
+| **Vues** | Liste des vues |
+
+### Aide (`/admin/help`)
+
+Documentation intégrée pour chaque module.
+
+## 🔍 Navigation efficace
+
+### Raccourcis clavier
+
+Avec le module `admin_toolbar` :
+- `/` : Ouvrir la recherche
+- `g c` : Aller au contenu
+- `g s` : Aller à la structure
+
+### Recherche d'administration
+
+Le module **Coffee** (`drupal/coffee`) ajoute une barre de recherche (Alt+D) :
+
+```bash
+composer require drupal/coffee
+drush en coffee -y
+```
+
+### URL d'administration importantes
+
+| URL | Page |
+|-----|------|
+| `/admin` | Tableau de bord admin |
+| `/admin/content` | Liste des contenus |
+| `/admin/structure/types` | Types de contenu |
+| `/admin/structure/views` | Vues |
+| `/admin/structure/taxonomy` | Taxonomies |
+| `/admin/structure/block` | Blocs |
+| `/admin/structure/menu` | Menus |
+| `/admin/config` | Configuration |
+| `/admin/people` | Utilisateurs |
+| `/admin/people/permissions` | Permissions |
+| `/admin/modules` | Modules |
+| `/admin/appearance` | Thèmes |
+| `/admin/reports/status` | Rapport de statut |
+| `/admin/reports/dblog` | Logs |
+
+## 📊 Rapport de statut
+
+Le rapport de statut (`/admin/reports/status`) est **essentiel**. Vérifiez régulièrement :
+
+### Éléments à surveiller
+
+| Élément | État attendu |
+|---------|--------------|
+| **Version de Drupal** | À jour |
+| **Version de PHP** | 8.3+ |
+| **Base de données** | Connectée |
+| **Configuration sync** | Chemin configuré |
+| **Répertoire de fichiers** | Accessible en écriture |
+| **Trusted host** | Configuré |
+| **Mises à jour** | Aucune mise à jour de sécurité en attente |
+
+### Codes couleur
+
+- 🟢 **Vert** : Tout va bien
+- 🟡 **Jaune** : Avertissement (à corriger quand possible)
+- 🔴 **Rouge** : Erreur critique (à corriger immédiatement)
+
+## 🎨 Personnaliser l'administration
+
+### Changer le thème d'administration
+
+```bash
+# Utiliser Seven (ancien thème admin)
+drush config:set system.theme admin seven
+
+# Revenir à Claro
+drush config:set system.theme admin claro
+```
+
+### Ajouter un logo personnalisé
+
+1. Aller à `/admin/appearance/settings/claro`
+2. Décocher "Utiliser le logo par défaut"
+3. Uploader votre logo
+
+### Raccourcis personnalisés
+
+1. Cliquer sur "Raccourcis" dans la toolbar
+2. "Modifier les raccourcis"
+3. Ajouter vos pages fréquentes
+
+## ✅ Exercice de navigation
+
+Effectuez les actions suivantes pour vous familiariser avec l'interface :
+
+<Steps>
+
+1. **Vérifiez le rapport de statut**
+   - Aller à `/admin/reports/status`
+   - Notez les éventuels avertissements
+
+2. **Explorez les types de contenu**
+   - Aller à `/admin/structure/types`
+   - Cliquez sur "Gérer les champs" d'un type existant
+
+3. **Découvrez les vues**
+   - Aller à `/admin/structure/views`
+   - Désactivez une vue, puis réactivez-la
+
+4. **Consultez les logs**
+   - Aller à `/admin/reports/dblog`
+   - Filtrez par type "error" (si présent)
+
+5. **Testez les raccourcis**
+   - Ajoutez "/admin/structure/types" à vos raccourcis
+   - Vérifiez qu'il apparaît dans la barre
+
+</Steps>
+
+## 🚀 Étape suivante
+
+Félicitations ! Vous avez terminé l'Étape 1. 
+
+Testez vos connaissances avec les [Exercices de l'Étape 1](/etape-1-installation/exercices/), puis passez à l'[Étape 2 - Types de Contenu](/etape-2-contenus/).
