@@ -1,0 +1,319 @@
+---
+title: Pathauto
+description: Générer automatiquement des URLs propres et SEO-friendly
+sidebar:
+  order: 2
+---
+
+import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
+
+## 🎯 Qu'est-ce que Pathauto ?
+
+**Pathauto** génère automatiquement des alias d'URL pour le contenu :
+
+| Sans Pathauto | Avec Pathauto |
+|---------------|---------------|
+| `/node/42` | `/produits/t-shirt-blanc` |
+| `/taxonomy/term/5` | `/categories/vetements` |
+| `/user/1` | `/utilisateurs/admin` |
+
+## 📦 Installation
+
+```bash
+# Installer (inclut Token comme dépendance)
+ddev composer require drupal/pathauto
+
+# Activer
+ddev drush en pathauto -y
+```
+
+## ⚙️ Configuration
+
+### Accès à la configuration
+
+**Configuration** → **Recherche et métadonnées** → **Alias d'URL** → **Modèles**
+
+Ou directement : `/admin/config/search/path/patterns`
+
+### Créer un modèle pour les produits
+
+<Steps>
+
+1. **Ajouter un modèle**
+
+   Cliquez sur **+ Ajouter un modèle Pathauto**
+
+2. **Configurer le modèle**
+
+   - **Type de modèle** : Contenu
+   - **Type de contenu** : Produit
+   - **Libellé** : Produits
+   - **Modèle de chemin** : `produits/[node:title]`
+
+3. **Sauvegarder**
+
+</Steps>
+
+## 🏷️ Tokens disponibles
+
+### Tokens de base
+
+| Token | Description | Exemple |
+|-------|-------------|---------|
+| `[node:title]` | Titre du contenu | `t-shirt-blanc` |
+| `[node:nid]` | ID du node | `42` |
+| `[node:created:custom:Y]` | Année création | `2025` |
+| `[node:author:name]` | Auteur | `admin` |
+
+### Tokens de taxonomie
+
+| Token | Description | Exemple |
+|-------|-------------|---------|
+| `[node:field_category:entity:name]` | Nom catégorie | `vetements` |
+| `[node:field_brand:entity:name]` | Nom marque | `nike` |
+| `[term:name]` | Nom du terme | `accessoires` |
+| `[term:parent:name]` | Terme parent | `mode` |
+
+### Voir tous les tokens
+
+Cliquez sur **Parcourir les jetons disponibles** dans le formulaire de modèle.
+
+## 📋 Modèles TailStore
+
+### Produits
+
+```
+produits/[node:field_category:entity:name]/[node:title]
+```
+
+Résultat : `/produits/vetements/t-shirt-blanc`
+
+### Articles de blog
+
+```
+blog/[node:created:custom:Y]/[node:created:custom:m]/[node:title]
+```
+
+Résultat : `/blog/2025/01/nouvel-article`
+
+### Catégories (taxonomie)
+
+```
+categories/[term:parent:name]/[term:name]
+```
+
+Résultat : `/categories/mode/vetements`
+
+Ou plus simple :
+
+```
+categories/[term:name]
+```
+
+### Marques
+
+```
+marques/[term:name]
+```
+
+Résultat : `/marques/nike`
+
+## 🔧 Paramètres avancés
+
+### Configuration générale
+
+**Configuration** → **Recherche et métadonnées** → **Alias d'URL** → **Paramètres**
+
+#### Séparateur de mots
+
+```
+Caractère à utiliser : -
+```
+
+#### Casse
+
+```
+Transformer en minuscules : Oui
+```
+
+#### Ponctuation
+
+| Caractère | Action |
+|-----------|--------|
+| `/` | Aucune action |
+| `:` | Supprimer |
+| `'` | Supprimer |
+| `?` | Supprimer |
+| `#` | Supprimer |
+
+### Caractères translittérés
+
+Transformations automatiques :
+
+| Original | Résultat |
+|----------|----------|
+| `é` | `e` |
+| `à` | `a` |
+| `ç` | `c` |
+| `ü` | `u` |
+
+## 🔄 Génération en masse
+
+### Générer les alias existants
+
+**Configuration** → **Recherche et métadonnées** → **Alias d'URL** → **Mise à jour en masse**
+
+<Steps>
+
+1. Sélectionner le type de contenu
+2. Cocher **Régénérer les alias**
+3. Cliquer sur **Mettre à jour**
+
+</Steps>
+
+### Avec Drush
+
+```bash
+# Générer tous les alias
+ddev drush pathauto:aliases-generate all
+
+# Générer pour un type spécifique
+ddev drush pathauto:aliases-generate node
+
+# Générer pour les termes
+ddev drush pathauto:aliases-generate taxonomy_term
+```
+
+## 📝 Alias manuels
+
+### Désactiver pour un contenu
+
+Dans le formulaire d'édition du contenu :
+
+1. Ouvrir **Paramètres du chemin d'URL**
+2. Décocher **Générer un alias automatique**
+3. Saisir l'alias manuellement
+
+### Priorité
+
+1. Alias manuel (si défini)
+2. Alias Pathauto (si modèle existe)
+3. Alias système (`/node/42`)
+
+## 🔀 Module Redirect
+
+Installez **Redirect** pour gérer les anciennes URLs :
+
+```bash
+ddev composer require drupal/redirect
+ddev drush en redirect -y
+```
+
+### Redirection automatique
+
+Quand un titre change :
+
+- Ancien : `/produits/tshirt-blanc`
+- Nouveau : `/produits/t-shirt-blanc-premium`
+
+Redirect crée automatiquement une redirection 301.
+
+### Configuration
+
+**Configuration** → **Recherche et métadonnées** → **Redirections**
+
+| Option | Valeur recommandée |
+|--------|-------------------|
+| Auto-redirect | Activé |
+| Code HTTP | 301 (permanent) |
+| Conserver anciennes URLs | Oui |
+
+## 🧪 Debug
+
+### Voir les alias d'un contenu
+
+```bash
+ddev drush path:alias /node/42
+```
+
+### Lister tous les alias
+
+```bash
+ddev drush sqlq "SELECT * FROM path_alias"
+```
+
+### Problèmes courants
+
+<Tabs>
+<TabItem label="Alias non généré">
+
+**Cause** : Pas de modèle correspondant
+
+**Solution** :
+1. Vérifier le modèle existe
+2. Vérifier le type de contenu sélectionné
+3. Vider le cache
+
+</TabItem>
+<TabItem label="Caractères spéciaux">
+
+**Cause** : Ponctuation non configurée
+
+**Solution** :
+1. **Paramètres** → **Ponctuation**
+2. Configurer chaque caractère
+3. Régénérer les alias
+
+</TabItem>
+<TabItem label="Alias dupliqués">
+
+**Cause** : Même titre pour plusieurs contenus
+
+**Solution** :
+1. Ajouter `[node:nid]` au modèle
+2. Ou utiliser des champs uniques
+
+```
+produits/[node:field_sku]/[node:title]
+```
+
+</TabItem>
+</Tabs>
+
+## 📊 Modèles complets TailStore
+
+### Tous les modèles
+
+| Type | Modèle | Exemple |
+|------|--------|---------|
+| Produit | `boutique/[node:field_category:entity:name]/[node:title]` | `/boutique/vetements/t-shirt` |
+| Article | `blog/[node:created:custom:Y-m]/[node:title]` | `/blog/2025-01/article` |
+| Catégorie | `categories/[term:name]` | `/categories/vetements` |
+| Marque | `marques/[term:name]` | `/marques/nike` |
+| Couleur | `couleurs/[term:name]` | `/couleurs/bleu` |
+| Taille | `tailles/[term:name]` | `/tailles/xl` |
+
+### Configuration recommandée
+
+```yaml
+# Paramètres généraux
+separator: "-"
+case: lowercase
+max_length: 100
+transliterate: true
+reduce_ascii: true
+```
+
+## ✅ Checklist
+
+- [ ] Pathauto installé et activé
+- [ ] Token installé (dépendance)
+- [ ] Modèle créé pour chaque type de contenu
+- [ ] Modèle créé pour les taxonomies
+- [ ] Translittération configurée
+- [ ] Redirect installé (optionnel)
+- [ ] Alias existants générés
+
+## 🔜 Prochaine étape
+
+URLs propres en place ! Optimisons le SEO avec [Metatag](/etape-7-modules/metatag/).
