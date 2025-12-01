@@ -1,0 +1,486 @@
+---
+title: Routes et Controllers
+description: Créer des pages et des endpoints API avec le système de routing Drupal
+sidebar:
+  order: 2
+---
+
+import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
+
+## 🛤️ Le système de routing
+
+Drupal utilise le composant **Routing** de Symfony. Chaque route lie :
+
+- Une **URL** (`/cart`)
+- À un **controller** (`CartController::index`)
+- Avec des **conditions** d'accès
+
+## 📝 Fichier .routing.yml
+
+```yaml
+# tailstore_cart.routing.yml
+
+# Page du panier
+tailstore_cart.cart:
+  path: '/cart'
+  defaults:
+    _controller: '\Drupal\tailstore_cart\Controller\CartController::index'
+    _title: 'Mon panier'
+  requirements:
+    _permission: 'access cart'
+
+# Ajouter au panier (htmx)
+tailstore_cart.add:
+  path: '/cart/add/{product_id}'
+  defaults:
+    _controller: '\Drupal\tailstore_cart\Controller\CartController::add'
+  requirements:
+    _permission: 'access cart'
+    product_id: '\d+'
+  methods: [POST]
+
+# Modifier la quantité (htmx)
+tailstore_cart.update:
+  path: '/cart/update/{product_id}'
+  defaults:
+    _controller: '\Drupal\tailstore_cart\Controller\CartController::update'
+  requirements:
+    _permission: 'access cart'
+    product_id: '\d+'
+  methods: [PATCH]
+
+# Supprimer du panier (htmx)
+tailstore_cart.remove:
+  path: '/cart/remove/{product_id}'
+  defaults:
+    _controller: '\Drupal\tailstore_cart\Controller\CartController::remove'
+  requirements:
+    _permission: 'access cart'
+    product_id: '\d+'
+  methods: [DELETE]
+
+# Mini-cart (htmx partial)
+tailstore_cart.mini:
+  path: '/cart/mini'
+  defaults:
+    _controller: '\Drupal\tailstore_cart\Controller\CartController::mini'
+  requirements:
+    _permission: 'access cart'
+
+# Page checkout
+tailstore_cart.checkout:
+  path: '/checkout'
+  defaults:
+    _controller: '\Drupal\tailstore_cart\Controller\CheckoutController::index'
+    _title: 'Finaliser la commande'
+  requirements:
+    _permission: 'access checkout'
+
+# Créer session Stripe
+tailstore_cart.checkout_create:
+  path: '/checkout/create'
+  defaults:
+    _controller: '\Drupal\tailstore_cart\Controller\CheckoutController::create'
+  requirements:
+    _permission: 'access checkout'
+  methods: [POST]
+
+# Succès paiement
+tailstore_cart.checkout_success:
+  path: '/checkout/success'
+  defaults:
+    _controller: '\Drupal\tailstore_cart\Controller\CheckoutController::success'
+    _title: 'Merci pour votre commande !'
+  requirements:
+    _permission: 'access cart'
+
+# Annulation
+tailstore_cart.checkout_cancel:
+  path: '/checkout/cancel'
+  defaults:
+    _controller: '\Drupal\tailstore_cart\Controller\CheckoutController::cancel'
+    _title: 'Commande annulée'
+  requirements:
+    _permission: 'access cart'
+
+# Webhook Stripe
+tailstore_cart.stripe_webhook:
+  path: '/webhook/stripe'
+  defaults:
+    _controller: '\Drupal\tailstore_cart\Controller\WebhookController::stripe'
+  requirements:
+    _access: 'TRUE'
+  methods: [POST]
+
+# Page d'administration
+tailstore_cart.admin:
+  path: '/admin/config/tailstore/cart'
+  defaults:
+    _form: '\Drupal\tailstore_cart\Form\SettingsForm'
+    _title: 'Configuration TailStore Cart'
+  requirements:
+    _permission: 'administer tailstore cart'
+```
+
+## 🎛️ Options de routing
+
+### Paramètres
+
+| Option | Description |
+|--------|-------------|
+| `path` | URL de la route |
+| `defaults._controller` | Controller à appeler |
+| `defaults._form` | Formulaire à afficher |
+| `defaults._title` | Titre de la page |
+| `requirements._permission` | Permission requise |
+| `requirements._role` | Rôle requis |
+| `requirements._access` | Accès libre (`TRUE`) |
+| `methods` | Méthodes HTTP acceptées |
+
+### Contraintes sur les paramètres
+
+```yaml
+# Uniquement des nombres
+product_id: '\d+'
+
+# Lettres minuscules
+slug: '[a-z]+'
+
+# UUID
+uuid: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+```
+
+### Valeurs par défaut
+
+```yaml
+tailstore_cart.products:
+  path: '/products/{page}'
+  defaults:
+    _controller: '\Drupal\tailstore_cart\Controller\ProductController::list'
+    page: 1  # Valeur par défaut si non fourni
+```
+
+## 📋 Controller de base
+
+### CartController.php
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\tailstore_cart\Controller;
+
+use Drupal\Core\Controller\ControllerBase;
+use Drupal\tailstore_cart\Service\CartServiceInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+/**
+ * Controller for cart operations.
+ */
+class CartController extends ControllerBase {
+
+  /**
+   * Constructs a CartController object.
+   */
+  public function __construct(
+    private readonly CartServiceInterface $cartService,
+  ) {}
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container): static {
+    return new static(
+      $container->get('tailstore_cart.cart'),
+    );
+  }
+
+  /**
+   * Display the cart page.
+   */
+  public function index(): array {
+    $items = $this->cartService->getItems();
+    $total = $this->cartService->getTotal();
+
+    return [
+      '#theme' => 'cart_page',
+      '#items' => $items,
+      '#total' => $total,
+      '#cache' => [
+        'contexts' => ['session'],
+        'max-age' => 0,
+      ],
+    ];
+  }
+
+  /**
+   * Add a product to the cart (htmx).
+   */
+  public function add(int $product_id, Request $request): Response {
+    $quantity = (int) $request->request->get('quantity', 1);
+    
+    try {
+      $this->cartService->add($product_id, $quantity);
+      
+      // Si requête htmx, retourner le fragment
+      if ($request->headers->has('HX-Request')) {
+        return $this->renderMiniCart();
+      }
+      
+      return new JsonResponse([
+        'success' => TRUE,
+        'message' => $this->t('Product added to cart.'),
+        'count' => $this->cartService->getCount(),
+      ]);
+    }
+    catch (\Exception $e) {
+      return new JsonResponse([
+        'success' => FALSE,
+        'message' => $e->getMessage(),
+      ], Response::HTTP_BAD_REQUEST);
+    }
+  }
+
+  /**
+   * Update product quantity (htmx).
+   */
+  public function update(int $product_id, Request $request): Response {
+    $quantity = (int) $request->request->get('quantity', 1);
+    
+    $this->cartService->updateQuantity($product_id, $quantity);
+    
+    if ($request->headers->has('HX-Request')) {
+      // Retourner la ligne mise à jour
+      $item = $this->cartService->getItem($product_id);
+      $build = [
+        '#theme' => 'cart_item',
+        '#product' => $item['product'],
+        '#quantity' => $item['quantity'],
+        '#subtotal' => $item['subtotal'],
+      ];
+      
+      $html = \Drupal::service('renderer')->renderRoot($build);
+      return new Response($html);
+    }
+    
+    return new JsonResponse(['success' => TRUE]);
+  }
+
+  /**
+   * Remove product from cart (htmx).
+   */
+  public function remove(int $product_id, Request $request): Response {
+    $this->cartService->remove($product_id);
+    
+    if ($request->headers->has('HX-Request')) {
+      // Retourner une réponse vide avec headers htmx
+      $response = new Response('');
+      $response->headers->set('HX-Trigger', 'cartUpdated');
+      return $response;
+    }
+    
+    return new JsonResponse(['success' => TRUE]);
+  }
+
+  /**
+   * Render mini-cart partial (htmx).
+   */
+  public function mini(): Response {
+    return $this->renderMiniCart();
+  }
+
+  /**
+   * Render the mini cart HTML.
+   */
+  private function renderMiniCart(): Response {
+    $build = [
+      '#theme' => 'mini_cart',
+      '#count' => $this->cartService->getCount(),
+      '#total' => $this->cartService->getTotal(),
+      '#items' => $this->cartService->getItems(),
+      '#cache' => ['max-age' => 0],
+    ];
+
+    $html = \Drupal::service('renderer')->renderRoot($build);
+    return new Response($html);
+  }
+
+}
+```
+
+## 🔄 Injection de dépendances
+
+### Pattern standard
+
+```php
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+class CartController extends ControllerBase {
+
+  public function __construct(
+    private readonly CartServiceInterface $cartService,
+    private readonly EntityTypeManagerInterface $entityTypeManager,
+  ) {}
+
+  public static function create(ContainerInterface $container): static {
+    return new static(
+      $container->get('tailstore_cart.cart'),
+      $container->get('entity_type.manager'),
+    );
+  }
+}
+```
+
+### Services couramment utilisés
+
+| Service | ID Container |
+|---------|--------------|
+| Entity manager | `entity_type.manager` |
+| Current user | `current_user` |
+| Database | `database` |
+| Renderer | `renderer` |
+| Messenger | `messenger` |
+| Config factory | `config.factory` |
+| Cache | `cache.default` |
+| Request stack | `request_stack` |
+
+## 📊 Réponses
+
+### Render array (page standard)
+
+```php
+public function index(): array {
+  return [
+    '#theme' => 'cart_page',
+    '#items' => $items,
+    '#cache' => ['max-age' => 0],
+  ];
+}
+```
+
+### JSON Response
+
+```php
+use Symfony\Component\HttpFoundation\JsonResponse;
+
+public function api(): JsonResponse {
+  return new JsonResponse([
+    'status' => 'success',
+    'data' => $data,
+  ]);
+}
+```
+
+### Response HTML (htmx)
+
+```php
+use Symfony\Component\HttpFoundation\Response;
+
+public function partial(): Response {
+  $html = '<div id="cart-count">5</div>';
+  return new Response($html);
+}
+```
+
+### Redirect
+
+```php
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\Core\Url;
+
+public function redirect(): RedirectResponse {
+  $url = Url::fromRoute('tailstore_cart.cart')->toString();
+  return new RedirectResponse($url);
+}
+```
+
+## 🔒 Accès personnalisé
+
+### Custom access checker
+
+```yaml
+# Dans .routing.yml
+tailstore_cart.checkout:
+  path: '/checkout'
+  defaults:
+    _controller: '\Drupal\tailstore_cart\Controller\CheckoutController::index'
+  requirements:
+    _custom_access: '\Drupal\tailstore_cart\Access\CartNotEmptyAccess::access'
+```
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\tailstore_cart\Access;
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
+use Drupal\Core\Routing\Access\AccessInterface;
+use Drupal\tailstore_cart\Service\CartServiceInterface;
+
+/**
+ * Checks if the cart is not empty.
+ */
+class CartNotEmptyAccess implements AccessInterface {
+
+  public function __construct(
+    private readonly CartServiceInterface $cartService,
+  ) {}
+
+  /**
+   * Custom access check.
+   */
+  public function access(): AccessResultInterface {
+    $hasItems = $this->cartService->getCount() > 0;
+    
+    return AccessResult::allowedIf($hasItems)
+      ->addCacheContexts(['session'])
+      ->setCacheMaxAge(0);
+  }
+
+}
+```
+
+### Déclarer le service d'accès
+
+```yaml
+# tailstore_cart.services.yml
+services:
+  tailstore_cart.access_checker.cart_not_empty:
+    class: Drupal\tailstore_cart\Access\CartNotEmptyAccess
+    arguments: ['@tailstore_cart.cart']
+    tags:
+      - { name: access_check }
+```
+
+## 🧪 Debug des routes
+
+```bash
+# Lister toutes les routes
+ddev drush router:list
+
+# Filtrer par module
+ddev drush router:list --module=tailstore_cart
+
+# Reconstruire les routes
+ddev drush cr
+```
+
+## ✅ Checklist
+
+- [ ] Fichier .routing.yml créé
+- [ ] Routes pour toutes les pages
+- [ ] Controllers avec injection de dépendances
+- [ ] Méthodes HTTP appropriées
+- [ ] Permissions définies
+- [ ] Réponses adaptées (array, JSON, Response)
+
+## 🔜 Prochaine étape
+
+Les routes sont en place ! Créons les [Services](/etape-8-developpement/services/).
