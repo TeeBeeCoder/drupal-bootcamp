@@ -101,7 +101,7 @@ Ce projet permet de :
 Étape 8 - Développement Custom
     └── Module, routing, controllers, services, htmx, Stripe
 
-Projet Intégrateur
+[Projet Intégrateur](/projet/)
     └── Évaluation finale
 ```
 
