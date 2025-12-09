@@ -13,8 +13,8 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 | Composant | Minimum | Recommandé |
 |-----------|---------|------------|
-| **RAM** | 4 Go | 8 Go+ |
-| **Disque** | 10 Go libres | 20 Go+ SSD |
+| **RAM** | 1 Go | 8 Go+ |
+| **Disque** | 100 Mo libres | 20 Go+ SSD |
 | **Processeur** | Dual-core | Quad-core+ |
 
 ### Systèmes d'exploitation supportés
@@ -27,7 +27,7 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 ### 1. PHP 8.3+
 
-Drupal 11 nécessite PHP 8.3 ou supérieur.
+Drupal 11 nécessite PHP 8.3 ou supérieur avec les extensions suivantes : PDO, XML, GD, OpenSSL, JSON, cURL, Mbstring, zlib.
 
 <Tabs>
   <TabItem label="macOS">
@@ -121,17 +121,53 @@ Pour le versionnement et la récupération du code.
   </TabItem>
 </Tabs>
 
-### 4. Environnement de développement local
+### 4. Node.js 18+
+
+Pour la gestion des assets front-end (Tailwind CSS, Alpine.js).
+
+<Tabs>
+  <TabItem label="macOS">
+    ```bash
+    # Avec Homebrew
+    brew install node
+    
+    # Vérifier
+    node -v
+    npm -v
+    ```
+  </TabItem>
+  <TabItem label="Windows">
+    ```powershell
+    # Télécharger depuis https://nodejs.org/
+    # Choisir la version LTS
+    
+    node -v
+    npm -v
+    ```
+  </TabItem>
+  <TabItem label="Linux">
+    ```bash
+    # Ubuntu/Debian
+    curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+    
+    node -v
+    npm -v
+    ```
+  </TabItem>
+</Tabs>
+
+### 5. Environnement de développement local
 
 Choisissez **DDEV** (recommandé) ou **XAMPP** :
 
 <Tabs>
   <TabItem label="DDEV (Recommandé)">
-    DDEV utilise Docker pour créer des environnements isolés.
+    DDEV utilise Docker pour créer des environnements isolés incluant Apache/Nginx, MySQL/MariaDB et PHP configuré.
 
     **Prérequis DDEV :**
     - Docker Desktop (macOS/Windows) ou Docker Engine (Linux)
-    - 4 Go RAM minimum pour Docker
+    - 1 Go RAM minimum pour Docker
 
     ```bash
     # macOS avec Homebrew
@@ -168,7 +204,7 @@ Choisissez **DDEV** (recommandé) ou **XAMPP** :
   </TabItem>
 </Tabs>
 
-### 5. Éditeur de code
+### 6. Éditeur de code
 
 Nous recommandons **Visual Studio Code** avec les extensions suivantes :
 
@@ -185,7 +221,7 @@ Autres éditeurs compatibles :
 - Sublime Text
 - Atom
 
-### 6. Navigateur web
+### 7. Navigateur web
 
 Navigateur moderne avec outils de développement :
 - ✅ Chrome / Chromium
@@ -210,6 +246,10 @@ composer --version
 git --version
 # Devrait afficher : git version 2.x.x
 
+# Node.js
+node -v
+# Devrait afficher : v18.x.x ou supérieur
+
 # DDEV (si utilisé)
 ddev version
 # Devrait afficher la version de DDEV et Docker
@@ -229,6 +269,7 @@ Avant de commencer l'Étape 1, vérifiez :
 - [ ] PHP 8.3+ installé et fonctionnel
 - [ ] Composer 2.x installé
 - [ ] Git installé
+- [ ] Node.js 18+ installé
 - [ ] DDEV ou XAMPP prêt
 - [ ] Éditeur de code configuré
 - [ ] Navigateur moderne disponible
