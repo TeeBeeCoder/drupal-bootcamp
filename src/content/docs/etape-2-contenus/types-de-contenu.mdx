@@ -3,6 +3,9 @@ title: Types de contenu
 description: Comprendre et créer des types de contenu dans Drupal 11
 sidebar:
   order: 1
+
+# status: stable
+# last-reviewed: 2025-12-10
 ---
 
 import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
@@ -35,6 +38,49 @@ Drupal installe deux types par défaut :
 - **Article** : Pour les contenus chronologiques (blog, actualités)
 - **Page de base** : Pour les pages statiques (À propos, Contact)
 
+## 📝 Conventions de nommage importantes
+
+:::danger[Machine names en anglais obligatoire]
+
+**RÈGLE ABSOLUE** : Tous les **machine names** (noms système) dans Drupal doivent être en **anglais**.
+
+**Pourquoi ?**
+- Drupal est un CMS international
+- Les développeurs du monde entier utilisent l'anglais
+- Cela limite les accents et caractères spéciaux dans les noms de machine
+- Cela facilite le partage de code et de configurations
+
+**Comment ça marche :**
+1. Le **nom d'affichage** peut être en français : "Produit", "Article de Blog"
+2. Drupal génère automatiquement un **machine name** à partir du nom
+3. **Vous DEVEZ corriger ce machine name** s'il n'est pas en anglais
+
+:::
+
+### Exemples de correction
+
+| Nom d'affichage | Machine name généré | Machine name correct |
+|----------------|-------------------|---------------------|
+| Produit | `produit` ❌ | `product` ✅ |
+| Article de Blog | `article_de_blog` ❌ | `blog_article` ✅ |
+| Slide | `slide` ✅ | `slide` ✅ |
+| Témoignage | `témoignage` ❌ | `testimonial` ✅ |
+
+:::tip[Comment corriger le machine name]
+
+Quand Drupal génère automatiquement un machine name incorrect :
+
+1. **Vérifiez toujours** le champ "Nom système" (machine name)
+2. **Corrigez-le** si nécessaire (minuscules, anglais, pas d'accents)
+3. **Relisez-vous** avant de sauvegarder
+
+**Exemple concret :**
+- Vous tapez "Produit" comme nom
+- Drupal propose `produit` comme machine name
+- **Changez-le immédiatement** en `product`
+
+:::
+
 ## 🏗️ Créer un type de contenu
 
 ### Via l'interface
@@ -47,7 +93,7 @@ Drupal installe deux types par défaut :
 
 3. Remplir les informations de base :
    - **Nom** : Produit
-   - **Identifiant machine** : `product` (généré automatiquement)
+   - **Nom système** (machine name) : `product` (généré automatiquement - **corrigez si nécessaire**)
    - **Description** : Articles de la boutique TailStore
 
 4. Configurer les **paramètres de soumission** :
@@ -69,6 +115,10 @@ Drupal installe deux types par défaut :
 8. Cliquer sur **Enregistrer et gérer les champs**
 
 </Steps>
+
+:::warning[Important]
+N'oubliez pas de **corriger le machine name** si Drupal génère un nom français !
+:::
 
 ### Configuration YAML
 
@@ -102,7 +152,7 @@ Créons le type de contenu principal de TailStore :
    | Champ | Valeur |
    |-------|--------|
    | Nom | Produit |
-   | Identifiant machine | product |
+   | Nom système (Machine name) | product |
    | Description | Articles de la boutique TailStore |
 
 3. **Paramètres de publication**
@@ -133,7 +183,7 @@ Créons le type de contenu principal de TailStore :
    | Champ | Valeur |
    |-------|--------|
    | Nom | Article de Blog |
-   | Identifiant machine | blog_article |
+   | Nom système (Machine name) | blog_article |
    | Description | Articles du blog TailStore |
 
 3. **Paramètres de publication**
@@ -164,7 +214,7 @@ Créons le type de contenu principal de TailStore :
    | Champ | Valeur |
    |-------|--------|
    | Nom | Slide |
-   | Identifiant machine | slide |
+   | Nom système (Machine name) | slide |
    | Description | Slides du carrousel de la page d'accueil |
 
 3. **Paramètres de publication**
@@ -203,15 +253,86 @@ drush config:set node.type.product description "Nouvelle description"
 
 ## 🗑️ Supprimer un type de contenu
 
-:::caution[Attention]
+:::danger[⚠️ DANGER : Suppression via modification directe des YAML]
+
+**NE SUPPRIMEZ JAMAIS un type de contenu en supprimant directement ses fichiers YAML s'il contient du contenu !**
+
+Cela provoquera une erreur fatale lors de l'import de configuration (`drush cim`).
+
+**Workflow sûr :**
+1. Supprimer le contenu via interface ou `drush entity:delete`
+2. Supprimer le type via interface
+3. Exporter la configuration avec `drush cex`
+
+:::
+
+:::caution[Suppression manuelle]
 Supprimer un type de contenu supprime aussi **tous les contenus** de ce type !
 :::
 
-Pour supprimer un type :
+### Méthode sûre : Suppression manuelle
 
-1. Assurez-vous qu'aucun contenu n'utilise ce type (ou sauvegardez-les)
-2. Aller à `/admin/structure/types`
-3. Cliquer sur **Supprimer** dans le menu déroulant
+Pour supprimer un type de contenu en toute sécurité :
+
+1. **Vérifiez s'il y a du contenu :**
+   ```bash
+   # Compter les contenus par type
+   drush sql-query "SELECT type, COUNT(*) as count FROM node GROUP BY type;"
+   ```
+
+2. **Supprimez le contenu au préalable :**
+   ```bash
+   # Via l'interface : /admin/content
+   # OU via Drush (supprime TOUS les contenus du type) :
+   drush entity:delete node --bundle=product
+   ```
+
+3. **Supprimez le type :**
+   - Aller à `/admin/structure/types`
+   - Cliquer sur **Supprimer** dans le menu déroulant
+
+4. **Exportez la configuration :**
+   ```bash
+   drush cex -y
+   ```
+
+### ❌ Méthode dangereuse : Suppression manuelle des fichiers YAML
+
+**NE FAITES PAS ÇA :**
+```bash
+# Supprimer manuellement le fichier de config
+rm config/sync/node.type.product.yml
+
+# Importer (❌ PLANTE si contenu existe)
+drush cim -y
+```
+
+**Pourquoi ça plante ?**
+- Vous supprimez directement le fichier YAML
+- Drupal essaie de supprimer le type de contenu à l'import
+- Mais il y a encore des nœuds qui référencent ce type
+- Contrainte de base de données violée → erreur fatale
+
+**Note :** Si vous faites les modifications via l'interface et exportez (`drush cex`), il n'y a aucun danger.
+
+### 💡 Solution de secours
+
+Si vous avez déjà fait l'erreur :
+
+```bash
+# Recréer temporairement le type
+drush php-eval "
+\Drupal\node\Entity\NodeType::create([
+  'type' => 'product',
+  'name' => 'Product',
+])->save();
+"
+
+# Supprimer le contenu
+drush entity:delete node --bundle=product
+
+# Maintenant supprimer le type normalement
+```
 
 ## 📋 Propriétés communes
 
@@ -253,6 +374,20 @@ drush cex -y
 git add config/sync/node.type.*.yml
 git commit -m "feat: add product, blog_article and slide content types"
 ```
+
+:::warning[⚠️ Import de configuration dangereux]
+
+**Scénarios :**
+- ✅ **Sûr :** Modifications via interface → `drush cex` → OK
+- ❌ **Dangereux :** Suppression directe du fichier YAML → `drush cim` → PLANTE
+
+:::
+
+:::tip[💡 RÈGLE D'OR]
+
+**Ne supprimez jamais manuellement les fichiers YAML de types contenant du contenu !**
+
+:::
 
 ## ✅ Vérification
 
