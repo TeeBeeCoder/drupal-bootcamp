@@ -126,14 +126,17 @@ Utilisez `^10 || ^11` pour supporter Drupal 10 et 11.
 
 ## 📚 Fichier .libraries.yml
 
-Le fichier **tailstore.libraries.yml** déclare les CSS et JS :
+Le fichier **tailstore.libraries.yml** déclare les CSS et JS selon les standards Drupal :
+
+<Tabs>
+  <TabItem label="Exemple complet">
 
 ```yaml
 # tailstore.libraries.yml
 
 # Librairie globale (chargée sur toutes les pages)
 global:
-  version: 1.0
+  version: 1.0.0
   css:
     base:
       css/base/reset.css: {}
@@ -156,7 +159,7 @@ global:
 
 # Librairie spécifique pour le slider
 slider:
-  version: 1.0
+  version: 1.0.0
   css:
     component:
       css/components/slider.css: {}
@@ -166,18 +169,18 @@ slider:
     - tailstore/global
     - core/once
 
-# Librairie pour le panier
+# Librairie pour le panier avec drupalSettings
 cart:
-  version: 1.0
+  version: 1.0.0
   js:
     js/cart.js: { attributes: { defer: true } }
   dependencies:
     - tailstore/global
     - core/drupalSettings
 
-# CDN externes
+# CDN externes (Swiper)
 swiper:
-  version: 11.0
+  version: 11.0.0
   remote: https://swiperjs.com/
   license:
     name: MIT
@@ -189,9 +192,9 @@ swiper:
   js:
     https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js: { type: external, minified: true }
 
-# Alpine.js
+# Alpine.js avec attributs
 alpine:
-  version: 3.x
+  version: 3.14.1
   remote: https://alpinejs.dev/
   license:
     name: MIT
@@ -199,18 +202,274 @@ alpine:
     gpl-compatible: true
   js:
     https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js: { type: external, attributes: { defer: true } }
+
+# Librairie chargée dans le header (ex: polices)
+fonts:
+  version: 1.0.0
+  header: true
+  css:
+    theme:
+      https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap: { type: external }
+
+# Librairie avec JS non agrégé
+analytics:
+  version: 1.0.0
+  js:
+    js/analytics.js: { preprocess: false }
+  dependencies:
+    - core/drupal
 ```
 
-<Aside type="note" title="Poids des CSS">
-L'ordre de chargement dépend de la catégorie :
-1. `base` - Reset, normalisation
-2. `layout` - Structure, grille
-3. `component` - Composants individuels
-4. `state` - États (hover, active...)
-5. `theme` - Styles finaux, surcharges
+  </TabItem>
+  <TabItem label="Types CSS">
+
+```yaml
+# Types de CSS avec leurs poids de chargement
+example:
+  css:
+    # Poids CSS_BASE = -200 : Reset, normalisation HTML
+    base:
+      css/base/reset.css: {}
+      css/base/normalize.css: {}
+    
+    # Poids CSS_LAYOUT = -100 : Structure, grille, régions
+    layout:
+      css/layout/grid.css: {}
+      css/layout/regions.css: {}
+    
+    # Poids CSS_COMPONENT = 0 : Composants individuels
+    component:
+      css/components/buttons.css: {}
+      css/components/cards.css: {}
+      css/components/forms.css: {}
+    
+    # Poids CSS_STATE = 100 : États (hover, active, focus)
+    state:
+      css/state/states.css: {}
+    
+    # Poids CSS_THEME = 200 : Styles finaux, surcharges
+    theme:
+      css/theme/colors.css: {}
+      css/theme/custom.css: {}
+```
+
+  </TabItem>
+  <TabItem label="Options JS">
+
+```yaml
+# Options avancées pour JavaScript
+advanced-js:
+  js:
+    # JS chargé dans le <head>
+    js/header-script.js: { header: true }
+    
+    # JS déjà minifié (évite la minification Drupal)
+    js/minified.js: { minified: true }
+    
+    # Attributs personnalisés
+    js/custom.js: { 
+      attributes: { 
+        id: "custom-script",
+        "data-version": "1.0"
+      } 
+    }
+    
+    # JS non agrégé
+    js/no-aggregate.js: { preprocess: false }
+```
+
+  </TabItem>
+</Tabs>
+
+<Aside type="tip" title="Version obligatoire">
+Depuis Drupal 10.1.2, la clé `version` est obligatoire dans chaque librairie pour éviter les problèmes de cache.
+</Aside>
+
+## 🟨 JavaScript et IIFE
+
+### Qu'est-ce qu'une IIFE ?
+
+Une **IIFE** (Immediately Invoked Function Expression) est un pattern JavaScript qui permet d'exécuter immédiatement une fonction anonyme. C'est essentiel dans Drupal pour éviter la pollution de l'espace global et gérer les dépendances proprement.
+
+<Tabs>
+  <TabItem label="Syntaxe de base">
+
+```javascript
+// Fonction anonyme classique
+function() {
+  console.log('Hello World!');
+}
+
+// Devient une IIFE
+(function() {
+  console.log('Hello World!');
+})();
+```
+
+  </TabItem>
+  <TabItem label="Avec paramètres">
+
+```javascript
+// IIFE avec paramètres (injection de dépendances)
+(function($, Drupal, once) {
+  'use strict';
+  
+  // Code protégé dans la portée locale
+  Drupal.behaviors.myBehavior = {
+    attach: function(context, settings) {
+      // Votre code ici
+    }
+  };
+  
+})(jQuery, Drupal, once);
+```
+
+  </TabItem>
+  <TabItem label="Dans Drupal">
+
+```javascript
+// js/tailstore.js - Exemple complet
+(function($, Drupal, once) {
+  'use strict';
+  
+  // Comportement pour le menu mobile
+  Drupal.behaviors.tailstoreMobileMenu = {
+    attach: function(context, settings) {
+      once('mobile-menu', '.mobile-menu-toggle', context).forEach(function(element) {
+        $(element).on('click', function() {
+          $('.main-navigation').toggleClass('is-open');
+        });
+      });
+    }
+  };
+  
+  // Comportement pour les sliders
+  Drupal.behaviors.tailstoreSliders = {
+    attach: function(context, settings) {
+      once('product-slider', '.product-slider', context).forEach(function(element) {
+        // Initialisation du slider
+        new Swiper(element, {
+          slidesPerView: 1,
+          spaceBetween: 10,
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      });
+    }
+  };
+  
+})(jQuery, Drupal, once);
+```
+
+  </TabItem>
+</Tabs>
+
+### Pourquoi utiliser les IIFE dans Drupal ?
+
+<Aside type="tip" title="Avantages des IIFE">
+- **Portée isolée** : Les variables sont locales, pas globales
+- **Évite les conflits** : Pas de pollution de `window`
+- **Injection de dépendances** : Contrôle explicite des dépendances
+- **Mode strict** : Permet d'activer `'use strict'` explicitement
+- **Performance** : Code minifié plus efficacement
+</Aside>
+
+### Structure recommandée
+
+```javascript
+(function($, Drupal, once) {
+  'use strict';
+  
+  // 1. Variables privées (non accessibles de l'extérieur)
+  var privateVariable = 'secret';
+  
+  // 2. Fonctions privées
+  function privateFunction() {
+    return 'private';
+  }
+  
+  // 3. Comportements Drupal (accessibles via Drupal.behaviors)
+  Drupal.behaviors.myModuleBehavior = {
+    attach: function(context, settings) {
+      // Code d'initialisation
+      once('my-behavior', '.my-selector', context).forEach(function(element) {
+        // Logique par élément
+      });
+    },
+    
+    detach: function(context, settings, trigger) {
+      // Code de nettoyage si nécessaire
+    }
+  };
+  
+  // 4. Fonctions publiques (si nécessaire)
+  Drupal.myModule = Drupal.myModule || {};
+  Drupal.myModule.publicFunction = function() {
+    return privateFunction();
+  };
+  
+})(jQuery, Drupal, once);
+```
+
+<Aside type="caution" title="Dépendances Drupal">
+Toujours inclure `jQuery`, `Drupal`, et `once` comme paramètres. Ces objets sont passés automatiquement par Drupal.
 </Aside>
 
 ## 🐘 Fichier .theme
+
+Le fichier **tailstore.theme** contient les fonctions PHP qui utilisent le **système de hooks** de Drupal.
+
+### Qu'est-ce qu'un hook Drupal ?
+
+Un **hook** est un point d'extension dans Drupal qui permet aux modules et thèmes de modifier ou d'étendre le comportement du système. Les hooks sont des fonctions PHP nommées selon une convention spécifique : `nom_du_module_ou_theme_nom_du_hook()`.
+
+<Tabs>
+  <TabItem label="Types de hooks utilisés">
+
+```php
+// Hook de préprocessing : Modifie les variables avant le rendu
+hook_preprocess_HOOK(&$variables)
+
+// Hook d'altération de formulaire : Modifie les formulaires
+hook_form_alter(&$form, $form_state, $form_id)
+
+// Hook de suggestions de template : Ajoute des templates alternatifs
+hook_theme_suggestions_HOOK_alter(&$suggestions, $variables)
+```
+
+  </TabItem>
+  <TabItem label="Convention de nommage">
+
+```php
+// Pour un thème nommé "tailstore" :
+// hook_preprocess_page → tailstore_preprocess_page
+// hook_form_alter → tailstore_form_alter
+// hook_theme_suggestions_node_alter → tailstore_theme_suggestions_node_alter
+
+function tailstore_preprocess_page(&$variables) {
+  // Votre code ici
+}
+```
+
+  </TabItem>
+</Tabs>
+
+<Aside type="tip" title="Rôle des hooks dans les thèmes">
+- **Préprocessing** : Préparer/modifier les données avant l'affichage
+- **Altération** : Modifier les formulaires et leur comportement  
+- **Suggestions** : Proposer des templates alternatifs selon le contexte
+</Aside>
+
+<Aside type="note" title="Ressources officielles">
+Pour une liste complète des hooks disponibles dans Drupal, consultez :
+- [Documentation des hooks Drupal](https://www.drupal.org/node/3551652)
+- [API Drupal - Hooks (v11.x)](https://api.drupal.org/api/drupal/core!core.api.php/group/hooks/11.x)
+
+**Évolution des hooks dans Drupal 11 :**
+- [Nouveaux hooks avec attributs vs hooks procéduraux](https://dev.to/xwero/new-drupal-hook-attribute-34n0)
+</Aside>
 
 Le fichier **tailstore.theme** contient les fonctions PHP :
 
@@ -226,12 +485,16 @@ use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Implements hook_preprocess_HOOK() for html.html.twig.
+ *
+ * Ce hook permet de modifier les variables avant le rendu du template html.html.twig.
+ * Ici, on ajoute des classes CSS au body pour le styling et la logique conditionnelle.
  */
 function tailstore_preprocess_html(&$variables) {
-  // Ajouter des classes au body
+  // Ajouter une classe globale au thème
   $variables['attributes']['class'][] = 'tailstore-theme';
   
-  // Ajouter une classe pour les pages produit
+  // Ajouter une classe spécifique pour les pages produit
+  // Utile pour appliquer des styles particuliers aux pages e-commerce
   $node = \Drupal::routeMatch()->getParameter('node');
   if ($node && $node->bundle() === 'product') {
     $variables['attributes']['class'][] = 'page-product';
@@ -240,9 +503,13 @@ function tailstore_preprocess_html(&$variables) {
 
 /**
  * Implements hook_preprocess_HOOK() for page.html.twig.
+ *
+ * Ce hook permet de modifier les variables avant le rendu du template page.html.twig.
+ * Ici, on charge des librairies JavaScript selon le contexte de la page.
  */
 function tailstore_preprocess_page(&$variables) {
-  // Charger la librairie slider sur la page d'accueil
+  // Charger la librairie slider uniquement sur la page d'accueil
+  // Évite de charger du JS inutile sur les autres pages
   if (\Drupal::service('path.matcher')->isFrontPage()) {
     $variables['#attached']['library'][] = 'tailstore/slider';
     $variables['#attached']['library'][] = 'tailstore/swiper';
@@ -251,6 +518,9 @@ function tailstore_preprocess_page(&$variables) {
 
 /**
  * Implements hook_preprocess_HOOK() for node.html.twig.
+ *
+ * Ce hook permet de modifier les variables avant le rendu des nodes.
+ * Ici, on prépare des données spécifiques pour les produits e-commerce.
  */
 function tailstore_preprocess_node(&$variables) {
   /** @var \Drupal\node\NodeInterface $node */
@@ -258,7 +528,7 @@ function tailstore_preprocess_node(&$variables) {
   
   // Variables personnalisées pour les produits
   if ($node->bundle() === 'product') {
-    // Formater le prix
+    // Formater le prix avec séparateur français
     if ($node->hasField('field_price') && !$node->get('field_price')->isEmpty()) {
       $variables['formatted_price'] = number_format(
         $node->get('field_price')->value,
@@ -268,12 +538,12 @@ function tailstore_preprocess_node(&$variables) {
       ) . ' €';
     }
     
-    // Vérifier le stock
+    // Vérifier la disponibilité en stock
     if ($node->hasField('field_stock')) {
       $variables['in_stock'] = $node->get('field_stock')->value > 0;
     }
     
-    // Prix barré si promo
+    // Gestion des prix barrés pour les promotions
     if ($node->hasField('field_old_price') && !$node->get('field_old_price')->isEmpty()) {
       $variables['old_price'] = number_format(
         $node->get('field_old_price')->value,
@@ -288,6 +558,9 @@ function tailstore_preprocess_node(&$variables) {
 
 /**
  * Implements hook_preprocess_HOOK() for field.html.twig.
+ *
+ * Ce hook permet de modifier les variables avant le rendu des champs.
+ * Ici, on ajoute des classes CSS spécifiques selon le type de champ.
  */
 function tailstore_preprocess_field(&$variables) {
   $field_name = $variables['field_name'];
@@ -300,6 +573,9 @@ function tailstore_preprocess_field(&$variables) {
 
 /**
  * Implements hook_form_alter().
+ *
+ * Ce hook permet de modifier tous les formulaires du système.
+ * Ici, on personnalise l'apparence et le comportement de certains formulaires.
  */
 function tailstore_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   // Personnaliser le formulaire de recherche
@@ -308,7 +584,7 @@ function tailstore_form_alter(&$form, FormStateInterface $form_state, $form_id) 
     $form['keys']['#attributes']['class'][] = 'search-input';
   }
   
-  // Personnaliser les filtres exposés
+  // Personnaliser les filtres exposés des vues
   if (strpos($form_id, 'views_exposed_form') === 0) {
     $form['#attributes']['class'][] = 'filters-form';
   }
@@ -316,13 +592,16 @@ function tailstore_form_alter(&$form, FormStateInterface $form_state, $form_id) 
 
 /**
  * Implements hook_theme_suggestions_HOOK_alter() for node.
+ *
+ * Ce hook permet de suggérer des templates alternatifs selon le contexte.
+ * Ici, on propose des templates spécifiques pour les produits en promotion.
  */
 function tailstore_theme_suggestions_node_alter(array &$suggestions, array $variables) {
   /** @var \Drupal\node\NodeInterface $node */
   $node = $variables['elements']['#node'];
   $view_mode = $variables['elements']['#view_mode'];
   
-  // Ajouter une suggestion basée sur un champ
+  // Ajouter une suggestion basée sur un champ personnalisé
   if ($node->bundle() === 'product' && $node->hasField('field_featured')) {
     if ($node->get('field_featured')->value) {
       $suggestions[] = 'node__product__featured';
