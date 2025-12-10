@@ -724,3 +724,344 @@ themes/custom/tailstore/
 ## 🔜 Prochaine étape
 
 Le thème est prêt ! Dans l'[Étape 7](/etape-7-modules/), nous ajouterons les modules contributifs essentiels (Pathauto, Metatag, Webform...).
+
+---
+
+## Exercice 7 : JavaScript avec IIFE
+
+<Card title="Durée estimée : 30 minutes" icon="clock">
+  Implémenter le JavaScript avec les bonnes pratiques IIFE.
+</Card>
+
+### Objectif
+
+Refactoriser le code JavaScript pour utiliser les IIFE et les comportements Drupal.
+
+### Instructions
+
+<Steps>
+
+1. **Modifier js/src/app.js avec IIFE**
+
+   ```javascript
+   (function($, Drupal, once) {
+     'use strict';
+     
+     // Store Alpine.js (variables privées)
+     var cartStore = {
+       items: Alpine.store('cart').items || [],
+       get count() {
+         return this.items.reduce((sum, item) => sum + item.quantity, 0);
+       }
+     };
+     
+     // Comportements Drupal (accessibles globalement)
+     Drupal.behaviors.tailstoreCart = {
+       attach: function(context, settings) {
+         // Initialisation du panier
+         once('cart-init', '.cart-container', context).forEach(function(element) {
+           console.log('Panier initialisé');
+         });
+       }
+     };
+     
+     Drupal.behaviors.tailstoreMobileMenu = {
+       attach: function(context, settings) {
+         once('mobile-menu', '.mobile-menu-toggle', context).forEach(function(element) {
+           $(element).on('click', function() {
+             $('.main-navigation').toggleClass('is-open');
+           });
+         });
+       }
+     };
+     
+   })(jQuery, Drupal, once);
+   ```
+
+2. **Ajouter les dépendances dans libraries.yml**
+
+   ```yaml
+   global:
+     version: 1.0.0
+     css:
+       theme:
+         css/dist/tailwind.css: { minified: true }
+     js:
+       js/dist/app.js: { defer: true }
+     dependencies:
+       - core/drupal
+       - core/once
+       - tailstore/alpine
+   ```
+
+3. **Créer la librairie Alpine.js**
+
+   ```yaml
+   alpine:
+     version: 3.14.1
+     remote: https://alpinejs.dev/
+     license:
+       name: MIT
+       url: https://github.com/alpinejs/alpine/blob/main/LICENSE.md
+       gpl-compatible: true
+     js:
+       https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js: { type: external, attributes: { defer: true } }
+   ```
+
+4. **Tester les comportements**
+
+   ```bash
+   npm run build:js
+   ddev drush cr
+   ```
+
+</Steps>
+
+### Validation ✓
+
+- [ ] Code dans une IIFE avec 'use strict'
+- [ ] Injection de dépendances (jQuery, Drupal, once)
+- [ ] Utilisation de Drupal.behaviors
+- [ ] Fonction once() pour éviter les doublons
+- [ ] Librairies correctement déclarées
+
+---
+
+## Exercice 8 : Hooks PHP personnalisés
+
+<Card title="Durée estimée : 35 minutes" icon="clock">
+  Implémenter les hooks PHP pour personnaliser le thème.
+</Card>
+
+### Objectif
+
+Ajouter de la logique PHP personnalisée via les hooks Drupal.
+
+### Instructions
+
+<Steps>
+
+1. **Créer tailstore.theme**
+
+   ```php
+   <?php
+
+   /**
+    * @file
+    * Functions to support theming in the TailStore theme.
+    */
+
+   use Drupal\Core\Form\FormStateInterface;
+
+   /**
+    * Implements hook_preprocess_html().
+    */
+   function tailstore_preprocess_html(&$variables) {
+     // Classes CSS contextuelles
+     $variables['attributes']['class'][] = 'tailstore-theme';
+     
+     // Classe pour les pages produit
+     $node = \Drupal::routeMatch()->getParameter('node');
+     if ($node && $node->bundle() === 'product') {
+       $variables['attributes']['class'][] = 'page-product';
+     }
+   }
+
+   /**
+    * Implements hook_preprocess_page().
+    */
+   function tailstore_preprocess_page(&$variables) {
+     // Charger les librairies selon le contexte
+     if (\Drupal::service('path.matcher')->isFrontPage()) {
+       $variables['#attached']['library'][] = 'tailstore/slider';
+     }
+   }
+
+   /**
+    * Implements hook_preprocess_node().
+    */
+   function tailstore_preprocess_node(&$variables) {
+     $node = $variables['node'];
+     
+     if ($node->bundle() === 'product') {
+       // Formater le prix
+       if ($node->hasField('field_price') && !$node->get('field_price')->isEmpty()) {
+         $variables['formatted_price'] = number_format(
+           $node->get('field_price')->value,
+           2,
+           ',',
+           ' '
+         ) . ' €';
+       }
+       
+       // Vérifier le stock
+       if ($node->hasField('field_stock')) {
+         $variables['in_stock'] = $node->get('field_stock')->value > 0;
+       }
+     }
+   }
+
+   /**
+    * Implements hook_form_alter().
+    */
+   function tailstore_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+     // Personnaliser la recherche
+     if ($form_id === 'search_block_form') {
+       $form['keys']['#attributes']['placeholder'] = t('Rechercher...');
+     }
+   }
+   ```
+
+2. **Ajouter les librairies manquantes**
+
+   ```yaml
+   slider:
+     version: 1.0.0
+     css:
+       component:
+         css/components/slider.css: {}
+     js:
+       js/slider.js: {}
+     dependencies:
+       - tailstore/global
+   ```
+
+3. **Créer js/slider.js avec IIFE**
+
+   ```javascript
+   (function($, Drupal, once) {
+     'use strict';
+     
+     Drupal.behaviors.tailstoreSlider = {
+       attach: function(context, settings) {
+         once('product-slider', '.product-slider', context).forEach(function(element) {
+           // Initialisation du slider
+           new Swiper(element, {
+             slidesPerView: 1,
+             spaceBetween: 10,
+             navigation: {
+               nextEl: '.swiper-button-next',
+               prevEl: '.swiper-button-prev',
+             },
+           });
+         });
+       }
+     };
+     
+   })(jQuery, Drupal, once);
+   ```
+
+4. **Vider le cache et tester**
+
+   ```bash
+   ddev drush cr
+   ```
+
+</Steps>
+
+### Validation ✓
+
+- [ ] Fichier .theme créé avec hooks
+- [ ] Variables preprocessées correctement
+- [ ] Librairies chargées contextuellement
+- [ ] Formulaires altérés
+- [ ] Cache vidé et changements visibles
+
+---
+
+## Exercice 9 : Optimisation et bonnes pratiques
+
+<Card title="Durée estimée : 20 minutes" icon="clock">
+  Optimiser le thème selon les bonnes pratiques Drupal.
+</Card>
+
+### Objectif
+
+Appliquer les bonnes pratiques de performance et maintenabilité.
+
+### Instructions
+
+<Steps>
+
+1. **Optimiser les librairies**
+
+   ```yaml
+   global:
+     version: 1.0.0
+     css:
+       theme:
+         css/dist/tailwind.css: { minified: true, preprocess: true }
+     js:
+       js/dist/app.js: { minified: true, defer: true, preprocess: true }
+     dependencies:
+       - core/drupal
+       - core/once
+   ```
+
+2. **Ajouter les attributs de performance**
+
+   ```yaml
+   # JS avec attributs de performance
+   cart:
+     version: 1.0.0
+     js:
+       js/cart.js: { 
+         attributes: { defer: true },
+         preprocess: false  # Ne pas aggrégér si nécessaire
+       }
+     dependencies:
+       - tailstore/global
+       - core/drupalSettings
+   ```
+
+3. **Créer un hook de suggestions de template**
+
+   ```php
+   /**
+    * Implements hook_theme_suggestions_node_alter().
+    */
+   function tailstore_theme_suggestions_node_alter(array &$suggestions, array $variables) {
+     $node = $variables['elements']['#node'];
+     $view_mode = $variables['elements']['#view_mode'];
+     
+     // Template spécial pour produits en promotion
+     if ($node->bundle() === 'product' && $node->hasField('field_featured')) {
+       if ($node->get('field_featured')->value) {
+         $suggestions[] = 'node__product__featured';
+         $suggestions[] = 'node__product__' . $view_mode . '__featured';
+       }
+     }
+   }
+   ```
+
+4. **Vérifier les performances**
+
+   ```bash
+   # Taille des fichiers générés
+   ls -lh css/dist/ js/dist/
+   
+   # Vérifier l'aggrégation
+   ddev drush config:get system.performance
+   ```
+
+</Steps>
+
+### Checklist final
+
+- [ ] Librairies optimisées (minifiées, aggrégées)
+- [ ] Attributs de performance (defer, async)
+- [ ] Hooks de suggestions implémentés
+- [ ] Cache et aggrégation fonctionnels
+- [ ] Thème prêt pour la production
+
+## 🎉 Félicitations !
+
+Vous avez terminé l'étape 6 ! Votre thème TailStore est maintenant complet avec :
+- ✅ Structure moderne avec Tailwind CSS v4
+- ✅ Templates Twig responsives
+- ✅ Interactions Alpine.js
+- ✅ JavaScript avec IIFE et comportements Drupal
+- ✅ Hooks PHP personnalisés
+- ✅ Optimisations de performance
+
+Passez à l'[Étape 7](/etape-7-modules/) pour ajouter les modules contributifs !
