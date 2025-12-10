@@ -30,6 +30,9 @@ export default defineConfig({
 			social: [
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/drupal-bootcamp' },
 			],
+			components: {
+				SocialIcons: './src/components/starlight/SocialIcons.astro',
+			},
 			sidebar: [
 				{
 					label: 'Introduction',

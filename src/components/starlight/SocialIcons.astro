@@ -1,0 +1,9 @@
+---
+import DefaultSocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
+import PageStatusBadge from '../PageStatusBadge.astro';
+---
+
+<div class="flex items-center gap-2">
+  <PageStatusBadge />
+  <DefaultSocialIcons {...Astro.props} />
+</div>
