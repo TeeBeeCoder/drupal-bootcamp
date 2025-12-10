@@ -1,0 +1,88 @@
+--- 
+
+import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
+import { Icon } from 'astro-icon/components';
+
+const { pathname } = Astro.url;
+const relativePath = pathname.replace(/^\//, '').replace(/\/$/, '');
+const docsPath = join(process.cwd(), 'src', 'content', 'docs');
+
+let filePath = join(docsPath, relativePath + '.mdx');
+
+if (!existsSync(filePath)) {
+  filePath = join(docsPath, relativePath, 'index.mdx');
+}
+
+if (!existsSync(filePath)) {
+    // Fallback for root or other cases
+    if (relativePath === '') {
+        filePath = join(docsPath, 'index.mdx');
+    }
+}
+
+let status = 'unknown';
+let lastReviewed = null;
+
+try {
+  if (existsSync(filePath)) {
+    const content = readFileSync(filePath, 'utf-8');
+    const lines = content.split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('# status:')) {
+        status = trimmed.split(':')[1].trim();
+      }
+      if (trimmed.startsWith('# last-reviewed:')) {
+        lastReviewed = trimmed.split(':')[1].trim();
+      }
+    }
+  }
+} catch (e) {
+  // file not found or error
+}
+
+let badgeClass = 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700';
+let badgeText = 'Unknown';
+let iconName = 'lucide:help-circle';
+
+if (status === 'stable') {
+  if (lastReviewed) {
+    const reviewedDate = new Date(lastReviewed);
+    const now = new Date();
+    const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+    if (reviewedDate < oneYearAgo) {
+      badgeClass = 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-200 border-orange-200 dark:border-orange-800';
+      badgeText = 'Outdated';
+      iconName = 'lucide:history';
+    } else {
+      badgeClass = 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200 border-green-200 dark:border-green-800';
+      badgeText = 'Stable';
+      iconName = 'lucide:check-circle-2';
+    }
+  } else {
+    badgeClass = 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200 border-green-200 dark:border-green-800';
+    badgeText = 'Stable';
+    iconName = 'lucide:check-circle-2';
+  }
+} else if (status === 'draft') {
+  badgeClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800';
+  badgeText = 'Draft';
+  iconName = 'lucide:pen-line';
+} else if (status === 'rework-needed') {
+  badgeClass = 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200 border-red-200 dark:border-red-800';
+  badgeText = 'Rework';
+  iconName = 'lucide:alert-triangle';
+} else {
+  badgeClass = 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700';
+  badgeText = 'Unknown';
+  iconName = 'lucide:help-circle';
+}
+---
+
+{import.meta.env.DEV && (
+  <div class={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-xs font-medium transition-colors ${badgeClass}`} title={`Status: ${status}${lastReviewed ? ` (Last reviewed: ${lastReviewed})` : ''}`}>
+    <Icon name={iconName} class="w-3.5 h-3.5" />
+    <span>{badgeText}</span>
+  </div>
+)}
