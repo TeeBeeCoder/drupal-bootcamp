@@ -41,6 +41,7 @@ export default defineConfig({
                   label: 'Introduction',
                   items: [
                       { label: 'Accueil', slug: 'index' },
+                      { label: 'Présentation du projet', slug: 'presentation-projet' },
                       { label: 'À propos', slug: 'a-propos' },
                       { label: 'Prérequis', slug: 'prerequis' },
                   ],
