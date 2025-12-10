@@ -37,27 +37,27 @@ import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
 
 1. Copiez le fichier de services par défaut
 
-```bash
-cp sites/default/default.services.yml sites/default/services.yml
-```
+    ```bash
+    cp sites/default/default.services.yml sites/default/services.yml
+    ```
 
 2. Éditez `sites/default/services.yml`
 
-</Steps>
-
-```yaml
-parameters:
-  twig.config:
-    debug: true
-    auto_reload: true
-    cache: false
-```
+    ```yaml
+    parameters:
+      twig.config:
+        debug: true
+        auto_reload: true
+        cache: false
+    ```
 
 3. Videz le cache
 
-```bash
-drush cr
-```
+    ```bash
+    drush cr
+    ```
+
+</Steps>
 
 ### Résultat dans le HTML source
 
@@ -496,18 +496,18 @@ Structure globale de la page :
 
 | Filtre | Description | Exemple |
 |--------|-------------|---------|
-| `|t` | Traduction | `{{ 'Hello'|t }}` |
-| `|raw` | HTML non échappé | `{{ html_content|raw }}` |
-| `|escape` | Échapper le HTML | `{{ user_input|escape }}` |
-| `|length` | Longueur | `{{ items|length }}` |
-| `|first` / `|last` | Premier/dernier | `{{ items|first }}` |
-| `|slice(0, 5)` | Sous-ensemble | `{{ items|slice(0, 5) }}` |
-| `|join(', ')` | Concaténer | `{{ tags|join(', ') }}` |
-| `|default('N/A')` | Valeur par défaut | `{{ value|default('N/A') }}` |
-| `|clean_class` | Classe CSS valide | `{{ type|clean_class }}` |
-| `|without('field_x')` | Exclure un champ | `{{ content|without('field_images') }}` |
-| `|render` | Rendre un élément | `{% if content.field_x|render %}` |
-| `|number_format` | Formater un nombre | `{{ price|number_format(2, ',', ' ') }}` |
+| `\|t` | Traduction | `{{ 'Hello'\|t }}` |
+| `\|raw` | HTML non échappé | `{{ html_content\|raw }}` |
+| `\|escape` | Échapper le HTML | `{{ user_input\|escape }}` |
+| `\|length` | Longueur | `{{ items\|length }}` |
+| `\|first` / `\|last` | Premier/dernier | `{{ items\|first }}` |
+| `\|slice(0, 5)` | Sous-ensemble | `{{ items\|slice(0, 5) }}` |
+| `\|join(', ')` | Concaténer | `{{ tags\|join(', ') }}` |
+| `\|default('N/A')` | Valeur par défaut | `{{ value\|default('N/A') }}` |
+| `\|clean_class` | Classe CSS valide | `{{ type\|clean_class }}` |
+| `\|without('field_x')` | Exclure un champ | `{{ content\|without('field_images') }}` |
+| `\|render` | Rendre un élément | `{% if content.field_x\|render %}` |
+| `\|number_format` | Formater un nombre | `{{ price\|number_format(2, ',', ' ') }}` |
 
 ## 🔄 Fonctions Twig Drupal
 
