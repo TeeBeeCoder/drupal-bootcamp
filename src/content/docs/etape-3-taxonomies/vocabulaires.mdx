@@ -65,7 +65,7 @@ Vêtements
 |-------|--------|
 | Name | `Catégorie Produit` |
 | Description | `Classification des produits` |
-| Machine name | `product_category` |
+| Machine name | `product_categories` |
 :::
 
 3. Cliquez sur **Save**
@@ -78,7 +78,7 @@ Répétez le processus :
 |-------|--------|
 | Name | `Marque` |
 | Description | `Marques disponibles` |
-| Machine name | `brand` |
+| Machine name | `brands` |
 
 ### 3. Vocabulaire "Taille"
 
@@ -86,7 +86,7 @@ Répétez le processus :
 |-------|--------|
 | Name | `Taille` |
 | Description | `Tailles disponibles (S, M, L, XL...)` |
-| Machine name | `size` |
+| Machine name | `sizes` |
 
 ### 4. Vocabulaire "Couleur"
 
@@ -94,7 +94,7 @@ Répétez le processus :
 |-------|--------|
 | Name | `Couleur` |
 | Description | `Couleurs des produits` |
-| Machine name | `color` |
+| Machine name | `colors` |
 
 Ce vocabulaire nécessite un champ supplémentaire pour le code couleur. Nous l'ajouterons après.
 
@@ -104,7 +104,7 @@ Ce vocabulaire nécessite un champ supplémentaire pour le code couleur. Nous l'
 |-------|--------|
 | Name | `Catégorie Blog` |
 | Description | `Classification des articles de blog` |
-| Machine name | `blog_category` |
+| Machine name | `blog_categories` |
 
 ## 🎨 Ajouter des champs aux vocabulaires
 
@@ -157,11 +157,11 @@ drush ev "foreach(\Drupal::entityTypeManager()->getStorage('taxonomy_vocabulary'
 Résultat attendu :
 
 ```
-blog_category - Catégorie Blog
-brand - Marque
-color - Couleur
-product_category - Catégorie Produit
-size - Taille
+blog_categories - Catégorie Blog
+brands - Marque
+colors - Couleur
+product_categories - Catégorie Produit
+sizes - Taille
 ```
 
 ## 🔌 Via Drush (Alternative)
@@ -176,11 +176,11 @@ Utilisez l'interface d'administration comme décrit ci-dessus.
 # Créer les vocabulaires
 drush php-eval "
 \$vocabs = [
-  ['vid' => 'product_category', 'name' => 'Catégorie Produit'],
-  ['vid' => 'brand', 'name' => 'Marque'],
-  ['vid' => 'size', 'name' => 'Taille'],
-  ['vid' => 'color', 'name' => 'Couleur'],
-  ['vid' => 'blog_category', 'name' => 'Catégorie Blog'],
+  ['vid' => 'product_categories', 'name' => 'Catégorie Produit'],
+  ['vid' => 'brands', 'name' => 'Marque'],
+  ['vid' => 'sizes', 'name' => 'Taille'],
+  ['vid' => 'colors', 'name' => 'Couleur'],
+  ['vid' => 'blog_categories', 'name' => 'Catégorie Blog'],
 ];
 foreach (\$vocabs as \$vocab) {
   \Drupal\taxonomy\Entity\Vocabulary::create(\$vocab)->save();
@@ -205,22 +205,22 @@ ls -la config/sync/taxonomy.vocabulary.*.yml
 ```
 
 Fichiers générés :
-- `taxonomy.vocabulary.product_category.yml`
-- `taxonomy.vocabulary.brand.yml`
-- `taxonomy.vocabulary.size.yml`
-- `taxonomy.vocabulary.color.yml`
-- `taxonomy.vocabulary.blog_category.yml`
+- `taxonomy.vocabulary.product_categories.yml`
+- `taxonomy.vocabulary.brands.yml`
+- `taxonomy.vocabulary.sizes.yml`
+- `taxonomy.vocabulary.colors.yml`
+- `taxonomy.vocabulary.blog_categories.yml`
 
 ## 📁 Structure d'un fichier de configuration
 
-Exemple de `taxonomy.vocabulary.product_category.yml` :
+Exemple de `taxonomy.vocabulary.product_categories.yml` :
 
 ```yaml
 langcode: fr
 status: true
 dependencies: {  }
 name: 'Catégorie Produit'
-vid: product_category
+vid: product_categories
 description: 'Classification des produits'
 weight: 0
 ```
