@@ -3,9 +3,12 @@ title: Étape 2 - Types de Contenu & Médias
 description: Créer des types de contenu personnalisés et gérer les médias dans Drupal 11
 sidebar:
   order: 0
+
+# status: stable
+# last-reviewed: 2025-12-10
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
 
 <div class="duration-badge">⏱️ Durée estimée : 3h30</div>
 
@@ -176,15 +179,21 @@ Pour le carrousel de la page d'accueil.
 # Lister les types de contenu
 drush entity:type:list --group=content
 
-# Créer du contenu de test
-drush genc 10 --bundles=product
-
 # Voir les champs d'un type
 drush field:list node.product
 
 # Exporter la configuration
 drush cex -y
 ```
+
+<Aside type="note" title="Génération de contenu">
+Pour générer du contenu de test automatiquement, installez le module Devel Generate :
+```bash
+ddev composer require --dev drupal/devel
+ddev drush en devel devel_generate -y
+ddev drush genc 10 --bundles=product
+```
+</Aside>
 
 ## ⚡ Workflow de création
 
