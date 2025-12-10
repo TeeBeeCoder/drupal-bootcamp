@@ -10,7 +10,7 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 XAMPP est une solution tout-en-un qui installe Apache, MySQL, PHP et phpMyAdmin. C'est une alternative plus simple à DDEV si vous ne souhaitez pas utiliser Docker.
 
 :::caution[Version PHP requise]
-Drupal 11 nécessite PHP 8.3+. Assurez-vous de télécharger une version de XAMPP qui inclut PHP 8.3 ou supérieur.
+Drupal 11 nécessite PHP 8.4+. Assurez-vous de télécharger une version de XAMPP qui inclut PHP 8.4 ou supérieur.
 :::
 
 ## 📥 Installation de XAMPP
@@ -19,7 +19,7 @@ Drupal 11 nécessite PHP 8.3+. Assurez-vous de télécharger une version de XAMP
   <TabItem label="macOS">
     <Steps>
     1. Télécharger XAMPP depuis [apachefriends.org](https://www.apachefriends.org/)
-    2. Choisir la version avec **PHP 8.3**
+    2. Choisir la version avec **PHP 8.4**
     3. Ouvrir le fichier `.dmg` et glisser XAMPP dans Applications
     4. Lancer XAMPP depuis Applications
     5. Démarrer **Apache** et **MySQL** dans le panneau de contrôle
@@ -28,7 +28,7 @@ Drupal 11 nécessite PHP 8.3+. Assurez-vous de télécharger une version de XAMP
   <TabItem label="Windows">
     <Steps>
     1. Télécharger l'installateur depuis [apachefriends.org](https://www.apachefriends.org/)
-    2. Choisir la version avec **PHP 8.3**
+    2. Choisir la version avec **PHP 8.4**
     3. Exécuter l'installateur (désactiver temporairement l'antivirus si nécessaire)
     4. Installer dans `C:\xampp`
     5. Lancer le panneau de contrôle XAMPP
@@ -39,10 +39,10 @@ Drupal 11 nécessite PHP 8.3+. Assurez-vous de télécharger une version de XAMP
     ```bash
     # Télécharger depuis apachefriends.org
     # Rendre le fichier exécutable
-    chmod +x xampp-linux-x64-8.3.x-installer.run
+    chmod +x xampp-linux-x64-8.4.x-installer.run
     
     # Installer
-    sudo ./xampp-linux-x64-8.3.x-installer.run
+    sudo ./xampp-linux-x64-8.4.x-installer.run
     
     # Démarrer les services
     sudo /opt/lampp/lampp start
