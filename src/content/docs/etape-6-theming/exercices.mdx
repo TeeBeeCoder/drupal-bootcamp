@@ -19,7 +19,7 @@ import { Tabs, TabItem, Aside, Card, CardGrid, Steps } from '@astrojs/starlight/
 
 ## Exercice 1 : Création du thème TailStore
 
-<Card title="Durée estimée : 30 minutes" icon="clock">
+<Card title="Durée estimée : 25 minutes" icon="clock">
   Créer la structure complète du thème personnalisé.
 </Card>
 
@@ -67,48 +67,83 @@ Créer le thème `tailstore` avec toutes les configurations nécessaires.
 
    ```yaml
    global:
-     version: 1.0
+     version: 1.0.0
      css:
        theme:
-         css/dist/tailwind.css: { minified: true }
+          dist/assets/main.css: { minified: true }
      js:
-       js/dist/app.js: { defer: true }
+        dist/assets/main.js: { defer: true }
      dependencies:
        - core/drupal
    ```
 
-4. **Initialiser npm et Tailwind**
+4. **Initialiser npm et installer Vite + Tailwind v4**
 
    ```bash
    cd themes/custom/tailstore
    npm init -y
-   npm install -D tailwindcss @tailwindcss/cli alpinejs esbuild
+   npm install -D vite @tailwindcss/vite tailwindcss alpinejs
    ```
 
-5. **Créer package.json avec scripts**
+5. **Créer vite.config.js**
+
+   ```javascript
+   import { defineConfig } from 'vite'
+   import tailwindcss from '@tailwindcss/vite'
+
+   export default defineConfig({
+     plugins: [
+       tailwindcss(),
+     ],
+     build: {
+       outDir: 'dist',
+       rollupOptions: {
+         input: {
+           main: 'assets/main.js',
+         },
+         output: {
+           entryFileNames: 'assets/[name].js',
+           chunkFileNames: 'assets/[name].js',
+           assetFileNames: 'assets/[name].[ext]',
+         },
+       },
+     },
+   })
+   ```
+
+6. **Créer assets/main.js pour le JavaScript**
+
+   ```javascript
+   import './style.css'
+   import Alpine from 'alpinejs'
+
+   // Votre code JavaScript ici
+   window.Alpine = Alpine
+   Alpine.start()
+   ```
+
+7. **Créer package.json avec scripts Vite**
 
    ```json
    {
      "name": "tailstore-theme",
      "version": "1.0.0",
+     "type": "module",
      "scripts": {
-       "build:css": "tailwindcss -i css/src/tailwind.css -o css/dist/tailwind.css --minify",
-       "build:js": "esbuild js/src/app.js --bundle --minify --outfile=js/dist/app.js",
-       "build": "npm run build:css && npm run build:js",
-       "watch:css": "tailwindcss -i css/src/tailwind.css -o css/dist/tailwind.css --watch",
-       "watch:js": "esbuild js/src/app.js --bundle --outfile=js/dist/app.js --watch",
-       "dev": "npm run watch:css & npm run watch:js"
+       "dev": "vite",
+       "build": "vite build",
+       "preview": "vite preview"
      }
    }
    ```
 
-6. **Activer le thème**
+8. **Activer le thème**
 
-   ```bash
-   ddev drush theme:enable tailstore
-   ddev drush config-set system.theme default tailstore -y
-   ddev drush cr
-   ```
+    ```bash
+    ddev drush theme:enable tailstore
+    ddev drush config-set system.theme default tailstore -y
+    ddev drush cr
+    ```
 
 </Steps>
 
@@ -124,7 +159,7 @@ Créer le thème `tailstore` avec toutes les configurations nécessaires.
 
 ## Exercice 2 : Configuration Tailwind CSS
 
-<Card title="Durée estimée : 25 minutes" icon="clock">
+<Card title="Durée estimée : 20 minutes" icon="clock">
   Configurer Tailwind avec les couleurs et composants TailStore.
 </Card>
 
@@ -136,7 +171,7 @@ Créer un système de design cohérent avec Tailwind CSS v4.
 
 <Steps>
 
-1. **Créer css/src/tailwind.css**
+1. **Créer assets/style.css**
 
    ```css
    @import "tailwindcss";
@@ -236,23 +271,11 @@ Créer un système de design cohérent avec Tailwind CSS v4.
    }
    ```
 
-2. **Créer tailwind.config.js**
-
-   ```javascript
-   export default {
-     content: [
-       './templates/**/*.twig',
-       './js/**/*.js',
-       '../../../modules/custom/**/*.twig',
-     ],
-   };
-   ```
-
 3. **Builder et vérifier**
 
    ```bash
-   npm run build:css
-   ls -lh css/dist/tailwind.css
+   npm run build
+   ls -lh dist/assets/
    ```
 
 </Steps>
@@ -268,7 +291,7 @@ Créer un système de design cohérent avec Tailwind CSS v4.
 
 ## Exercice 3 : Template de la page principale
 
-<Card title="Durée estimée : 40 minutes" icon="clock">
+<Card title="Durée estimée : 35 minutes" icon="clock">
   Créer le template page.html.twig avec toutes les régions.
 </Card>
 
@@ -345,7 +368,7 @@ Implémenter la structure HTML/Tailwind de la page principale.
 
 ## Exercice 4 : Product Card Template
 
-<Card title="Durée estimée : 45 minutes" icon="clock">
+<Card title="Durée estimée : 40 minutes" icon="clock">
   Créer le template de carte produit avec interactions.
 </Card>
 
@@ -429,7 +452,7 @@ Créer un système de panier complet avec persistance localStorage.
 
 <Steps>
 
-1. **Créer js/src/stores/cart.js**
+1. **Créer assets/stores/cart.js**
 
    Implémentez le store Alpine avec :
    - `items` : tableau des produits
@@ -440,14 +463,15 @@ Créer un système de panier complet avec persistance localStorage.
    - `updateQuantity()` : modifier quantité
    - `save()` : persister localStorage
 
-2. **Créer js/src/app.js**
+2. **Modifier assets/main.js**
 
    ```javascript
-   import Alpine from 'alpinejs';
-   import './stores/cart.js';
+   import './style.css'
+   import Alpine from 'alpinejs'
+   import './stores/cart.js'
    
-   window.Alpine = Alpine;
-   Alpine.start();
+   window.Alpine = Alpine
+   Alpine.start()
    ```
 
 3. **Créer le template mini-cart**
@@ -461,7 +485,7 @@ Créer un système de panier complet avec persistance localStorage.
 4. **Builder et tester**
 
    ```bash
-   npm run build:js
+   npm run build
    ```
 
 </Steps>
@@ -619,33 +643,20 @@ Préparer les assets pour le déploiement.
 
 <Steps>
 
-1. **Vérifier le contenu Tailwind**
-
-   ```javascript
-   // tailwind.config.js
-   export default {
-     content: [
-       './templates/**/*.twig',
-       './js/**/*.js',
-       '../../../modules/custom/**/*.twig',
-     ],
-   };
-   ```
-
-2. **Build minifié**
+1. **Build minifié**
 
    ```bash
    npm run build
    ```
 
-3. **Vérifier les tailles**
+2. **Vérifier les tailles**
 
    ```bash
-   ls -lh css/dist/tailwind.css
-   ls -lh js/dist/app.js
+   ls -lh dist/assets/main-*.css
+   ls -lh dist/assets/main-*.js
    ```
 
-4. **Tester sans erreurs console**
+3. **Tester sans erreurs console**
 
    Ouvrir DevTools, vérifier aucune erreur.
 
@@ -695,18 +706,19 @@ Préparer les assets pour le déploiement.
 
 ```
 themes/custom/tailstore/
-├── css/
-│   ├── src/
-│   │   └── tailwind.css
-│   └── dist/
-│       └── tailwind.css
-├── js/
-│   ├── src/
-│   │   ├── app.js
-│   │   └── stores/
-│   │       └── cart.js
-│   └── dist/
-│       └── app.js
+├── src/
+│   └── Plugin/ (classes PHP PSR-4)
+├── assets/
+│   ├── style.css
+│   ├── main.js
+│   ├── stores/
+│   │   └── cart.js
+│   ├── slider.js
+│   └── cart.js
+├── dist/
+│   └── assets/
+│       ├── main-*.css
+│       └── main-*.js
 ├── templates/
 │   ├── html.html.twig
 │   ├── page.html.twig
@@ -717,8 +729,9 @@ themes/custom/tailstore/
 ├── tailstore.info.yml
 ├── tailstore.libraries.yml
 ├── tailstore.theme
+├── vite.config.js
 ├── package.json
-└── tailwind.config.js
+└── tailstore.breakpoints.yml
 ```
 
 ## 🔜 Prochaine étape
@@ -741,7 +754,7 @@ Refactoriser le code JavaScript pour utiliser les IIFE et les comportements Drup
 
 <Steps>
 
-1. **Modifier js/src/app.js avec IIFE**
+1. **Modifier assets/main.js avec IIFE**
 
    ```javascript
    (function($, Drupal, once) {
@@ -785,9 +798,9 @@ Refactoriser le code JavaScript pour utiliser les IIFE et les comportements Drup
      version: 1.0.0
      css:
        theme:
-         css/dist/tailwind.css: { minified: true }
+         dist/assets/main-*.css: { minified: true }
      js:
-       js/dist/app.js: { defer: true }
+       dist/assets/main-*.js: { defer: true }
      dependencies:
        - core/drupal
        - core/once
@@ -926,7 +939,7 @@ Ajouter de la logique PHP personnalisée via les hooks Drupal.
        - tailstore/global
    ```
 
-3. **Créer js/slider.js avec IIFE**
+3. **Créer assets/slider.js avec IIFE**
 
    ```javascript
    (function($, Drupal, once) {
@@ -990,9 +1003,9 @@ Appliquer les bonnes pratiques de performance et maintenabilité.
      version: 1.0.0
      css:
        theme:
-         css/dist/tailwind.css: { minified: true, preprocess: true }
+         dist/assets/main-*.css: { minified: true, preprocess: true }
      js:
-       js/dist/app.js: { minified: true, defer: true, preprocess: true }
+       dist/assets/main-*.js: { minified: true, defer: true, preprocess: true }
      dependencies:
        - core/drupal
        - core/once
@@ -1005,7 +1018,7 @@ Appliquer les bonnes pratiques de performance et maintenabilité.
    cart:
      version: 1.0.0
      js:
-       js/cart.js: { 
+       assets/cart.js: { 
          attributes: { defer: true },
          preprocess: false  # Ne pas aggrégér si nécessaire
        }
@@ -1038,7 +1051,7 @@ Appliquer les bonnes pratiques de performance et maintenabilité.
 
    ```bash
    # Taille des fichiers générés
-   ls -lh css/dist/ js/dist/
+   ls -lh dist/assets/
    
    # Vérifier l'aggrégation
    ddev drush config:get system.performance
