@@ -40,7 +40,7 @@ global:
   version: 1.0
   css:
     theme:
-      css/dist/tailwind.css: { minified: true }
+      dist/assets/main.css: { minified: true }
   dependencies:
     - tailstore/alpine
 ```
@@ -52,10 +52,11 @@ cd themes/custom/tailstore
 npm install alpinejs
 ```
 
-Créez `js/src/alpine.js` :
+Créez `assets/main.js` :
 
 ```javascript
-// js/src/alpine.js
+// assets/main.js
+import './style.css'
 import Alpine from 'alpinejs';
 
 // Plugins optionnels
@@ -72,13 +73,13 @@ window.Alpine = Alpine;
 Alpine.start();
 ```
 
-Bundle avec un outil comme **esbuild** :
+Vite gère automatiquement le bundling :
 
 ```json
 {
   "scripts": {
-    "build:js": "esbuild js/src/alpine.js --bundle --minify --outfile=js/dist/app.js",
-    "watch:js": "esbuild js/src/alpine.js --bundle --outfile=js/dist/app.js --watch"
+    "dev": "vite",
+    "build": "vite build"
   }
 }
 ```
@@ -90,9 +91,9 @@ global:
   version: 1.0
   css:
     theme:
-      css/dist/tailwind.css: { minified: true }
+      dist/assets/main.css: { minified: true }
   js:
-    js/dist/app.js: { minified: true }
+    dist/assets/main.js: { minified: true }
 ```
 
 ## 🛒 Composants TailStore
@@ -100,7 +101,7 @@ global:
 ### Panier (Cart)
 
 ```javascript
-// js/src/stores/cart.js
+// assets/stores/cart.js
 document.addEventListener('alpine:init', () => {
   Alpine.store('cart', {
     items: JSON.parse(localStorage.getItem('cart') || '[]'),
