@@ -108,12 +108,12 @@ docker-compose version v2.x.x
 2. **Configurer DDEV**
 
    ```bash
-   ddev config --project-type=drupal --php-version=8.3 --docroot=web
+   ddev config --project-type=drupal --php-version=8.4 --docroot=web
    ```
 
    Cette commande crée un fichier `.ddev/config.yaml` avec :
    - Type de projet : Drupal
-   - Version PHP : 8.3
+   - Version PHP : 8.4
    - Racine web : `web/`
 
 3. **Démarrer l'environnement**
@@ -211,7 +211,7 @@ tailstore/
 name: tailstore
 type: drupal
 docroot: web
-php_version: "8.3"
+php_version: "8.4"
 webserver_type: nginx-fpm
 database:
   type: mariadb
