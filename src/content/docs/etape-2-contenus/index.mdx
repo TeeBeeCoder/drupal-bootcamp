@@ -25,6 +25,60 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
 - [x] Accès à l'administration Drupal
 - [x] Drush configuré
 
+## 📄 Pages système importantes
+
+Contrairement à ce que l'on pourrait penser, Drupal ne crée pas automatiquement les pages principales par défaut. Cependant, il est recommandé de créer ces trois pages essentielles pour une bonne UX :
+
+### 1. Page d'accueil (Home)
+- **Type** : Page de base
+- **Alias d'URL** : `/home` (recommandé) ou `/`
+- **Rôle** : Page d'accueil du site
+- **Configuration** : `/admin/config/system/site-information` → "Page d'accueil par défaut"
+
+### 2. Page d'erreur 404 ("Page non trouvée")
+- **Type** : Page de base
+- **Alias d'URL** : `/404`
+- **Contenu** : Message d'erreur + lien vers l'accueil + recherche
+- **Configuration** : `/admin/config/system/site-information` → "Page par défaut 'Page non trouvée (404)'"
+- **Conseil** : Rendez-la utile avec une barre de recherche et des liens vers les sections populaires
+
+### 3. Page d'erreur 403 ("Accès refusé")
+- **Type** : Page de base
+- **Alias d'URL** : `/403`
+- **Contenu** : Message d'erreur + explication + lien de connexion
+- **Configuration** : `/admin/config/system/site-information` → "Page par défaut 'Accès refusé (403)'"
+- **Conseil** : Pour les utilisateurs non connectés, proposez un lien vers la page de connexion
+
+:::tip[Bonnes pratiques]
+- Créez ces pages dès le début du projet
+- Utilisez des chemins simples comme `/404` et `/403`
+- Testez-les régulièrement en modifiant temporairement les URLs dans la config
+- Personnalisez le design pour qu'elles s'intègrent à votre thème
+:::
+
+### 🔍 Vérification des pages système
+
+:::tip[Commandes de test rapide]
+```bash
+# Vérifier que DDEV fonctionne
+ddev describe
+
+# Ouvrir le site dans le navigateur
+ddev launch
+
+# Puis naviguer vers /home, /404, /403 manuellement ou en utilisant DDEV :
+
+# Ouvrir la page d'accueil
+ddev launch /home
+
+# Tester la page 404 (URL inexistante)
+ddev launch /page-inexistante-12345
+
+# Tester la page 403 (nécessite d'être déconnecté)
+ddev launch /admin
+```
+:::
+
 ## 📚 Sommaire
 
 <CardGrid>
