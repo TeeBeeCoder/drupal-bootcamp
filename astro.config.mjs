@@ -1,12 +1,14 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
-import starlightThemeGalaxy from 'starlight-theme-galaxy'
+import starlightThemeGalaxy from 'starlight-theme-galaxy';
+import icon from 'astro-icon';
 
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://drupal-bootcamp.vercel.app',
 	integrations: [
+		icon(),
 		starlight({
 			plugins: [starlightThemeGalaxy()],
 			title: 'Drupal Bootcamp',
