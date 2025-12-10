@@ -3,6 +3,9 @@ title: Étape 1 - Installation & Configuration
 description: Installez Drupal 11 et maîtrisez les fondamentaux de la configuration
 sidebar:
   order: 0
+
+# status: stable
+# last-reviewed: 2025-12-10
 ---
 
 import { Card, CardGrid, Tabs, TabItem } from '@astrojs/starlight/components';
@@ -19,11 +22,15 @@ import { Card, CardGrid, Tabs, TabItem } from '@astrojs/starlight/components';
 - ✅ Maîtriser le système de configuration sync
 - ✅ Naviguer dans l'interface d'administration
 
+:::note[Environnement de développement]
+Pour tout le cours, nous utiliserons **DDEV** comme environnement de développement principal. Toutes les commandes présentées peuvent être exécutées avec DDEV (`ddev <commande>`) ou directement dans votre environnement local (sans `ddev`).
+:::
+
 ## 📋 Prérequis
 
 Avant de commencer, assurez-vous d'avoir :
 
-- [x] PHP 8.3+ installé
+- [x] PHP 8.4+ installé
 - [x] Composer 2.x installé
 - [x] DDEV ou XAMPP configuré
 - [x] Git installé
@@ -83,6 +90,28 @@ tailstore/                     # Votre projet Drupal
 └── composer.lock
 ```
 
+## 🔧 Installation de Drush
+
+**Drush** est l'outil en ligne de commande indispensable pour gérer Drupal. Il vous permet de :
+
+- 🔄 Exporter/importer la configuration (`drush cex`, `drush cim`)
+- 🗑️ Vider le cache (`drush cr`)
+- 👤 Gérer les utilisateurs (`drush uli`, `drush user-create`)
+- 🗄️ Interagir avec la base de données
+- 🚀 Installer et activer des modules
+
+### Installation de Drush
+
+```bash
+# Installation globale (recommandé)
+composer global require drush/drush
+
+# Vérifier l'installation
+drush --version
+```
+
+Une fois DDEV démarré, Drush sera automatiquement disponible avec `ddev drush`.
+
 ## ⚡ Commandes clés de cette étape
 
 ```bash
@@ -98,6 +127,9 @@ ddev drush site:install
 drush cex -y    # Exporter la configuration
 drush cim -y    # Importer la configuration
 drush cr        # Vider le cache
+
+# Voir toutes les commandes disponibles
+drush list
 ```
 
 ## 🚀 C'est parti !
