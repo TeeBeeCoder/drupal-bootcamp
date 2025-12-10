@@ -32,15 +32,43 @@ npm init -y
 ### 2. Installer Tailwind CSS v4
 
 ```bash
-npm install -D tailwindcss @tailwindcss/cli
+npm install -D vite @tailwindcss/vite tailwindcss
 ```
 
-### 3. Créer le fichier CSS source
+### 3. Configurer Vite
 
-Créez `css/src/tailwind.css` :
+Créez `vite.config.js` :
+
+```javascript
+import { defineConfig } from 'vite'
+import tailwindcss from '@tailwindcss/vite'
+
+export default defineConfig({
+  plugins: [
+    tailwindcss(),
+  ],
+  build: {
+    outDir: 'dist',
+    rollupOptions: {
+      input: {
+        main: 'assets/main.js',
+      },
+      output: {
+        entryFileNames: 'assets/[name].js',
+        chunkFileNames: 'assets/[name].js',
+        assetFileNames: 'assets/[name].[ext]',
+      },
+    },
+  },
+})
+```
+
+### 4. Créer le fichier CSS source
+
+Créez `assets/style.css` :
 
 ```css
-/* css/src/tailwind.css */
+/* assets/style.css */
 
 /* Import Tailwind */
 @import "tailwindcss";
@@ -152,43 +180,43 @@ Créez `package.json` avec les scripts :
 {
   "name": "tailstore-theme",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
-    "build": "tailwindcss -i css/src/tailwind.css -o css/dist/tailwind.css --minify",
-    "watch": "tailwindcss -i css/src/tailwind.css -o css/dist/tailwind.css --watch"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "^4.0.0",
-    "tailwindcss": "^4.0.0"
+    "@tailwindcss/vite": "^4.0.0",
+    "tailwindcss": "^4.0.0",
+    "vite": "^5.0.0"
   }
 }
 ```
 
-### 5. Configurer la détection des classes
+### 5. Créer le point d'entrée JavaScript
 
-Créez `tailwind.config.js` (optionnel pour v4, mais utile) :
+Créez `assets/main.js` :
 
 ```javascript
-// tailwind.config.js
-export default {
-  content: [
-    './templates/**/*.twig',
-    './js/**/*.js',
-    '../../../modules/custom/**/*.twig',
-  ],
-};
+// assets/main.js
+import './style.css'
+
+// Votre code JavaScript ici
+console.log('TailStore theme loaded!')
 ```
 
-### 6. Builder le CSS
+### 5. Builder le CSS
 
 ```bash
+# Démarrer le serveur de développement
+npm run dev
+
 # Build production
 npm run build
-
-# Développement avec watch
-npm run watch
 ```
 
-### 7. Déclarer dans libraries.yml
+### 6. Déclarer dans libraries.yml
 
 ```yaml
 # tailstore.libraries.yml
@@ -196,7 +224,7 @@ global:
   version: 1.0
   css:
     theme:
-      css/dist/tailwind.css: { minified: true }
+      dist/assets/main-*.css: { minified: true }
   dependencies:
     - core/drupal
 ```
@@ -459,7 +487,7 @@ ddev drush cr  # Après modification des templates
 npm run build
 
 # Vérifier la taille
-ls -lh css/dist/tailwind.css
+ls -lh dist/assets/
 ```
 
 ## 🔧 Intégration avec le formulaire exposé Views
@@ -516,27 +544,17 @@ Si vous générez des classes dynamiquement, utilisez la syntaxe complète :
 <div class="{{ color_classes[color] }}">
 ```
 
-### Fichier de safelist (optionnel)
+### Classes dynamiques avec Tailwind v4
 
-```javascript
-// tailwind.config.js
-export default {
-  safelist: [
-    'bg-red-500',
-    'bg-blue-500',
-    'text-green-600',
-    // Classes générées dynamiquement
-  ],
-};
-```
+Pour les classes générées dynamiquement, utilisez des noms de classes complets plutôt que des concaténations. Si vous avez besoin de classes vraiment dynamiques, considérez l'approche des variants safelist dans votre fichier CSS avec `@theme`.
 
 ## ✅ Checklist
 
 - [ ] Tailwind CSS v4 installé
-- [ ] Fichier source `css/src/tailwind.css` créé
+- [ ] Fichier source `assets/style.css` créé
 - [ ] @theme configuré avec les couleurs
-- [ ] Scripts build/watch fonctionnels
-- [ ] CSS compilé dans `css/dist/`
+- [ ] Scripts Vite fonctionnels
+- [ ] Assets compilés dans `dist/assets/`
 - [ ] Librairie déclarée dans libraries.yml
 - [ ] Templates convertis avec classes Tailwind
 - [ ] Build production testé
