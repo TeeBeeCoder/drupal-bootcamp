@@ -4,7 +4,7 @@ description: Installer et configurer DDEV pour le développement Drupal 11
 sidebar:
   order: 1
 
-# status: draft
+# status: stable
 # last-reviewed: 2025-12-10
 ---
 
@@ -142,7 +142,17 @@ docker-compose version v2.x.x
    ddev composer install
    ```
 
-5. **Installer Drupal**
+5. **Vérifier et installer Drush**
+
+   ```bash
+   # Vérifier que Drush est installé
+   ddev drush --version
+   
+   # Si Drush n'est pas disponible, l'installer
+   ddev composer require drush/drush
+   ```
+
+6. **Installer Drupal**
 
    ```bash
    ddev drush site:install standard \
@@ -158,7 +168,7 @@ docker-compose version v2.x.x
    - **Mot de passe** : admin
    :::
 
-6. **Ouvrir le site**
+7. **Ouvrir le site**
 
    ```bash
    ddev launch
