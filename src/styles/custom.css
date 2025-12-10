@@ -1,0 +1,5 @@
+/* Links in tabs take full width */
+li.tab a {
+  display: inline-block;
+  width: 100%;
+}

@@ -3,6 +3,9 @@ title: Prérequis techniques
 description: Configuration requise et outils à installer avant de commencer la formation
 sidebar:
   order: 2
+
+# status: stable
+# last-reviewed: 2025-12-10
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
@@ -25,15 +28,15 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 ## 🔧 Logiciels requis
 
-### 1. PHP 8.3+
+### 1. PHP 8.4+
 
-Drupal 11 nécessite PHP 8.3 ou supérieur avec les extensions suivantes : PDO, XML, GD, OpenSSL, JSON, cURL, Mbstring, zlib.
+Drupal 11 nécessite PHP 8.4 ou supérieur avec les extensions suivantes : PDO, XML, GD, OpenSSL, JSON, cURL, Mbstring, zlib.
 
 <Tabs>
   <TabItem label="macOS">
     ```bash
     # Avec Homebrew
-    brew install php@8.3
+    brew install php@8.4
     
     # Vérifier la version
     php -v
@@ -52,7 +55,7 @@ Drupal 11 nécessite PHP 8.3 ou supérieur avec les extensions suivantes : PDO, 
     ```bash
     # Ubuntu/Debian
     sudo apt update
-    sudo apt install php8.3 php8.3-cli php8.3-common php8.3-mysql php8.3-xml php8.3-curl php8.3-gd php8.3-mbstring php8.3-zip
+    sudo apt install php8.4 php8.4-cli php8.4-common php8.4-mysql php8.4-xml php8.4-curl php8.4-gd php8.4-mbstring php8.4-zip
     
     # Vérifier la version
     php -v
@@ -106,7 +109,7 @@ Pour le versionnement et la récupération du code.
   </TabItem>
   <TabItem label="Windows">
     ```powershell
-    # Télécharger depuis https://git-scm.com/download/win
+    # Télécharger depuis [https://git-scm.com/download/win](https://git-scm.com/download/win)
     # Installer avec les options par défaut
     
     git --version
@@ -166,7 +169,7 @@ Choisissez **DDEV** (recommandé) ou **XAMPP** :
     DDEV utilise Docker pour créer des environnements isolés incluant Apache/Nginx, MySQL/MariaDB et PHP configuré.
 
     **Prérequis DDEV :**
-    - Docker Desktop (macOS/Windows) ou Docker Engine (Linux)
+    - [Docker Desktop](https://www.docker.com/products/docker-desktop) (macOS/Windows) ou Docker Engine (Linux)
     - 1 Go RAM minimum pour Docker
 
     ```bash
@@ -188,18 +191,19 @@ Choisissez **DDEV** (recommandé) ou **XAMPP** :
     - Configuration automatique (PHP, MySQL, Apache/Nginx)
     - Commandes Drush intégrées
     - Facile à partager entre développeurs
+    - Lien officiel : [ddev.com](https://ddev.com)
     :::
   </TabItem>
   <TabItem label="XAMPP">
     XAMPP est une solution tout-en-un plus simple.
 
     1. Télécharger depuis [apachefriends.org](https://www.apachefriends.org/)
-    2. Choisir la version avec **PHP 8.3**
+    2. Choisir la version avec **PHP 8.4**
     3. Installer avec les composants : Apache, MySQL, PHP
     4. Démarrer les services Apache et MySQL
 
     :::caution[Attention]
-    Assurez-vous que XAMPP utilise PHP 8.3+. Les versions plus anciennes peuvent inclure PHP 8.1 ou 8.2.
+    Assurez-vous que XAMPP utilise PHP 8.4+. Les versions plus anciennes peuvent inclure PHP 8.1 ou 8.2.
     :::
   </TabItem>
 </Tabs>
@@ -211,15 +215,16 @@ Nous recommandons **Visual Studio Code** avec les extensions suivantes :
 ```bash
 # Extensions recommandées
 code --install-extension bmewburn.vscode-intelephense-client  # PHP IntelliSense
-code --install-extension whatwedo.twig                         # Twig syntax
+code --install-extension whatwedo.twig                        # Twig syntax
 code --install-extension bradlc.vscode-tailwindcss            # Tailwind CSS
 code --install-extension esbenp.prettier-vscode               # Formatage
 ```
 
 Autres éditeurs compatibles :
-- PHPStorm (payant, excellent support Drupal)
-- Sublime Text
-- Atom
+- **[PHPStorm](https://www.jetbrains.com/phpstorm/)** (payant, excellent support Drupal)
+- **[Sublime Text](https://www.sublimetext.com/)** (éditeur léger et rapide)
+- **[vscode](https://code.visualstudio.com/)** (gratuit et extensible)
+- **[Helix](https://helix-editor.com/)** (vim like, pour les utilisateurs avancés)
 
 ### 7. Navigateur web
 
@@ -236,7 +241,7 @@ Exécutez ces commandes pour vérifier que tout est prêt :
 ```bash
 # PHP
 php -v
-# Devrait afficher : PHP 8.3.x
+# Devrait afficher : PHP 8.4.x
 
 # Composer
 composer --version
@@ -250,6 +255,10 @@ git --version
 node -v
 # Devrait afficher : v18.x.x ou supérieur
 
+# Docker (si DDEV est utilisé)
+docker --version
+# Devrait afficher la version de Docker
+
 # DDEV (si utilisé)
 ddev version
 # Devrait afficher la version de DDEV et Docker
@@ -258,15 +267,15 @@ ddev version
 ## 🌐 Accès réseau
 
 Assurez-vous d'avoir accès à :
-- **packagist.org** - Dépôt Composer
-- **drupal.org** - Modules et thèmes Drupal
-- **github.com** - Code source et templates
+- **[packagist.org](https://packagist.org)** - Dépôt Composer
+- **[drupal.org](https://drupal.org)** - Modules et thèmes Drupal
+- **[github.com](https://github.com)** - Code source et templates
 
 ## ✅ Checklist finale
 
 Avant de commencer l'Étape 1, vérifiez :
 
-- [ ] PHP 8.3+ installé et fonctionnel
+- [ ] PHP 8.4+ installé et fonctionnel
 - [ ] Composer 2.x installé
 - [ ] Git installé
 - [ ] Node.js 18+ installé
