@@ -25,6 +25,58 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
 - [x] Étape 4 terminée (vues créées)
 - [x] Contenu de démonstration existant
 
+## 🔗 URLs et alias (SEO & UX)
+
+### Pourquoi des belles URLs ?
+
+Les URLs parlantes sont essentielles pour le **SEO** et l'**expérience utilisateur** :
+
+- **SEO** : Les moteurs de recherche favorisent les URLs descriptives
+- **UX** : Les visiteurs comprennent où ils vont avant de cliquer
+- **Partage** : URLs faciles à lire et mémoriser
+- **Analytics** : URLs claires facilitent l'analyse du trafic
+
+### Configuration des alias d'URL
+
+1. **Activer le module Path**
+   ```bash
+   drush en path -y
+   ```
+
+2. **Créer des alias automatiques**
+   - Aller dans `/admin/config/search/path/patterns`
+   - Configurer les patterns par type de contenu :
+     - **Articles** : `[node:title]`
+     - **Produits** : `produits/[node:title]`
+     - **Blog** : `blog/[node:title]`
+
+3. **Alias manuels**
+   - Lors de l'édition d'un contenu : onglet "Alias d'URL"
+   - Ou via `/admin/config/search/path/add`
+
+### Bonnes pratiques pour les alias
+
+| Type de contenu | Pattern recommandé | Exemple |
+|----------------|-------------------|---------|
+| Page statique | `/[nom-page]` | `/a-propos` |
+| Produit | `/produits/[titre]` | `/produits/t-shirt-coton-bio` |
+| Catégorie | `/categories/[nom]` | `/categories/vetements` |
+| Article blog | `/blog/[titre]` | `/blog/tendances-mode-2024` |
+
+:::caution[Évitez]
+- ❌ URLs trop longues (>100 caractères)
+- ❌ Caractères spéciaux non-ASCII
+- ❌ Mots vides (le, la, les, un, une, etc.)
+- ❌ Dates dans les URLs (sauf pour les actualités)
+:::
+
+:::tip[URLs optimisées]
+- ✅ Minuscules uniquement
+- ✅ Traits d'union comme séparateur
+- ✅ Mots-clés pertinents
+- ✅ Structure hiérarchique logique
+:::
+
 ## 📚 Sommaire
 
 <CardGrid>
