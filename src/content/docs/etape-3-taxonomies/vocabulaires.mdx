@@ -192,6 +192,47 @@ foreach (\$vocabs as \$vocab) {
 </TabItem>
 </Tabs>
 
+### 📋 Exemple illustratif : Créer une taxonomie "Saison"
+
+Pour illustrer la création via Drush, voici comment créer une taxonomie "Saison" :
+
+```bash
+# Créer le vocabulaire "Saison"
+drush php-eval "
+\$vocab = \Drupal\taxonomy\Entity\Vocabulary::create([
+  'vid' => 'season',
+  'name' => 'Saison',
+  'description' => 'Saisons des collections',
+]);
+\$vocab->save();
+echo 'Vocabulaire \"Saison\" créé avec succès !' . PHP_EOL;
+"
+
+# Créer les termes de la taxonomie
+drush php-eval "
+use Drupal\taxonomy\Entity\Term;
+
+\$terms = [
+  ['vid' => 'season', 'name' => 'Printemps-Été 2025'],
+  ['vid' => 'season', 'name' => 'Automne-Hiver 2024'],
+  ['vid' => 'season', 'name' => 'Collection Capsule'],
+];
+foreach (\$terms as \$data) {
+  \$term = Term::create(\$data);
+  \$term->save();
+  echo 'Terme créé: ' . \$term->label() . PHP_EOL;
+}
+"
+
+# Vérifier la création
+drush taxonomy:vocabulary-list | grep season
+drush taxonomy:term-list season
+```
+
+<Aside type="note" title="Pour illustration uniquement">
+Cet exemple est fourni pour illustrer la syntaxe Drush. Dans le bootcamp, nous créons les taxonomies et termes via l'interface pour bien comprendre le processus.
+</Aside>
+
 ## 💾 Exporter la configuration
 
 Après avoir créé tous les vocabulaires :
