@@ -3,6 +3,9 @@ title: Metatag
 description: Optimiser le SEO avec les métadonnées Open Graph et Twitter Cards
 sidebar:
   order: 3
+
+# status: stable
+# last-reviewed: 2026-01-14
 ---
 
 import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
@@ -327,8 +330,72 @@ config/sync/metatag.metatag_defaults.taxonomy_term__category.yml
 - [ ] Twitter Cards activé
 - [ ] Métadonnées globales configurées
 - [ ] Métadonnées par type de contenu
-- [ ] Image style Open Graph créé
+- [ ] Image style Open Graph créé (1200×630)
 - [ ] Testé avec les validateurs
+- [ ] Vérifié dans le code source HTML
+
+## ⚡ Performance et cache
+
+### Cache des métadonnées
+
+Les metatags sont mis en cache avec les pages. Si vous modifiez un modèle :
+
+```bash
+# Vider le cache pour voir les changements
+ddev drush cr
+
+# Pour un contenu spécifique
+ddev drush cache:rebuild-external /node/42
+```
+
+### Optimisation
+
+```yaml
+# Ne pas générer de metatags inutiles
+Configuration → Metatag → Avancé → Désactiver les metatags non utilisés
+```
+
+<Aside type="tip" title="Bonnes pratiques SEO">
+**Title tag** :
+- Longueur idéale : 50-60 caractères
+- Format : `[Titre Page] | [Nom Site]`
+- Unique pour chaque page
+
+**Meta description** :
+- Longueur : 150-160 caractères
+- Descriptive et engageante
+- Contient des mots-clés pertinents
+
+**Open Graph** :
+- Images : 1200×630px (ratio 1.91:1)
+- Poids : < 300KB pour chargement rapide
+- Format : JPG ou PNG
+- Alt text toujours renseigné
+</Aside>
+
+## 🛡️ Sécurité
+
+### Tokens et données sensibles
+
+```yaml
+# ⚠️ NE JAMAIS inclure de données sensibles
+# ❌ Mauvais
+Description: "Prix d'achat: [node:field_cost_price]"
+
+# ✅ Bon
+Description: "Prix de vente: [node:field_price]"
+```
+
+### Validation des URLs
+
+Assurez-vous que les URLs canoniques sont absolues :
+```yaml
+# ❌ Mauvais
+canonical: "/produits/t-shirt"
+
+# ✅ Bon
+canonical: "[current-page:url]"
+```
 
 ## 🔜 Prochaine étape
 
