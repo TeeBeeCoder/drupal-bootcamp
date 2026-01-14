@@ -3,6 +3,9 @@ title: Pathauto
 description: Générer automatiquement des URLs propres et SEO-friendly
 sidebar:
   order: 2
+
+# status: stable
+# last-reviewed: 2026-01-14
 ---
 
 import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
@@ -311,8 +314,85 @@ reduce_ascii: true
 - [ ] Modèle créé pour chaque type de contenu
 - [ ] Modèle créé pour les taxonomies
 - [ ] Translittération configurée
-- [ ] Redirect installé (optionnel)
+- [ ] Redirect installé (optionnel mais recommandé)
 - [ ] Alias existants générés
+- [ ] Testé avec des contenus réels
+
+## 🛠️ Erreurs courantes et solutions
+
+### Erreur : "Alias already exists"
+
+**Cause** : Deux contenus génèrent le même alias (ex: même titre)
+
+**Solutions** :
+```
+# Option 1 : Ajouter l'ID au modèle
+produits/[node:field_category:entity:name]/[node:title]-[node:nid]
+
+# Option 2 : Utiliser un champ unique (SKU)
+produits/[node:field_sku]
+
+# Option 3 : Ajouter un numéro auto-incrément (Pathauto le fait automatiquement)
+```
+
+### Problème : Caractères accentués non transformés
+
+**Solution** : Vérifier les paramètres de translittération
+```bash
+# Vérifier la config
+ddev drush config-get pathauto.settings transliterate
+
+# Doit être TRUE
+```
+
+### Alias non générés automatiquement
+
+**Causes possibles** :
+1. Pas de modèle pour ce type de contenu
+2. Case "Générer automatiquement" décochée dans le formulaire
+3. Cache à vider
+
+**Solution** :
+```bash
+ddev drush cr
+ddev drush pathauto:aliases-generate all
+```
+
+<Aside type="tip" title="Bonnes pratiques SEO">
+**Longueur d'URL** : Gardez vos URLs < 80 caractères pour le SEO
+
+**Hiérarchie claire** : Utilisez une structure logique
+- ✅ `/boutique/vetements/t-shirts/t-shirt-blanc`
+- ❌ `/produits/node-42`
+
+**Mots-clés** : Intégrez des mots-clés pertinents dans vos URLs
+
+**Stabilité** : Une fois en production, évitez de changer les modèles Pathauto (utilisez Redirect pour gérer les anciennes URLs)
+</Aside>
+
+## 🔧 Maintenance
+
+### Audit des alias
+
+```bash
+# Compter les alias générés
+ddev drush sqlq "SELECT COUNT(*) as total FROM path_alias"
+
+# Voir les alias orphelins (contenu supprimé)
+ddev drush sqlq "SELECT * FROM path_alias WHERE path NOT IN (SELECT CONCAT('/node/', nid) FROM node)"
+
+# Nettoyer les alias orphelins
+ddev drush pathauto:aliases-delete all
+ddev drush pathauto:aliases-generate all
+```
+
+### Performance
+
+Pour les sites avec des milliers de contenus :
+```bash
+# Générer par batch de 50
+ddev drush pathauto:aliases-generate node --batch-size=50
+```
 
 ## 🔜 Prochaine étape
 
