@@ -3,18 +3,40 @@ title: Templates Twig
 description: Personnaliser l'affichage avec le moteur de templates Twig
 sidebar:
   order: 2
+
+# status: stable
+# last-reviewed: 2026-01-14
 ---
 
 import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
 
 ## 🌿 Qu'est-ce que Twig ?
 
-**Twig** est le moteur de templates utilisé par Drupal depuis la version 8. Il offre :
+**Twig** est le moteur de templates utilisé par Drupal depuis la version 8. C'est un langage de templating moderne, sûr et flexible qui sépare la logique métier (PHP) de la présentation (HTML).
 
-- Syntaxe claire et sécurisée
-- Héritage de templates
-- Filtres et fonctions
-- Séparation logique/présentation
+### Pourquoi Twig dans Drupal ?
+
+**Avant Drupal 8** : PHPTemplate (mélange PHP/HTML difficile à maintenir)
+**Depuis Drupal 8** : Twig (séparation claire, sécurité renforcée)
+
+### Avantages de Twig
+
+- ✅ **Sécurité** : Échappement automatique contre les attaques XSS
+- ✅ **Syntaxe claire** : Facile à lire et à maintenir
+- ✅ **Héritage** : Réutilisation et extension de templates
+- ✅ **Filtres puissants** : Transformation de données sans PHP
+- ✅ **Séparation** : Logique métier (PHP) vs présentation (Twig)
+- ✅ **Performance** : Templates compilés en PHP optimisé
+
+### Twig vs PHP dans les templates
+
+| Aspect | PHPTemplate (ancien) | Twig (actuel) |
+|--------|----------------------|---------------|
+| Sécurité | Échappement manuel | Automatique |
+| Syntaxe | `<?php echo $var ?>` | `{{ var }}` |
+| Logique | PHP mélangé au HTML | Séparé en .theme |
+| Maintenabilité | Difficile | Excellente |
+| Courbe d'apprentissage | Connaissance PHP | Syntaxe simple |
 
 ### Syntaxe de base
 
@@ -58,6 +80,22 @@ import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
     ```
 
 </Steps>
+
+<Aside type="tip" title="Raccourci pour développeurs">
+Si le fichier `services.yml` n'existe pas encore, vous pouvez le créer directement avec les bonnes valeurs :
+
+```bash
+cat > sites/default/services.yml << 'EOF'
+parameters:
+  twig.config:
+    debug: true
+    auto_reload: true
+    cache: false
+EOF
+
+drush cr
+```
+</Aside>
 
 ### Résultat dans le HTML source
 
@@ -520,23 +558,537 @@ Structure globale de la page :
 | `attach_library()` | Charger une librairie | `{{ attach_library('tailstore/slider') }}` |
 | `create_attribute()` | Créer des attributs | `{% set attr = create_attribute() %}` |
 
-## 💾 Bonnes pratiques
+## 🎯 Exercices pratiques
 
-1. **Ne jamais modifier les templates du core** - Copiez dans votre thème
-2. **Utiliser les suggestions** - Créez des templates spécifiques
-3. **Préprocessing en PHP** - Préparez les données dans `.theme`
-4. **Vérifier avant d'afficher** - `{% if content.field|render %}`
-5. **Classes propres** - Utilisez `|clean_class` pour les classes dynamiques
+### Exercice 1 : Créer un template page personnalisé
 
-## ✅ Checklist
+**Objectif** : Surcharger le template de page pour ajouter une structure HTML personnalisée.
 
-- [ ] Débogage Twig activé
-- [ ] Template page.html.twig personnalisé
-- [ ] Template node--product.html.twig créé
-- [ ] Template node--product--card.html.twig créé
-- [ ] Variables préprocessées dans .theme
-- [ ] Cache vidé et templates testés
+<Steps>
+
+1. Localisez le template de base :
+   ```bash
+   # Trouver le template page.html.twig du thème de base
+   find web/core/themes -name "page.html.twig"
+   ```
+
+2. Copiez-le dans votre thème :
+   ```bash
+   mkdir -p themes/custom/tailstore/templates/layout
+   cp web/core/themes/olivero/templates/layout/page.html.twig \
+      themes/custom/tailstore/templates/layout/page.html.twig
+   ```
+
+3. Modifiez le template pour ajouter une classe personnalisée :
+   ```twig
+   <div class="layout-container tailstore-layout">
+     {# Votre structure personnalisée #}
+   </div>
+   ```
+
+4. Videz le cache :
+   ```bash
+   drush cr
+   ```
+
+5. Inspectez le HTML (F12) : la classe `tailstore-layout` doit apparaître
+
+</Steps>
+
+**Validation** : ✅ La classe personnalisée est visible dans l'inspecteur
+
+---
+
+### Exercice 2 : Créer un template de produit simple
+
+**Objectif** : Créer un template basique pour afficher un produit avec titre et prix.
+
+<Steps>
+
+1. Créez le fichier :
+   ```bash
+   touch themes/custom/tailstore/templates/node/node--product.html.twig
+   ```
+
+2. Ajoutez ce code minimal :
+   ```twig
+   <article class="product">
+     <h2>{{ label }}</h2>
+     
+     {% if content.field_price|render %}
+       <div class="price">
+         {{ content.field_price }}
+       </div>
+     {% endif %}
+     
+     {{ content|without('field_price') }}
+   </article>
+   ```
+
+3. Videz le cache et visitez une page produit
+
+</Steps>
+
+**Validation** : ✅ Le produit s'affiche avec le nouveau template
+
+---
+
+### Exercice 3 : Utiliser les filtres Twig
+
+**Objectif** : Manipuler des données avec les filtres Twig.
+
+**Tâches** :
+
+1. **Limiter la description** :
+   ```twig
+   {# Afficher seulement les 100 premiers caractères #}
+   {{ content.field_description|render|striptags|slice(0, 100) }}...
+   ```
+
+2. **Formater un prix** :
+   ```twig
+   {# Dans tailstore.theme, préparez formatted_price #}
+   {# Puis dans le template : #}
+   <span class="price">{{ formatted_price }}</span>
+   ```
+
+3. **Afficher une liste de catégories** :
+   ```twig
+   {% if node.field_categories %}
+     <div class="categories">
+       {% for category in node.field_categories %}
+         <span class="badge">{{ category.entity.label }}</span>
+       {% endfor %}
+     </div>
+   {% endif %}
+   ```
+
+**Validation** : ✅ Les filtres fonctionnent et transforment les données correctement
+
+---
+
+### Exercice 4 : Ajouter des conditions
+
+**Objectif** : Afficher du contenu conditionnel selon le contexte.
+
+```twig
+{# Badge "Nouveau" si publié il y a moins de 7 jours #}
+{% set created_date = node.getCreatedTime() %}
+{% set current_date = "now"|date('U') %}
+{% set days_old = (current_date - created_date) / 86400 %}
+
+{% if days_old < 7 %}
+  <span class="badge badge--new">Nouveau</span>
+{% endif %}
+
+{# Badge "Promo" si prix barré existe #}
+{% if content.field_old_price|render %}
+  <span class="badge badge--sale">Promo</span>
+{% endif %}
+
+{# Afficher stock #}
+{% if in_stock %}
+  <span class="stock stock--available">En stock</span>
+{% else %}
+  <span class="stock stock--unavailable">Rupture de stock</span>
+{% endif %}
+```
+
+**Validation** : ✅ Les badges s'affichent selon les conditions
+
+## 🧠 Bonnes pratiques essentielles
+
+### 🔒 Sécurité Twig
+
+**Échappement automatique**
+
+Twig échappe automatiquement toutes les variables pour prévenir les attaques XSS.
+
+```twig
+{# ✅ Sécurisé par défaut #}
+{{ user_input }}  {# Échappe automatiquement < > " ' & #}
+
+{# ⚠️ Dangereux - À éviter #}
+{{ user_input|raw }}  {# Pas d'échappement, risque XSS #}
+
+{# ✅ Si vous devez afficher du HTML, utilisez les fonctions Drupal #}
+{{ content.field_body }}  {# Drupal gère l'échappement intelligent #}
+```
+
+<Aside type="caution" title="Règle d'or">
+Ne JAMAIS utiliser `|raw` sur des données utilisateur. Seulement sur du contenu provenant de champs Drupal sécurisés ou de variables préprocessées.
+</Aside>
+
+### ⚡ Performance
+
+**Vérifier l'existence avant le rendu**
+
+```twig
+{# ❌ Mauvais - Rend même si vide, génère du HTML inutile #}
+{% if content.field_images %}
+  {{ content.field_images }}
+{% endif %}
+
+{# ✅ Bon - Vérifie vraiment si le champ a du contenu #}
+{% if content.field_images|render %}
+  {{ content.field_images }}
+{% endif %}
+
+{# ✅ Encore mieux - Vérifie en PHP (preprocessing) #}
+{% if has_images %}
+  {{ content.field_images }}
+{% endif %}
+```
+
+**Limiter les boucles**
+
+```twig
+{# ❌ Mauvais - Affiche potentiellement des milliers d'items #}
+{% for item in items %}
+  {{ item }}
+{% endfor %}
+
+{# ✅ Bon - Limite à 10 items #}
+{% for item in items|slice(0, 10) %}
+  {{ item }}
+{% endfor %}
+```
+
+### ♿ Accessibilité
+
+**Landmarks HTML5 et ARIA**
+
+```twig
+{# ✅ Utiliser les balises sémantiques HTML5 #}
+<header role="banner">
+  {{ page.header }}
+</header>
+
+<nav role="navigation" aria-label="{{ 'Navigation principale'|t }}">
+  {{ page.primary_menu }}
+</nav>
+
+<main role="main" id="main-content" tabindex="-1">
+  <a id="main-content"></a>
+  {{ page.content }}
+</main>
+
+<aside role="complementary" aria-label="{{ 'Filtres'|t }}">
+  {{ page.sidebar }}
+</aside>
+
+<footer role="contentinfo">
+  {{ page.footer }}
+</footer>
+```
+
+**Skip link obligatoire**
+
+```twig
+<a href="#main-content" class="visually-hidden focusable skip-link">
+  {{ 'Aller au contenu principal'|t }}
+</a>
+```
+
+**Images accessibles**
+
+```twig
+{# ❌ Mauvais - Pas d'attribut alt #}
+<img src="{{ image_url }}">
+
+{# ✅ Bon - Alt descriptif #}
+<img src="{{ image_url }}" alt="{{ node.label }}">
+
+{# ✅ Image décorative #}
+<img src="{{ icon_url }}" alt="" role="presentation">
+```
+
+### 📋 Conventions de nommage
+
+1. **Classes CSS** : Utilisez BEM ou une convention cohérente
+   ```twig
+   <div class="product-card">
+     <h3 class="product-card__title">{{ label }}</h3>
+     <div class="product-card__price">{{ price }}</div>
+   </div>
+   ```
+
+2. **Variables Twig** : snake_case
+   ```twig
+   {% set is_featured = node.field_featured.value %}
+   {% set product_classes = ['product', 'product--' ~ view_mode] %}
+   ```
+
+3. **Toujours commenter** :
+   ```twig
+   {# Badge promo si prix barré existe #}
+   {% if old_price %}
+     <span class="badge badge--sale">-{{ discount }}%</span>
+   {% endif %}
+   ```
+
+### 🔧 Débogage
+
+**Afficher les variables disponibles**
+
+```twig
+{# En mode debug uniquement #}
+{{ dump() }}                  {# Toutes les variables #}
+{{ dump(node) }}             {# Variable spécifique #}
+{{ dump(node.field_price) }} {# Champ spécifique #}
+```
+
+<Aside type="caution" title="Attention">
+`dump()` ne fonctionne qu'avec le module **Devel** activé et le débogage Twig activé. Ne JAMAIS laisser de `dump()` en production !
+</Aside>
+
+**Inspecter les suggestions de templates**
+
+Avec le débogage Twig activé, inspectez le HTML source (Ctrl+U) pour voir :
+- Les suggestions de noms de fichiers
+- Le template actuellement utilisé
+- Les variables disponibles
+
+### 📝 Checklist qualité template
+
+Avant de valider un template :
+
+- [ ] Échappement automatique préservé (pas de `|raw` inutile)
+- [ ] Vérifications `|render` pour les champs optionnels
+- [ ] Balises sémantiques HTML5 (header, nav, main, aside, footer)
+- [ ] Attributs ARIA appropriés
+- [ ] Classes CSS cohérentes (BEM ou convention choisie)
+- [ ] Commentaires Twig pour expliquer la logique
+- [ ] Pas de `dump()` oublié
+- [ ] Responsive (mobile-first avec Tailwind)
+- [ ] Images avec attribut `alt`
+- [ ] Skip link pour navigation clavier
+
+## ✅ Checklist de validation
+
+### Templates créés et fonctionnels
+
+| Template | Emplacement | Validation | Statut |
+|----------|-------------|------------|--------|
+| `page.html.twig` | `templates/layout/` | Inspecter la structure HTML | ⬜ |
+| `node--product.html.twig` | `templates/node/` | Visiter une page produit | ⬜ |
+| `node--product--card.html.twig` | `templates/node/` | Voir la grille de produits | ⬜ |
+| `block--system-branding-block.html.twig` | `templates/block/` | Vérifier le logo | ⬜ |
+
+### Vérifications techniques
+
+<Steps>
+
+1. **Débogage Twig activé**
+   ```bash
+   # Vérifier la config
+   grep -A3 "twig.config" sites/default/services.yml
+   ```
+   **Attendu** : `debug: true`, `auto_reload: true`, `cache: false`
+
+2. **Templates détectés par Drupal**
+   ```bash
+   # Vider le cache
+   drush cr
+   
+   # Vérifier les suggestions dans le HTML source (Ctrl+U)
+   # Chercher "THEME DEBUG" dans le code source
+   ```
+
+3. **Pas d'erreurs dans les logs**
+   ```bash
+   drush watchdog:show --severity=Error --count=20
+   ```
+   **Attendu** : Aucune erreur Twig
+
+4. **Templates compilés**
+   ```bash
+   ls -la sites/default/files/php/twig/
+   ```
+   **Attendu** : Fichiers .php générés pour chaque template
+
+</Steps>
+
+### Tests fonctionnels
+
+- [ ] La structure HTML de la page est personnalisée
+- [ ] Les produits s'affichent avec le bon template (mode full)
+- [ ] Les cartes produits utilisent le template card
+- [ ] Les badges (nouveau, promo) s'affichent correctement
+- [ ] Les conditions (stock, prix) fonctionnent
+- [ ] Les boucles (couleurs, tailles) affichent les bonnes données
+- [ ] Pas de code PHP visible dans le HTML
+- [ ] Responsive fonctionne (tester mobile F12)
+
+### Commande récapitulative
+
+```bash
+# Script de validation complet
+echo "=== Vérification templates Twig ==="
+
+# 1. Config Twig debug
+if grep -q "debug: true" sites/default/services.yml; then
+  echo "✅ Debug Twig activé"
+else
+  echo "❌ Debug Twig désactivé"
+fi
+
+# 2. Templates présents
+echo "\n📁 Templates trouvés :"
+find themes/custom/tailstore/templates -name "*.twig" -type f
+
+# 3. Cache Twig
+echo "\n🗂️ Templates compilés :"
+ls -1 sites/default/files/php/twig/*.php | wc -l
+echo "fichiers compilés"
+
+# 4. Erreurs récentes
+echo "\n⚠️ Erreurs récentes :"
+drush watchdog:show --severity=Error --count=5
+
+echo "\n✅ Vérification terminée"
+```
+
+**Temps estimé total** : 2-3 heures pour créer et tester tous les templates
+
+## � Erreurs courantes et solutions
+
+### Erreur 1 : Template non détecté
+
+**Symptôme** : Modifications du template non visibles
+
+**Causes possibles** :
+- Cache non vidé
+- Nom de fichier incorrect
+- Mauvais emplacement
+
+**Solution** :
+```bash
+# 1. Vider le cache
+drush cr
+
+# 2. Vérifier le nom exact suggéré
+# Activer debug Twig et inspecter le HTML source (Ctrl+U)
+# Chercher "FILE NAME SUGGESTIONS"
+
+# 3. Vérifier l'emplacement
+ls -la themes/custom/tailstore/templates/node/node--product.html.twig
+```
+
+### Erreur 2 : Variable undefined
+
+**Symptôme** : `Warning: Undefined variable`
+
+**Cause** : Variable non préprocessée ou mal nommée
+
+**Solution** :
+```twig
+{# ❌ Mauvais - Erreur si la variable n'existe pas #}
+{{ my_custom_var }}
+
+{# ✅ Bon - Vérifie l'existence #}
+{% if my_custom_var is defined %}
+  {{ my_custom_var }}
+{% endif %}
+
+{# ✅ Ou avec valeur par défaut #}
+{{ my_custom_var|default('Valeur par défaut') }}
+```
+
+### Erreur 3 : Champ vide génère du HTML
+
+**Symptôme** : Balises vides dans le HTML (`<div></div>`)
+
+**Cause** : Condition sur le champ sans vérifier le rendu
+
+**Solution** :
+```twig
+{# ❌ Mauvais - Génère des balises vides #}
+{% if content.field_description %}
+  <div class="description">
+    {{ content.field_description }}
+  </div>
+{% endif %}
+
+{# ✅ Bon - Vérifie vraiment le contenu #}
+{% if content.field_description|render %}
+  <div class="description">
+    {{ content.field_description }}
+  </div>
+{% endif %}
+```
+
+### Erreur 4 : Boucle infinie ou erreur de syntaxe
+
+**Symptôme** : Page blanche, timeout, ou erreur Twig
+
+**Solution** :
+```bash
+# 1. Consulter les logs Drupal
+drush watchdog:show --severity=Error
+
+# 2. Consulter les logs PHP
+tail -f sites/default/files/php-errors.log
+
+# 3. Désactiver temporairement le template
+mv themes/custom/tailstore/templates/node/node--product.html.twig \
+   themes/custom/tailstore/templates/node/node--product.html.twig.bak
+   
+drush cr
+```
+
+### Erreur 5 : Styles CSS non appliqués
+
+**Symptôme** : Classes présentes mais pas de style
+
+**Cause** : Problème de chargement CSS, pas de problème Twig
+
+**Solution** :
+```bash
+# Vérifier que la librairie CSS est chargée
+# F12 → Network → Filtrer CSS
+# Vérifier que tailstore.css est chargé (statut 200)
+
+# Vider le cache CSS
+drush cc css-js
+drush cr
+```
+
+<Aside type="tip" title="Outil de débogage : Twig Vardumper">
+Installez le module **Devel** pour utiliser `{{ dump() }}` :
+
+```bash
+composer require --dev drupal/devel
+drush pm:enable devel
+```
+
+Utilisation :
+```twig
+{{ dump(node) }}              {# Affiche toute la structure #}
+{{ dump(node.field_price) }}  {# Affiche un champ spécifique #}
+```
+</Aside>
+
+## 📚 Ressources complémentaires
+
+### Documentation officielle
+
+- [Twig Documentation](https://twig.symfony.com/doc/) - Documentation complète Twig
+- [Drupal Twig](https://www.drupal.org/docs/theming-drupal/twig-in-drupal) - Twig dans Drupal
+- [Twig Filters](https://www.drupal.org/docs/theming-drupal/twig-in-drupal/filters-modifying-variables-in-twig-templates) - Liste des filtres
+- [Twig Functions](https://www.drupal.org/docs/theming-drupal/twig-in-drupal/functions-in-twig-templates) - Fonctions disponibles
+
+### Outils utiles
+
+- **Extension VS Code** : Twig Language 2 (autocomplétion, coloration)
+- **Module Drupal** : Devel (dump, Kint pour debug)
+- **Module Drupal** : Twig Tweak (fonctions Twig supplémentaires)
+
+### Exemples de code
+
+- [Drupal Core Templates](https://git.drupalcode.org/project/drupal/-/tree/11.x/core/themes/olivero/templates) - Templates Olivero
+- [Twig Recipes](https://www.drupal.org/docs/theming-drupal/twig-in-drupal/twig-template-recipes) - Recettes pratiques
 
 ## 🔜 Prochaine étape
 
-Les templates sont en place ! Passons aux [Assets (CSS/JS)](/etape-6-theming/assets/).
+Les templates sont en place ! Passons aux [Assets (CSS/JS)](/etape-6-theming/assets/) pour styliser tout ça avec Tailwind CSS.
