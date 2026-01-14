@@ -3,17 +3,37 @@ title: Routes et Controllers
 description: Créer des pages et des endpoints API avec le système de routing Drupal
 sidebar:
   order: 2
+
+# status: stable
+# last-reviewed: 2026-01-14
 ---
 
 import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
 
 ## 🛤️ Le système de routing
 
-Drupal utilise le composant **Routing** de Symfony. Chaque route lie :
+Drupal utilise le composant **Routing** de Symfony (depuis Drupal 8). Chaque route lie :
 
-- Une **URL** (`/cart`)
-- À un **controller** (`CartController::index`)
-- Avec des **conditions** d'accès
+- Une **URL** (ex: `/cart`)
+- À un **controller** (ex: `CartController::index`)
+- Avec des **conditions** d'accès (permissions, rôles)
+- Et des **paramètres optionnels** (méthodes HTTP, contraintes)
+
+<Aside type="note" title="Routing Symfony vs Drupal">
+Drupal utilise Symfony Routing avec quelques conventions spécifiques :
+- Format YAML (Symfony accepte aussi PHP, annotations)
+- Préfixe `_` pour les options système (`_controller`, `_permission`)
+- Support des Form API via `_form`
+- Intégration avec le système de permissions Drupal
+</Aside>
+
+### Avantages du routing déclaratif
+
+- ✅ **Séparation** : Routes définies hors du code PHP
+- ✅ **Clarté** : Vue d'ensemble de toutes les URLs du module
+- ✅ **Cache** : Routes mises en cache pour performance
+- ✅ **Flexibilité** : Modification sans toucher au controller
+- ✅ **Génération d'URLs** : Via `Url::fromRoute()`
 
 ## 📝 Fichier .routing.yml
 
