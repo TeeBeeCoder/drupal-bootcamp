@@ -3,6 +3,9 @@ title: Gestion des Modules
 description: Installer, activer et gérer les modules contributifs Drupal
 sidebar:
   order: 1
+
+# status: stable
+# last-reviewed: 2026-01-14
 ---
 
 import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
@@ -11,15 +14,34 @@ import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
 
 ### Pourquoi Composer ?
 
-**Composer** est le gestionnaire de dépendances PHP standard. Il :
+**Composer** est le gestionnaire de dépendances PHP standard depuis Drupal 8. Il :
 
-- Gère les dépendances automatiquement
-- Permet les mises à jour faciles
-- Assure la cohérence des versions
-- Génère l'autoloading
+- ✅ **Gère les dépendances** automatiquement (si module A nécessite B, les deux sont installés)
+- ✅ **Garantit la cohérence** des versions entre les environnements
+- ✅ **Facilite les mises à jour** et les rollbacks
+- ✅ **Génère l'autoloading** PHP optimisé
+- ✅ **Sécurise** les installations (vérification de l'intégrité)
 
 <Aside type="caution" title="Important">
 N'installez **jamais** de modules manuellement en téléchargeant depuis drupal.org. Utilisez toujours Composer.
+
+**Pourquoi ?**
+- ❌ Pas de gestion des dépendances
+- ❌ Conflits de versions possibles
+- ❌ Pas de traçabilité (composer.json/lock)
+- ❌ Complexifie les déploiements
+</Aside>
+
+### Bonne pratique : Workflow d'installation
+
+<Aside type="tip" title="Process professionnel">
+1. **Installer** avec Composer : `composer require drupal/module`
+2. **Activer** avec Drush : `drush en module -y`
+3. **Configurer** via l'interface ou Drush
+4. **Exporter** la configuration : `drush cex -y`
+5. **Commiter** : `git add composer.json composer.lock config/` puis `git commit`
+
+Ce workflow garantit la reproductibilité sur tous les environnements.
 </Aside>
 
 ### Commandes essentielles
