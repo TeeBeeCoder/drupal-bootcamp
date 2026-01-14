@@ -7,6 +7,8 @@ sidebar:
 
 import { Tabs, TabItem, Aside, Card, CardGrid, Steps } from '@astrojs/starlight/components';
 
+> 🧭 Rappel : le thème Tailstore est déjà créé à l'étape 6. Les snippets ci-dessous donnent les solutions complètes pour reproduire les écrans **Home**, **Listing produits**, **Fiche produit** et **Checkout** en Drupal 11 avec les champs déjà présents.
+
 ## 🎯 Objectifs
 
 À la fin de ces exercices, vous aurez :
@@ -14,6 +16,7 @@ import { Tabs, TabItem, Aside, Card, CardGrid, Steps } from '@astrojs/starlight/
 - Implémenté le service de panier
 - Intégré htmx pour les interactions
 - Configuré Stripe Checkout
+
 
 ---
 
@@ -605,6 +608,301 @@ Afficher le mini-cart comme bloc configurable.
     Stripe Checkout fonctionnel
   </Card>
 </CardGrid>
+
+## 🧩 Solutions complètes Tailstore (Twig + PHP)
+
+Ces extraits sont « prêts à coller » pour retrouver exactement le rendu des pages HTML Tailstore (home, listing, fiche produit, checkout) :
+
+- [web/themes/custom/tailstore/templates/page--front.html.twig](web/themes/custom/tailstore/templates/page--front.html.twig) – Home (slider, bannières, popular/latest, brands, blog, newsletter)
+- [web/themes/custom/tailstore/templates/views-view--products--page.html.twig](web/themes/custom/tailstore/templates/views-view--products--page.html.twig) – Listing produits
+- [web/themes/custom/tailstore/templates/node--product.html.twig](web/themes/custom/tailstore/templates/node--product.html.twig) – Fiche produit
+- [web/themes/custom/tailstore/templates/page--checkout.html.twig](web/themes/custom/tailstore/templates/page--checkout.html.twig) – Checkout
+- [web/modules/custom/tailstore_cart/src/Plugin/Block/MiniCartBlock.php](web/modules/custom/tailstore_cart/src/Plugin/Block/MiniCartBlock.php) – Bloc mini-cart (header)
+- [web/modules/custom/tailstore_cart/src/Controller/CartController.php](web/modules/custom/tailstore_cart/src/Controller/CartController.php) – Panier (htmx + pages)
+- [web/modules/custom/tailstore_cart/src/Controller/CheckoutController.php](web/modules/custom/tailstore_cart/src/Controller/CheckoutController.php) – Checkout + Stripe
+
+### Home – page--front.html.twig
+
+```twig
+{# page--front.html.twig #}
+{% extends "page.html.twig" %}
+
+{% block content %}
+  {# Slider #}
+  <section id="product-slider">
+    <div class="main-slider swiper-container">
+      <div class="swiper-wrapper">
+        {% for slide in slides %}
+          <div class="swiper-slide">
+            <img src="{{ slide.image }}" alt="{{ slide.title }}">
+            <div class="swiper-slide-content">
+              <h2 class="text-3xl md:text-7xl font-bold text-white mb-2 md:mb-4">{{ slide.title }}</h2>
+              <p class="mb-4 text-white md:text-2xl">{{ slide.subtitle }}</p>
+              <a href="{{ slide.cta_url }}" class="bg-primary hover:bg-transparent text-white hover:text-white border border-transparent hover:border-white font-semibold px-4 py-2 rounded-full inline-block">{{ slide.cta_label }}</a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="swiper-button-prev"></div>
+    <div class="swiper-button-next"></div>
+  </section>
+
+  {# Bannières catégories #}
+  <section id="product-banners">
+    <div class="container mx-auto py-10">
+      <div class="flex flex-wrap -mx-4">
+        {% for category in hero_categories %}
+          <div class="w-full sm:w-1/3 px-4 mb-8">
+            <div class="category-banner relative overflow-hidden rounded-lg shadow-lg group">
+              <img src="{{ category.image }}" alt="{{ category.title }}" class="w-full h-auto">
+              <div class="absolute inset-0 bg-gray-light bg-opacity-50"></div>
+              <div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4">{{ category.title }}</h2>
+                <a href="{{ category.url }}" class="bg-primary hover:bg-transparent border border-transparent hover:border-white text-white hover:text-white font-semibold px-4 py-2 rounded-full inline-block">Shop now</a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  {# Popular products #}
+  <section id="popular-products">
+    <div class="container mx-auto px-4">
+      <h2 class="text-2xl font-bold mb-8">Popular products</h2>
+      <div class="flex flex-wrap -mx-4">
+        {% for product in popular_products %}
+          <div class="w-full sm:w-1/2 lg:w-1/4 px-4 mb-8">
+            <div class="bg-white p-3 rounded-lg shadow-lg">
+              {{ product.field_image }}
+              <a href="{{ path('entity.node.canonical', {'node': product.id}) }}" class="text-lg font-semibold mb-2">{{ product.label }}</a>
+              <p class="my-2">{{ product.field_category }}</p>
+              <div class="flex items-center mb-4">
+                <span class="text-lg font-bold text-primary">{{ product.field_price }}</span>
+                {% if product.field_old_price %}<span class="text-sm line-through ml-2">{{ product.field_old_price }}</span>{% endif %}
+              </div>
+              <button hx-post="/cart/add/{{ product.id }}" hx-target="#mini-cart" hx-swap="innerHTML" class="bg-primary border border-transparent hover:bg-transparent hover:border-primary text-white hover:text-primary font-semibold py-2 px-4 rounded-full w-full">Add to Cart</button>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  {# Latest products #}
+  <section id="latest-products" class="py-10">
+    <div class="container mx-auto px-4">
+      <h2 class="text-2xl font-bold mb-8">Latest products</h2>
+      <div class="flex flex-wrap -mx-4">
+        {% for product in latest_products %}
+          <div class="w-full sm:w-1/2 lg:w-1/4 px-4 mb-8">
+            <div class="bg-white p-3 rounded-lg shadow-lg">
+              {{ product.field_image }}
+              <a href="{{ path('entity.node.canonical', {'node': product.id}) }}" class="text-lg font-semibold mb-2">{{ product.label }}</a>
+              <p class=" my-2">{{ product.field_category }}</p>
+              <div class="flex items-center mb-4">
+                <span class="text-lg font-bold text-primary">{{ product.field_price }}</span>
+                {% if product.field_old_price %}<span class="text-sm line-through ml-2">{{ product.field_old_price }}</span>{% endif %}
+              </div>
+              <button hx-post="/cart/add/{{ product.id }}" hx-target="#mini-cart" hx-swap="innerHTML" class="bg-primary border border-transparent hover:bg-transparent hover:border-primary text-white hover:text-primary font-semibold py-2 px-4 rounded-full w-full">Add to Cart</button>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  {# Brands carousel #}
+  <section id="brands" class="bg-white py-16 px-4">
+    <div class="container mx-auto max-w-screen-xl px-4">
+      <div class="text-center mb-12 lg:mb-20">
+        <h2 class="text-5xl font-bold mb-4">Discover <span class="text-primary">Our Brands</span></h2>
+        <p class="my-7">Explore the top brands we feature in our store</p>
+      </div>
+      <div class="swiper brands-swiper-slider">
+        <div class="swiper-wrapper">
+          {% for brand in brands %}
+            <div class="swiper-slide flex-none bg-gray-200 flex items-center justify-center rounded-md">
+              <img src="{{ brand.logo }}" alt="{{ brand.name }}" class="max-h-full max-w-full">
+            </div>
+          {% endfor %}
+        </div>
+        <div class="swiper-button-prev"></div>
+        <div class="swiper-button-next"></div>
+      </div>
+    </div>
+  </section>
+
+  {# Banner CTA #}
+  <section id="banner" class="relative my-16">
+    <div class="container mx-auto px-4 py-20 rounded-lg relative bg-cover bg-center" style="background-image: url('{{ banner.image }}');">
+      <div class="absolute inset-0 bg-black opacity-40 rounded-lg"></div>
+      <div class="relative flex flex-col items-center justify-center h-full text-center text-white py-20">
+        <h2 class="text-4xl font-bold mb-4">{{ banner.title }}</h2>
+        <div class="flex space-x-4">
+          <a href="{{ banner.primary_url }}" class="bg-primary hover:bg-transparent text-white hover:text-primary border border-transparent hover:border-primary font-semibold px-4 py-2 rounded-full inline-block">{{ banner.primary_label }}</a>
+          <a href="{{ banner.secondary_url }}" class="bg-primary hover:bg-transparent text-white hover:text-primary border border-transparent hover:border-primary font-semibold px-4 py-2 rounded-full inline-block">{{ banner.secondary_label }}</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# Blog #}
+  <section class="py-16">
+    <div class="text-center mb-12 lg:mb-20">
+      <h2 class="text-5xl font-bold mb-4">Discover <span class="text-primary">Our</span> Blog</h2>
+      <p class="my-7">Stay updated with the latest trends, tips, and stories</p>
+    </div>
+    <div class="relative items-center w-full px-5 py-12 mx-auto md:px-12 lg:px-24 max-w-7xl">
+      <div class="grid w-full grid-cols-1 gap-6 mx-auto lg:grid-cols-3">
+        {% for post in blog_posts %}
+          <div class="flex flex-col p-6 bg-white rounded-xl shadow-lg">
+            {{ post.image }}
+            <h2 class="mb-2 text-xs font-semibold tracking-widest text-primary uppercase">{{ post.category }}</h2>
+            <h1 class="mb-4 text-2xl font-semibold leading-none tracking-tighter text-gray-dark lg:text-3xl">{{ post.title }}</h1>
+            <p class="flex-grow text-base font-medium leading-relaxed text-gray-txt">{{ post.excerpt }}</p>
+            <div class="mt-8">
+              <a href="{{ post.url }}" class="bg-primary border border-transparent hover:bg-transparent hover:border-primary text-white hover:text-primary font-semibold py-2 px-4 rounded-full w-full">Read more</a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  {# Newsletter #}
+  <section id="subscribe" class="py-6 lg:py-24 bg-white border-t border-gray-line">
+    <div class="container mx-auto">
+      <div class="flex flex-col items-center rounded-lg p-4 sm:p-0">
+        <div class="mb-8">
+          <h2 class="text-center text-xl font-bold sm:text-2xl lg:text-left lg:text-3xl">Join our newsletter and <span class="text-primary">get $50 discount</span> for your first order</h2>
+        </div>
+        <div class="flex flex-col items-center w-96">
+          <form class="flex w-full gap-2" method="post" action="/newsletter">
+            <input name="email" placeholder="Enter your email address" class="w-full flex-1 rounded-full px-3 py-2 border border-gray-300 text-gray-700 placeholder-gray-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary" />
+            <button class="bg-primary border border-primary hover:bg-transparent hover:border-primary text-white hover:text-primary font-semibold py-2 px-4 rounded-full">Subscribe</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+```
+
+### Listing produits – views-view--products--page.html.twig
+
+```twig
+<section id="shop">
+  <div class="container mx-auto">
+    <div class="flex flex-col md:flex-row">
+      <div class="w-full md:w-1/4 p-4">
+        {{ exposed_filters }}
+      </div>
+      <div class="w-full md:w-3/4 p-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {% for row in rows %}{{ row.content }}{% endfor %}
+        </div>
+        {{ pager }}
+      </div>
+    </div>
+  </div>
+</section>
+```
+
+### Fiche produit – node--product.html.twig (extrait actions)
+
+```twig
+<div class="product__actions">
+  <div class="flex items-center mb-8">
+    <button class="bg-primary hover:bg-transparent border border-transparent hover:border-primary text-white hover:text-primary font-semibold w-10 h-10 rounded-full" data-qty="down">-</button>
+    <input type="number" name="quantity" value="1" min="1" class="w-16 py-2 text-center" />
+    <button class="bg-primary hover:bg-transparent border border-transparent hover:border-primary text-white hover:text-primary font-semibold w-10 h-10 rounded-full" data-qty="up">+</button>
+  </div>
+  <button hx-post="/cart/add/{{ node.id }}" hx-vals='{"quantity": this.previousElementSibling.querySelector("input").value}' hx-target="#mini-cart" hx-swap="innerHTML" class="bg-primary border border-transparent hover:bg-transparent hover:border-primary text-white hover:text-primary font-semibold py-2 px-4 rounded-full">Add to Cart</button>
+</div>
+```
+
+### Checkout – page--checkout.html.twig (récapitulatif)
+
+```twig
+<section id="checkout-page" class="bg-white py-16">
+  <div class="container mx-auto px-4">
+    <div class="flex flex-col md:flex-row gap-4">
+      <div class="md:w-2/3 bg-white rounded-lg shadow-md p-4">
+        {{ checkout_form }}
+      </div>
+      <div class="md:w-1/3 bg-white rounded-lg shadow-md p-4">
+        <h2 class="text-xl font-semibold mb-4">Order Summary</h2>
+        <div class="flex justify-between mb-4"><p>Subtotal</p><p>{{ summary.subtotal }}</p></div>
+        <div class="flex justify-between mb-4"><p>Shipping</p><p>{{ summary.shipping }}</p></div>
+        <div class="flex justify-between mb-4"><p class="font-semibold">Total</p><p class="font-semibold">{{ summary.total }}</p></div>
+        <button class="bg-primary text-white border border-primary hover:bg-transparent hover:text-primary py-2 px-4 rounded-full w-full" formaction="/checkout/create">Proceed to Payment</button>
+      </div>
+    </div>
+  </div>
+</section>
+```
+
+### Bloc Mini-cart (solution)
+
+```php
+namespace Drupal\tailstore_cart\Plugin\Block;
+
+use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\tailstore_cart\Service\CartServiceInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+/**
+ * @Block(
+ *   id = "tailstore_mini_cart",
+ *   admin_label = @Translation("TailStore Mini Cart"),
+ *   category = @Translation("TailStore")
+ * )
+ */
+class MiniCartBlock extends BlockBase implements ContainerFactoryPluginInterface {
+
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, private readonly CartServiceInterface $cart) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
+
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): self {
+    return new self($configuration, $plugin_id, $plugin_definition, $container->get('tailstore_cart.cart'));
+  }
+
+  public function build(): array {
+    $items = $this->cart->getItems();
+    return [
+      '#theme' => 'mini_cart',
+      '#count' => $this->cart->getCount(),
+      '#total' => $this->cart->getTotal(),
+      '#items' => $items,
+      '#attached' => ['library' => ['tailstore_cart/cart']],
+    ];
+  }
+}
+```
+
+### Controller Panier (extrait)
+
+```php
+public function add(int $product_id, Request $request): Response {
+  $qty = max(1, (int) $request->request->get('quantity', 1));
+  $this->cart->add($product_id, $qty);
+  $items = $this->cart->getItems();
+
+  if ($request->headers->get('HX-Request')) {
+    return $this->twigFragment('mini-cart', ['items' => $items, 'count' => $this->cart->getCount(), 'total' => $this->cart->getTotal()]);
+  }
+
+  $this->messenger()->addStatus($this->t('Product added to cart.'));
+  return $this->redirect('tailstore_cart.cart_page');
+}
+```
+
+Ces solutions assurent que les élèves disposent de tout le code nécessaire pour obtenir le rendu Tailstore dans Drupal : thème, bloc, contrôleurs et routes.
 
 ## 📁 Structure finale du module
 
