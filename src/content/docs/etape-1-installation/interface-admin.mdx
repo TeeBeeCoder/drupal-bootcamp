@@ -204,11 +204,14 @@ Le rapport de statut (`/admin/reports/status`) est **essentiel**. Vérifiez rég
 ### Changer le thème d'administration
 
 ```bash
-# Utiliser Seven (ancien thème admin)
-drush config:set system.theme admin seven
+# Voir le thème d'administration actuel
+drush config:get system.theme admin
 
-# Revenir à Claro
-drush config:set system.theme admin claro
+# Drupal 11 utilise Claro par défaut
+# Si vous installez un autre thème admin (ex: Gin) :
+composer require drupal/gin
+drush en gin -y
+drush config:set system.theme admin gin -y
 ```
 
 ### Ajouter un logo personnalisé
