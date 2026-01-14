@@ -13,7 +13,7 @@
     "@astrojs/starlight": "^0.37.2",
     "@astrojs/starlight-tailwind": "^4.0.2",
     "@tailwindcss/vite": "^4.1.18",
-    "astro": "^5.16.5",
+    "astro": "^5.16.9",
     "astro-icon": "^1.1.5",
     "sharp": "^0.34.5",
     "starlight-theme-galaxy": "^0.7.0",
