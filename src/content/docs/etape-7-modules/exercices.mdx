@@ -1,8 +1,11 @@
 ---
 title: Exercices Étape 7
-description: Mise en pratique des modules contributifs Drupal
+description: Mise en pratique des modules contributifs Drupal pour professionnaliser TailStore
 sidebar:
   order: 6
+
+# status: stable
+# last-reviewed: 2026-01-14
 ---
 
 import { Tabs, TabItem, Aside, Card, CardGrid, Steps } from '@astrojs/starlight/components';
@@ -10,10 +13,33 @@ import { Tabs, TabItem, Aside, Card, CardGrid, Steps } from '@astrojs/starlight/
 ## 🎯 Objectifs
 
 À la fin de ces exercices, vous aurez :
-- Installé tous les modules essentiels
-- Configuré les URLs automatiques
-- Optimisé le SEO
-- Créé des formulaires fonctionnels
+- 📦 Installé et configuré tous les modules essentiels pour un site e-commerce professionnel
+- 🔗 Configuré des URLs automatiques SEO-friendly pour tous les contenus
+- 📊 Optimisé le référencement avec les métadonnées sociales
+- 📝 Créé des formulaires fonctionnels avec protection anti-spam
+- 🚀 Mis en place les outils pour un site maintenable et performant
+
+<Aside type="note" title="Approche pédagogique">
+Ces exercices suivent un workflow professionnel :
+1. **Installation** et activation via Composer/Drush
+2. **Configuration** adaptée au projet TailStore
+3. **Test** pour valider le fonctionnement
+4. **Export** de la configuration pour versionnement
+
+C'est la méthode utilisée en entreprise.
+</Aside>
+
+<Aside type="tip" title="Temps de réalisation">
+- **Exercice 1** : 20 min (Installation modules)
+- **Exercice 2** : 25 min (Pathauto)
+- **Exercice 3** : 30 min (Metatag)
+- **Exercice 4** : 35 min (Webform contact)
+- **Exercice 5** : 30 min (Webform devis)
+- **Exercice 6** : 15 min (Sitemap)
+- **Exercice 7** : 15 min (Sécurité)
+
+**Total** : ~2h50
+</Aside>
 
 ---
 
@@ -75,10 +101,50 @@ Préparer l'environnement TailStore avec tous les modules.
 
 ### Validation ✓
 
-- [ ] Tous les modules installés sans erreur
-- [ ] Modules activés
-- [ ] Gin visible dans l'administration
-- [ ] Admin Toolbar avec menus déroulants
+- [ ] Tous les modules installés sans erreur (vérifier dans `composer.json`)
+- [ ] Modules activés (vérifier avec `drush pm:list --status=enabled`)
+- [ ] Gin visible et fonctionnel dans l'administration
+- [ ] Admin Toolbar avec menus déroulants opérationnels
+- [ ] Aucune erreur dans les logs (`drush ws` pour watchdog)
+- [ ] Configuration exportée (`ddev drush cex -y`)
+- [ ] Fichiers committés (composer.json, composer.lock, config/)
+
+<Aside type="caution" title="Erreurs courantes">
+**Erreur** : `Your requirements could not be resolved...`
+
+**Solution** : Conflit de versions. Vérifier la compatibilité Drupal 11
+```bash
+ddev composer why-not drupal/module_name
+```
+
+**Erreur** : `Class not found...`
+
+**Solution** : Régénérer l'autoloader
+```bash
+ddev composer dump-autoload
+ddev drush cr
+```
+
+**Erreur** : `Module already enabled`
+
+**Solution** : Normal, le module était déjà activé. Continuer.
+</Aside>
+
+### Points d'attention
+
+💡 **Commit après installation** :
+```bash
+git add composer.json composer.lock config/
+git commit -m "feat(modules): install contrib modules (pathauto, metatag, webform, admin_toolbar, gin, honeypot)"
+```
+
+💡 **Déploiement sur autre environnement** :
+```bash
+# Sur staging/production
+composer install
+drush cim -y
+drush cr
+```
 
 ---
 
@@ -148,14 +214,56 @@ Créez un produit "Pantalon Cargo" dans la catégorie "Pantalons".
 
 **URL attendue** : `/boutique/pantalons/pantalon-cargo`
 
+Créez un article de blog "Tendances mode hiver 2026" publié le 14 janvier 2026.
+
+**URL attendue** : `/blog/2026-01/tendances-mode-hiver-2026`
+
+<Aside type="tip" title="Tester la translittération">
+Créez un produit avec caractères accentués : "T-Shirt été à fleurs"
+
+**URL attendue** : `/boutique/t-shirts/t-shirt-ete-a-fleurs`
+
+Les accents doivent être automatiquement transformés.
+</Aside>
+
 ### Validation ✓
 
-- [ ] Modèle Produits créé
-- [ ] Modèle Articles créé
+- [ ] Modèle Produits créé et fonctionnel
+- [ ] Modèle Articles créé avec date dans l'URL
 - [ ] Modèle Catégories créé
 - [ ] Modèle Marques créé
-- [ ] URLs générées correctement
-- [ ] Translittération fonctionnelle (é → e)
+- [ ] URLs générées correctement (vérifier 3-5 contenus)
+- [ ] Translittération fonctionnelle (é → e, à → a, etc.)
+- [ ] Séparateur `-` appliqué
+- [ ] Longueur max respectée (< 100 caractères)
+- [ ] Alias existants régénérés
+- [ ] Configuration exportée
+
+### Vérification technique
+
+```bash
+# Lister les alias générés
+ddev drush sqlq "SELECT alias, path FROM path_alias LIMIT 10"
+
+# Vérifier un alias spécifique
+ddev drush path:alias /node/42
+
+# Compter les alias par type
+ddev drush sqlq "SELECT COUNT(*) FROM path_alias WHERE path LIKE '/node/%'"
+```
+
+<Aside type="caution" title="Problème : Alias non généré">
+**Vérifier** :
+1. Le modèle existe pour ce type de contenu
+2. La case "Générer automatiquement" est cochée dans le formulaire
+3. Le cache est vidé
+
+**Forcer la génération** :
+```bash
+ddev drush cr
+ddev drush pathauto:aliases-generate all
+```
+</Aside>
 
 ---
 
@@ -239,10 +347,63 @@ Configurer Metatag pour les produits et le partage social.
 ### Validation ✓
 
 - [ ] Métadonnées globales configurées
-- [ ] Open Graph pour les produits
+- [ ] Open Graph pour les produits avec tous les champs
 - [ ] Twitter Cards configurées
-- [ ] Style d'image OG créé
+- [ ] Style d'image OG créé (1200×630px)
 - [ ] Test avec [Facebook Debugger](https://developers.facebook.com/tools/debug/)
+- [ ] Test avec [Twitter Card Validator](https://cards-dev.twitter.com/validator)
+- [ ] Balises présentes dans le code source HTML
+- [ ] Images correctement affichées dans les validateurs
+- [ ] Configuration exportée
+
+### Vérification dans le code source
+
+1. Visitez une page produit
+2. **Clic droit** → **Afficher le code source**
+3. Cherchez `<meta property="og:` (Ctrl+F)
+
+**Attendu** :
+```html
+<meta property="og:type" content="product" />
+<meta property="og:title" content="T-Shirt Blanc - 29.99€ | TailStore" />
+<meta property="og:description" content="T-shirt en coton bio..." />
+<meta property="og:image" content="https://tailstore.ddev.site/sites/default/files/2026-01/tshirt.jpg" />
+<meta property="og:site_name" content="TailStore" />
+<meta property="og:url" content="https://tailstore.ddev.site/boutique/t-shirts/t-shirt-blanc" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="T-Shirt Blanc - 29.99€ | TailStore" />
+<meta name="twitter:description" content="T-shirt en coton bio..." />
+<meta name="twitter:image" content="https://tailstore.ddev.site/sites/default/files/2026-01/tshirt.jpg" />
+```
+
+<Aside type="caution" title="Erreurs courantes">
+**Image non affichée** :
+- Vérifier que l'image existe et est accessible publiquement
+- Vérifier le style d'image (doit être 1200×630)
+- URL absolue requise (pas de chemin relatif)
+
+**Titre trop long** :
+- Facebook tronque à 60 caractères
+- Adapter le modèle si nécessaire
+
+**Description vide** :
+- Vérifier que le token pointe vers le bon champ
+- Vérifier que le contenu a bien une description
+</Aside>
+
+### Test partage social
+
+**Facebook** :
+1. Allez sur [Facebook Debugger](https://developers.facebook.com/tools/debug/)
+2. Entrez l'URL de votre produit
+3. Cliquez **Déboguer**
+4. Vérifiez l'aperçu
+
+**Twitter** :
+1. Allez sur [Card Validator](https://cards-dev.twitter.com/validator)
+2. Entrez l'URL
+3. Vérifiez la Card Preview
 
 ---
 
@@ -359,12 +520,80 @@ Créer le formulaire de contact TailStore avec emails automatiques.
 
 ### Validation ✓
 
-- [ ] Formulaire créé avec tous les champs
-- [ ] Email admin configuré
+- [ ] Formulaire créé avec tous les champs obligatoires
+- [ ] Email admin configuré avec bon format
 - [ ] Email confirmation client configuré
-- [ ] Message de confirmation affiché
-- [ ] Formulaire accessible sur /contact
-- [ ] Test d'envoi fonctionnel
+- [ ] Message de confirmation affiché après soumission
+- [ ] Formulaire accessible sur /form/contact
+- [ ] Formulaire intégré dans une page ou un bloc
+- [ ] Test d'envoi fonctionnel (vérifier réception email)
+- [ ] Soumission enregistrée dans **Résultats**
+- [ ] Champs requis validés (erreur si vide)
+- [ ] Format email validé automatiquement
+- [ ] Configuration exportée
+
+### Test complet
+
+<Steps>
+
+1. **Accéder au formulaire**
+   
+   `/form/contact`
+
+2. **Test validation**
+   
+   - Soumettez le formulaire vide → Erreurs affichées ?
+   - Email invalide : `test` → Erreur format ?
+
+3. **Test soumission valide**
+   
+   Remplissez tous les champs et soumettez
+
+4. **Vérifier l'email admin**
+   
+   ```bash
+   # Voir les emails capturés par DDEV (mailpit)
+   ddev launch -m
+   ```
+   
+   Ou accédez à : `https://tailstore.ddev.site:8026`
+
+5. **Vérifier la soumission**
+   
+   `/admin/structure/webform/manage/contact/results/submissions`
+
+</Steps>
+
+<Aside type="tip" title="Déboguer les emails">
+**Email non reçu ?**
+
+1. Vérifier Mailpit (interface DDEV) : `ddev launch -m`
+2. Vérifier les logs Webform : **Rapports** → **Journaux récents**
+3. Vérifier la configuration email : **Configuration** → **Système** → **Configuration de base du site**
+
+**Tester l'envoi** :
+```bash
+# Envoyer un email de test
+ddev drush php-eval "mail('test@example.com', 'Test', 'Corps du message');"
+```
+</Aside>
+
+### Personnalisation avancée
+
+Ajoutez des classes CSS TailStore :
+
+```yaml
+# Sur chaque champ
+wrapper_attributes:
+  class: 'mb-4'
+
+attributes:
+  class: 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
+
+# Sur le bouton submit
+attributes:
+  class: 'btn btn-primary w-full md:w-auto'
+```
 
 ---
 
@@ -485,11 +714,73 @@ Créer un formulaire plus complexe avec wizard et champs conditionnels.
 
 ### Validation ✓
 
-- [ ] Wizard à 3 étapes
-- [ ] Navigation avant/arrière
-- [ ] Barre de progression
-- [ ] Tous les champs fonctionnels
-- [ ] Email récapitulatif complet
+- [ ] Wizard à 3 étapes créé
+- [ ] Navigation avant/arrière fonctionnelle
+- [ ] Barre de progression affichée
+- [ ] Tous les champs fonctionnels et bien labelés
+- [ ] Email récapitulatif complet avec toutes les infos
+- [ ] Test du parcours complet sans erreur
+- [ ] Données correctement enregistrées dans les résultats
+- [ ] Email reçu avec mise en forme lisible
+- [ ] Configuration exportée
+
+<Aside type="tip" title="Bonnes pratiques UX pour les wizards">
+**Progression visible** :
+- ✅ Afficher l'étape actuelle : "Etape 1/3"
+- ✅ Nommer clairement chaque étape
+- ✅ Permettre le retour arrière sans perte de données
+
+**Navigation** :
+- ✅ Bouton "Précédent" toujours visible (sauf étape 1)
+- ✅ Bouton "Suivant" avec texte clair
+- ✅ Dernière étape : "Envoyer ma demande de devis"
+
+**Validation** :
+- ✅ Valider chaque étape avant de passer à la suivante
+- ✅ Afficher les erreurs clairement
+- ✅ Ne pas perdre les données en cas d'erreur
+</Aside>
+
+### Email récapitulatif complet
+
+Exemple de configuration email :
+
+```yaml
+Titre: Demande de devis
+Destinataire: devis@tailstore.com
+Sujet: "[TailStore] Nouvelle demande de devis - [webform_submission:values:company]"
+Corps: |
+  === NOUVELLE DEMANDE DE DEVIS ===
+  
+  Date: [webform_submission:created:custom:d/m/Y à H:i]
+  
+  --- Informations client ---
+  Nom: [webform_submission:values:name]
+  Email: [webform_submission:values:email]
+  Téléphone: [webform_submission:values:phone]
+  Entreprise: [webform_submission:values:company]
+  
+  --- Produits demandés ---
+  Catégories: [webform_submission:values:products]
+  Quantité: [webform_submission:values:quantity]
+  Détails: [webform_submission:values:details]
+  
+  --- Budget et planning ---
+  Budget estimé: [webform_submission:values:budget]
+  Date souhaitée: [webform_submission:values:deadline:custom:d/m/Y]
+  Urgence: [webform_submission:values:urgency]
+  
+  ---
+  Voir la soumission complète :
+  [webform_submission:url]
+```
+
+### Test du workflow complet
+
+1. **Étape 1** : Remplir les infos personnelles → Suivant
+2. **Étape 2** : Sélectionner produits et quantités → Suivant
+3. **Étape 3** : Budget et délai → Envoyer
+4. **Vérifier** : Page de confirmation + email reçu
 
 ---
 
@@ -541,10 +832,77 @@ Configurer Simple Sitemap pour indexer tous les contenus.
 
 ### Validation ✓
 
-- [ ] Tous les types configurés
+- [ ] Tous les types configurés dans Simple Sitemap
+- [ ] Priorités définies selon l'importance
 - [ ] Sitemap accessible à /sitemap.xml
-- [ ] URLs propres dans le sitemap
-- [ ] Priorités définies
+- [ ] URLs propres (Pathauto) dans le sitemap
+- [ ] Contenu test présent dans le sitemap
+- [ ] Fichier XML valide (pas d'erreur de syntaxe)
+- [ ] Sitemaps soumis à Google Search Console (optionnel)
+- [ ] Configuration exportée
+
+### Vérification du sitemap
+
+```bash
+# Générer le sitemap
+ddev drush simple-sitemap:generate
+
+# Voir le contenu
+curl https://tailstore.ddev.site/sitemap.xml
+
+# Ou dans le navigateur
+```
+
+**Exemple de sortie attendue** :
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://tailstore.ddev.site/</loc>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://tailstore.ddev.site/boutique/t-shirts/t-shirt-blanc</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://tailstore.ddev.site/blog/2026-01/tendances-mode-hiver</loc>
+    <priority>0.6</priority>
+  </url>
+</urlset>
+```
+
+<Aside type="tip" title="Bonnes pratiques Sitemap">
+**Priorités recommandées** :
+- Page d'accueil : 1.0
+- Pages produits : 0.8-0.9 (contenu principal e-commerce)
+- Catégories : 0.7
+- Articles blog : 0.5-0.6
+- Pages statiques : 0.5
+
+**Fréquence de mise à jour** :
+- Automatique lors de création/modification de contenu
+- Ou via cron : `drush simple-sitemap:generate`
+
+**Soumettre à Google** :
+1. Google Search Console → Sitemaps
+2. Ajouter URL : `https://tailstore.com/sitemap.xml`
+3. Vérifier l'indexation après quelques jours
+</Aside>
+
+### Configuration avancée
+
+**Exclure certains contenus** :
+```yaml
+# Configuration → Simple Sitemap → Entités
+# Pour chaque type, définir :
+Inclure: Oui/Non
+Priorité: 0.1 - 1.0
+Changefreq: daily, weekly, monthly, yearly
+```
+
+**Multi-sitemap** (pour gros sites) :
+Simple Sitemap génère automatiquement plusieurs sitemaps si > 50 000 URLs
 
 ---
 
@@ -591,9 +949,83 @@ Configurer Honeypot et limiter les soumissions.
 
 ### Validation ✓
 
-- [ ] Honeypot actif sur tous les formulaires
-- [ ] Délai minimum configuré
-- [ ] Limites de soumission définies
+- [ ] Honeypot activé sur tous les formulaires
+- [ ] Délai minimum configuré (5 secondes)
+- [ ] Limites de soumission définies par formulaire
+- [ ] Message d'erreur clair pour l'utilisateur
+- [ ] Test : soumission trop rapide bloquée
+- [ ] Test : limite de soumissions respectée
+- [ ] Configuration exportée
+
+### Test Honeypot
+
+<Steps>
+
+1. **Accéder au formulaire** : `/form/contact`
+
+2. **Ouvrir les outils développeur** (F12)
+
+3. **Inspecter le formulaire**
+   
+   Chercher un champ caché (probablement `<input name="url" type="text" style="display:none">`)
+
+4. **Tester la soumission rapide**
+   
+   Remplir et soumettre en < 5 secondes → **Refus attendu**
+
+5. **Tester après délai**
+   
+   Attendre > 5 secondes puis soumettre → **Succès attendu**
+
+</Steps>
+
+### Test limites de soumissions
+
+```bash
+# Simuler plusieurs soumissions
+ddev drush webform:test contact --num=4
+
+# La 4ème devrait être refusée si limite = 3
+```
+
+Ou testez manuellement en soumettant le formulaire 4 fois.
+
+<Aside type="tip" title="Stratégie anti-spam complète">
+**Niveau 1 : Honeypot** (recommandé pour tous)
+- Invisible pour l'utilisateur
+- Bloque 90% des bots
+- Sans impact sur l'UX
+
+**Niveau 2 : Limites de soumission**
+- Empêche les abus
+- Légère contrainte pour utilisateurs légitimes
+
+**Niveau 3 : CAPTCHA** (seulement si nécessaire)
+- Réduire le taux de conversion de 10-30%
+- À utiliser uniquement en cas de spam massif
+- Préférer reCAPTCHA v3 (invisible)
+
+**Niveau 4 : Validation email**
+- Email de confirmation avec lien à cliquer
+- Pour les inscriptions/créations de compte
+</Aside>
+
+### Monitoring
+
+**Surveiller les tentatives de spam** :
+
+```bash
+# Voir les soumissions récentes
+ddev drush sqlq "SELECT * FROM webform_submission ORDER BY created DESC LIMIT 10"
+
+# Logs Honeypot
+# Rapports → Journaux récents → Filtrer "honeypot"
+```
+
+**Ajuster les paramètres** si nécessaire :
+- Augmenter le délai minimum (10-15 secondes)
+- Réduire les limites de soumission
+- Ajouter CAPTCHA en cas de spam persistant
 
 ---
 
@@ -601,30 +1033,135 @@ Configurer Honeypot et limiter les soumissions.
 
 <CardGrid>
   <Card title="Modules installés" icon="puzzle">
-    9 modules contributifs
+    ✅ 9 modules contributifs
+    ✅ Configuration complète
+    ✅ Tests validés
   </Card>
   <Card title="URLs propres" icon="document">
-    Pathauto configuré
+    ✅ Pathauto configuré
+    ✅ Modèles pour tous types
+    ✅ Translittération active
   </Card>
   <Card title="SEO optimisé" icon="magnifier">
-    Metatag + Open Graph
+    ✅ Metatag complet
+    ✅ Open Graph + Twitter
+    ✅ Sitemap XML généré
   </Card>
   <Card title="Formulaires" icon="pencil">
-    Contact + Devis
+    ✅ Contact fonctionnel
+    ✅ Devis multi-étapes
+    ✅ Anti-spam actif
   </Card>
 </CardGrid>
 
-## 📋 Export final
+## 📋 Checklist finale complète
+
+### Infrastructure
+- [ ] Tous les modules installés via Composer
+- [ ] Modules activés via Drush
+- [ ] Gin theme admin activé
+- [ ] Admin Toolbar opérationnel
+
+### URLs et Navigation
+- [ ] Pathauto : modèles créés pour tous les types
+- [ ] Token installé et fonctionnel
+- [ ] Redirect installé pour les anciennes URLs
+- [ ] Alias générés pour contenus existants
+
+### SEO et Métadonnées
+- [ ] Metatag : configuration globale
+- [ ] Metatag : configuration par type de contenu
+- [ ] Open Graph configuré (Facebook, LinkedIn)
+- [ ] Twitter Cards configuré
+- [ ] Images OG au bon format (1200×630)
+- [ ] Testé avec validateurs sociaux
+- [ ] Simple Sitemap généré (/sitemap.xml)
+
+### Formulaires
+- [ ] Webform installé et activé
+- [ ] Formulaire contact créé et testé
+- [ ] Formulaire devis (wizard) créé
+- [ ] Emails admin configurés
+- [ ] Emails confirmation client configurés
+- [ ] Honeypot activé
+- [ ] Limites de soumission définies
+
+### Sécurité et Protection
+- [ ] Honeypot sur tous les formulaires
+- [ ] Délai anti-spam configuré (5+ secondes)
+- [ ] Limites de soumission par utilisateur
+- [ ] Messages d'erreur clairs
+
+### Versionnement et Déploiement
+- [ ] Configuration exportée (`drush cex -y`)
+- [ ] composer.json et composer.lock à jour
+- [ ] Fichiers de config dans `config/sync/`
+- [ ] Tout committé dans Git
+
+## 📦 Export final
 
 ```bash
 # Exporter toute la configuration
 ddev drush cex -y
 
+# Vérifier les fichiers exportés
+ls -la config/sync/ | grep -E "(pathauto|metatag|webform)"
+
 # Commit
-git add .
-git commit -m "feat: configure contrib modules (pathauto, metatag, webform, etc.)"
+git add composer.json composer.lock config/
+git commit -m "feat(step7): configure contrib modules (pathauto, metatag, webform, sitemap, security)
+
+- URLs automatiques avec Pathauto pour tous les types de contenu
+- SEO optimisé avec Metatag, Open Graph, Twitter Cards
+- Formulaires contact et devis avec Webform
+- Sitemap XML pour moteurs de recherche
+- Sécurité anti-spam avec Honeypot
+- Interface admin améliorée avec Gin et Admin Toolbar"
+
+git push origin main
 ```
+
+<Aside type="tip" title="Déploiement sur staging/production">
+Pour déployer sur un autre environnement :
+
+```bash
+# Tirer les dernières modifications
+git pull origin main
+
+# Installer les dépendances
+composer install
+
+# Importer la configuration
+drush cim -y
+
+# Vider le cache
+drush cr
+
+# Générer le sitemap
+drush simple-sitemap:generate
+```
+
+Cette procédure garantit que tous les environnements sont identiques.
+</Aside>
+
+## 📊 Impact sur TailStore
+
+### Améliorations SEO
+- **URLs lisibles** : `/boutique/t-shirts/t-shirt-blanc` au lieu de `/node/42`
+- **Partage social optimisé** : Beaux aperçus sur Facebook, Twitter, LinkedIn
+- **Indexation améliorée** : Sitemap XML pour Google
+- **Redirections** : Pas de liens cassés
+
+### Expérience utilisateur
+- **Formulaires professionnels** : Contact, devis, newsletter
+- **Interface admin moderne** : Gin + Admin Toolbar = gain de productivité
+- **Performance** : Configuration optimisée
+
+### Professionnalisation
+- **Maintenabilité** : Configuration versionnée
+- **Sécurité** : Protection anti-spam
+- **Scalabilité** : Modules éprouvés par la communauté
 
 ## 🔜 Prochaine étape
 
-Les modules sont configurés ! Dans l'[Étape 8](/etape-8-developpement/), nous développerons nos propres modules custom.
+Les modules sont configurés ! Dans l'[Étape 8](/etape-8-developpement/), nous développerons nos propres modules custom pour les fonctionnalités spécifiques à TailStore.
