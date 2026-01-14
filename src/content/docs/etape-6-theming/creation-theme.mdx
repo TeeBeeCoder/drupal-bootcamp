@@ -3,9 +3,54 @@ title: Créer un thème
 description: Structure et fichiers de base d'un thème Drupal personnalisé
 sidebar:
   order: 1
+
+# status: stable
+# last-reviewed: 2026-01-14
 ---
 
 import { Tabs, TabItem, Aside, Steps, FileTree } from '@astrojs/starlight/components';
+
+## 🎨 Qu'est-ce qu'un thème Drupal ?
+
+Un **thème Drupal** est un ensemble de fichiers qui contrôle l'apparence visuelle de votre site. Il transforme les données brutes (contenu, menus, blocs) en HTML, CSS et JavaScript pour le navigateur.
+
+### Architecture en couches
+
+```
+┌─────────────────────────────────────┐
+│     Contenu (Drupal Core)           │ ← Données, logique métier, base de données
+├─────────────────────────────────────┤
+│     Thème (Twig + CSS + JS)         │ ← Présentation, UX, design
+├─────────────────────────────────────┤
+│     Navigateur (HTML rendu)         │ ← Affichage final pour l'utilisateur
+└─────────────────────────────────────┘
+```
+
+### Thème vs Module
+
+| Aspect | Thème | Module |
+|--------|-------|--------|
+| **Rôle** | Présentation, affichage | Logique métier, fonctionnalités |
+| **Fichiers** | `.twig`, `.css`, `.js` | `.php`, `.module`, `.routing.yml` |
+| **Exemples** | Couleurs, grilles, animations | Types de contenu, API, formulaires |
+| **Localisation** | `themes/custom/` | `modules/custom/` |
+| **Modifie** | Comment les choses apparaissent | Ce que les choses font |
+
+**Pour TailStore** : Le thème gère l'apparence e-commerce (grilles produits, panier visuel, animations), tandis que les modules Drupal Commerce gèrent la logique (prix, stock, commandes, paiement).
+
+### Héritage des thèmes
+
+```
+core/themes/stable9/  (base Drupal)
+        ↓
+themes/custom/tailstore/  (votre thème)
+```
+
+**Deux options** :
+1. **`base theme: false`** : Thème indépendant (contrôle total, plus de travail)
+2. **`base theme: olivero`** : Hérite d'un thème existant (rapide, moins flexible)
+
+**Choix pour TailStore** : `base theme: false` car nous créons un design e-commerce sur-mesure avec Tailwind CSS.
 
 ## 📁 Emplacement des thèmes
 
@@ -93,7 +138,7 @@ base theme: false
 logo: images/logo.svg
 screenshot: screenshot.png
 
-# Régions du thème
+# Régions du thème (zones de placement des blocs)
 regions:
   header: 'Header'
   primary_menu: 'Primary menu'
@@ -123,6 +168,69 @@ libraries-extend: {}
 <Aside type="tip" title="core_version_requirement">
 Utilisez `^10 || ^11` pour supporter Drupal 10 et 11.
 </Aside>
+
+### 📐 Comprendre les régions
+
+Les **régions** définissent les zones où vous pouvez placer des blocs. Voici comment elles s'organisent visuellement :
+
+```
+┌────────────────────────────────────────────────┐
+│                  header                         │ ← Logo, recherche, langues
+├────────────────────────────────────────────────┤
+│  primary_menu           │  secondary_menu      │ ← Navigation principale/secondaire
+├────────────────────────────────────────────────┤
+│              highlighted                        │ ← Messages système, bandeau promo
+├────────────────────────────────────────────────┤
+│              breadcrumb                         │ ← Fil d'Ariane
+├───────────────────────────┬────────────────────┤
+│                           │                    │
+│         content           │      sidebar       │ ← Contenu principal + filtres/widgets
+│        (obligatoire)      │                    │
+├───────────────────────────┴────────────────────┤
+│             content_below                       │ ← Produits recommandés, newsletter
+├────────────────────────────────────────────────┤
+│              footer_top                         │ ← Liens, réseaux sociaux
+│              footer_bottom                      │ ← Copyright, mentions légales
+└────────────────────────────────────────────────┘
+```
+
+<Aside type="caution" title="Région 'content' obligatoire">
+La région **`content`** est obligatoire dans tous les thèmes Drupal. C'est là que le contenu principal de la page sera affiché.
+</Aside>
+
+### 🛒 Régions spécifiques e-commerce
+
+Pour le projet **TailStore**, nous ajouterons des régions supplémentaires adaptées à l'e-commerce. Modifiez la section `regions:` pour inclure :
+
+```yaml
+regions:
+  # Régions standards
+  header: 'Header'
+  cart_header: 'Cart icon & counter'
+  primary_menu: 'Primary menu'
+  secondary_menu: 'Secondary menu'
+  promo_banner: 'Promotional banner'
+  highlighted: 'Highlighted'
+  help: 'Help'
+  breadcrumb: 'Breadcrumb'
+  
+  # Zones de contenu
+  content: 'Content'
+  sidebar: 'Sidebar (filters, widgets)'
+  content_below: 'Content below (recommendations)'
+  
+  # Footer
+  footer_top: 'Footer top'
+  footer_bottom: 'Footer bottom'
+  trust_badges: 'Trust badges (checkout)'
+```
+
+**Utilisation des nouvelles régions** :
+- **`cart_header`** : Icône panier avec compteur d'articles (dynamique)
+- **`promo_banner`** : Bandeau promotionnel (ex: "Livraison gratuite dès 50€")
+- **`sidebar`** : Filtres de prix, catégories, disponibilité sur les pages catalogue
+- **`content_below`** : "Vous aimerez aussi", cross-sell, upsell
+- **`trust_badges`** : Badges de réassurance (paiement sécurisé, satisfait ou remboursé)
 
 ## 📚 Fichier .libraries.yml
 
@@ -285,11 +393,11 @@ advanced-js:
 Depuis Drupal 10.1.2, la clé `version` est obligatoire dans chaque librairie pour éviter les problèmes de cache.
 </Aside>
 
-## 🟨 JavaScript et IIFE
+## 🟨 JavaScript dans Drupal
 
-### Qu'est-ce qu'une IIFE ?
+### Structure recommandée : IIFE + Drupal.behaviors
 
-Une **IIFE** (Immediately Invoked Function Expression) est un pattern JavaScript qui permet d'exécuter immédiatement une fonction anonyme. C'est essentiel dans Drupal pour éviter la pollution de l'espace global et gérer les dépendances proprement.
+Les fichiers JavaScript Drupal utilisent une structure spécifique appelée **IIFE** (Immediately Invoked Function Expression) combinée avec `Drupal.behaviors`.
 
 <Tabs>
   <TabItem label="Syntaxe de base">
@@ -366,55 +474,44 @@ function() {
   </TabItem>
 </Tabs>
 
-### Pourquoi utiliser les IIFE dans Drupal ?
+### Pourquoi cette structure ?
 
-<Aside type="tip" title="Avantages des IIFE">
-- **Portée isolée** : Les variables sont locales, pas globales
-- **Évite les conflits** : Pas de pollution de `window`
-- **Injection de dépendances** : Contrôle explicite des dépendances
-- **Mode strict** : Permet d'activer `'use strict'` explicitement
-- **Performance** : Code minifié plus efficacement
+<Aside type="tip" title="Avantages de l'IIFE + Drupal.behaviors">
+- **Portée isolée** : Variables locales, pas de pollution globale
+- **Compatible AJAX** : `Drupal.behaviors` se réexécute après les requêtes AJAX
+- **Compatible BigPipe** : Fonctionne avec le chargement progressif Drupal
+- **API once()** : Évite la réinitialisation multiple des éléments
+- **Injection de dépendances** : `jQuery`, `Drupal`, `once` passés explicitement
 </Aside>
 
-### Structure recommandée
+### Exemple minimal pour TailStore
 
 ```javascript
+// js/tailstore.js
 (function($, Drupal, once) {
   'use strict';
   
-  // 1. Variables privées (non accessibles de l'extérieur)
-  var privateVariable = 'secret';
-  
-  // 2. Fonctions privées
-  function privateFunction() {
-    return 'private';
-  }
-  
-  // 3. Comportements Drupal (accessibles via Drupal.behaviors)
-  Drupal.behaviors.myModuleBehavior = {
+  // Menu mobile toggle
+  Drupal.behaviors.tailstoreMobileMenu = {
     attach: function(context, settings) {
-      // Code d'initialisation
-      once('my-behavior', '.my-selector', context).forEach(function(element) {
-        // Logique par élément
+      once('mobile-menu', '.mobile-menu-toggle', context).forEach(function(toggle) {
+        $(toggle).on('click', function(e) {
+          e.preventDefault();
+          $('.main-navigation').toggleClass('is-open');
+        });
       });
-    },
-    
-    detach: function(context, settings, trigger) {
-      // Code de nettoyage si nécessaire
     }
-  };
-  
-  // 4. Fonctions publiques (si nécessaire)
-  Drupal.myModule = Drupal.myModule || {};
-  Drupal.myModule.publicFunction = function() {
-    return privateFunction();
   };
   
 })(jQuery, Drupal, once);
 ```
 
-<Aside type="caution" title="Dépendances Drupal">
-Toujours inclure `jQuery`, `Drupal`, et `once` comme paramètres. Ces objets sont passés automatiquement par Drupal.
+<Aside type="note" title="Approfondir JavaScript Drupal">
+Pour une explication détaillée des IIFE, `Drupal.behaviors`, et l'API `once`, consultez :
+- [Documentation officielle Drupal JavaScript](https://www.drupal.org/docs/develop/standards/javascript/javascript-api-overview)
+- [Once API (Drupal 10+)](https://www.drupal.org/node/3158256)
+
+Nous approfondirons ces concepts dans le chapitre **Alpine.js** où nous créerons des interactions avancées.
 </Aside>
 
 ## 🐘 Fichier .theme
@@ -469,6 +566,156 @@ Pour une liste complète des hooks disponibles dans Drupal, consultez :
 
 **Évolution des hooks dans Drupal 11 :**
 - [Nouveaux hooks avec attributs vs hooks procéduraux](https://dev.to/xwero/new-drupal-hook-attribute-34n0)
+</Aside>
+
+Le fichier **tailstore.theme** contient les fonctions PHP :
+
+```php
+<?php
+
+/**
+ * @file
+ * Functions to support theming in the TailStore theme.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_preprocess_HOOK() for html.html.twig.
+ *
+ * Ce hook permet de modifier les variables avant le rendu du template html.html.twig.
+ * Ici, on ajoute des classes CSS au body pour le styling et la logique conditionnelle.
+ */
+function tailstore_preprocess_html(&$variables) {
+  // Ajouter une classe globale au thème
+  $variables['attributes']['class'][] = 'tailstore-theme';
+  
+  // Ajouter une classe spécifique pour les pages produit
+  // Utile pour appliquer des styles particuliers aux pages e-commerce
+  $node = \Drupal::routeMatch()->getParameter('node');
+  if ($node && $node->bundle() === 'product') {
+    $variables['attributes']['class'][] = 'page-product';
+  }
+}
+
+## 🧠 Bonnes pratiques essentielles
+
+### 🔒 Sécurité : Validation des données
+
+Ne jamais faire confiance aux données utilisateur ou même aux champs Drupal sans validation.
+
+**❌ Dangereux** :
+```php
+function tailstore_preprocess_node(&$variables) {
+  $node = $variables['node'];
+  $variables['price'] = $node->get('field_price')->value; // Pas de validation !
+}
+```
+
+**✅ Sécurisé** :
+```php
+function tailstore_preprocess_node(&$variables) {
+  $node = $variables['node'];
+  
+  if ($node->hasField('field_price') && !$node->get('field_price')->isEmpty()) {
+    $price = $node->get('field_price')->value;
+    
+    // Valider que c'est un nombre positif
+    if (is_numeric($price) && $price >= 0) {
+      $variables['price'] = number_format((float) $price, 2, ',', ' ') . ' €';
+    }
+    else {
+      // Logger l'erreur
+      \Drupal::logger('tailstore')->warning('Invalid price for node @nid', [
+        '@nid' => $node->id()
+      ]);
+    }
+  }
+}
+```
+
+<Aside type="caution" title="Toujours valider les données">
+Toujours vérifier l'existence des champs, leur contenu, et valider les types de données avant utilisation.
+</Aside>
+
+### ⚡ Performance : Chargement conditionnel
+
+**Principe** : Évitez de charger des librairies lourdes sur toutes les pages.
+
+**Exemple** : Charger le slider uniquement sur la homepage :
+
+```php
+function tailstore_preprocess_page(&$variables) {
+  // Slider chargé UNIQUEMENT sur la homepage
+  if (\Drupal::service('path.matcher')->isFrontPage()) {
+    $variables['#attached']['library'][] = 'tailstore/slider';
+    $variables['#attached']['library'][] = 'tailstore/swiper';
+  }
+  
+  // Panier chargé UNIQUEMENT sur les pages produit et panier
+  $route_name = \Drupal::routeMatch()->getRouteName();
+  if (in_array($route_name, ['entity.node.canonical', 'commerce_cart.page'])) {
+    $variables['#attached']['library'][] = 'tailstore/cart';
+  }
+}
+```
+
+**Impact** :
+- Homepage : 200KB JS
+- Page article : 50KB JS (150KB économisés !)
+
+<Aside type="tip" title="Chargement conditionnel obligatoire">
+Ne jamais charger des librairies lourdes (sliders, animations) sur toutes les pages. Utilisez les hooks de preprocessing pour un chargement ciblé.
+</Aside>
+
+### ♿ Accessibilité : Régions et landmarks
+
+<Aside type="note" title="Régions doivent correspondre à des landmarks HTML5">
+Chaque région Drupal doit être rendue avec le landmark HTML5 approprié dans les templates Twig.
+
+| Région Drupal | Landmark HTML5 | Rôle ARIA | Utilisation |
+|---------------|----------------|-----------|-------------|
+| `header` | `<header>` | `role="banner"` | En-tête principal (logo, recherche) |
+| `primary_menu` | `<nav>` | `role="navigation"` | Navigation principale |
+| `content` | `<main>` | `role="main"` | Contenu principal (unique par page) |
+| `sidebar` | `<aside>` | `role="complementary"` | Contenu complémentaire (filtres, widgets) |
+| `footer_top` | `<footer>` | `role="contentinfo"` | Pied de page |
+
+**Implémentation** : Cela sera fait dans les templates Twig (chapitre suivant).
+
+**Test d'accessibilité** :
+- Extension : [axe DevTools](https://www.deque.com/axe/devtools/)
+- Lecteur d'écran : NVDA (Windows), VoiceOver (Mac)
+- Validation : [WAVE](https://wave.webaim.org/)
+</Aside>
+
+### 📖 Documentation : PHPDoc obligatoire
+
+Chaque hook doit avoir un bloc de documentation PHPDoc.
+
+**Template recommandé** :
+```php
+/**
+ * Implements hook_preprocess_HOOK() for node.html.twig.
+ *
+ * Prepare variables for node templates.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - elements: Node entity and view mode.
+ *   - node: The node entity.
+ *   - view_mode: View mode (full, teaser, card, etc.).
+ */
+function tailstore_preprocess_node(&$variables) {
+  // Code...
+}
+```
+
+<Aside type="tip" title="Documentation obligatoire">
+**Avantages** :
+- Compréhension rapide du rôle
+- Auto-documentation du code
+- Support IDE (autocomplétion PHPStorm, VS Code)
 </Aside>
 
 Le fichier **tailstore.theme** contient les fonctions PHP :
@@ -609,6 +856,7 @@ function tailstore_theme_suggestions_node_alter(array &$suggestions, array $vari
     }
   }
 }
+```
 ```
 
 ## 📐 Fichier .breakpoints.yml
@@ -811,16 +1059,232 @@ drush cr
 # Visitez le site pour voir le thème
 ```
 
-## ✅ Checklist
+### ✅ Checkpoint : Thème activé et fonctionnel
 
-- [ ] Dossier `themes/custom/tailstore` créé
-- [ ] `tailstore.info.yml` configuré
-- [ ] `tailstore.libraries.yml` avec librairie global
-- [ ] `tailstore.theme` avec hooks de base
-- [ ] `tailstore.breakpoints.yml` pour le responsive
-- [ ] CSS de base (reset, typography)
-- [ ] Thème activé et défini par défaut
-- [ ] Site accessible avec le nouveau thème
+Vérifiez que tout fonctionne correctement :
+
+<Steps>
+
+1. **Vérifier l'activation**
+   ```bash
+   drush config:get system.theme default
+   ```
+   **Attendu** : `'system.theme:default': tailstore`
+
+2. **Vérifier les logs d'erreurs**
+   ```bash
+   drush watchdog:show --severity=Error --count=10
+   ```
+   **Attendu** : Aucune erreur liée au thème
+
+3. **Tester l'accessibilité du site**
+   ```bash
+   curl -I http://localhost/
+   ```
+   **Attendu** : `HTTP/1.1 200 OK`
+
+4. **Inspecter le HTML dans le navigateur**
+   - Ouvrez le site dans votre navigateur
+   - F12 → Onglet Elements
+   - Vérifiez que `<body>` contient `class="tailstore-theme"`
+
+5. **Vérifier le chargement CSS/JS**
+   - F12 → Onglet Network
+   - Rechargez la page
+   - Vérifiez que `tailstore.css` et `tailstore.js` sont chargés (statut 200)
+
+</Steps>
+
+<Aside type="caution" title="Dépannage">
+**Si le site affiche une page blanche** :
+- Vérifiez la syntaxe YAML (pas de tabulations, espaces uniquement)
+- Consultez les logs PHP : `tail -f sites/default/files/php-errors.log`
+- Désactivez temporairement le thème : `drush config:set system.theme default olivero -y`
+
+**Si les CSS ne se chargent pas** :
+- Vérifiez les chemins dans `tailstore.libraries.yml`
+- Videz le cache : `drush cr`
+- Désactivez l'agrégation CSS : `/admin/config/development/performance`
+</Aside>
+
+## 🎯 Exercices pratiques
+
+### Exercice 1 : Créer le thème minimal
+
+**Objectif** : Créer un thème fonctionnel avec seulement les fichiers obligatoires.
+
+<Steps>
+
+1. Créez la structure minimale :
+   ```bash
+   mkdir -p themes/custom/tailstore
+   cd themes/custom/tailstore
+   touch tailstore.info.yml
+   ```
+
+2. Éditez `tailstore.info.yml` avec le strict minimum :
+   ```yaml
+   name: TailStore
+   type: theme
+   core_version_requirement: ^10 || ^11
+   regions:
+     content: 'Content'
+   ```
+
+3. Activez le thème :
+   ```bash
+   drush theme:enable tailstore
+   drush config:set system.theme default tailstore -y
+   drush cr
+   ```
+
+4. Visitez votre site : il doit s'afficher (même sans style)
+
+</Steps>
+
+**Validation** : ✅ Le site est accessible sans erreur 500
+
+---
+
+### Exercice 2 : Premier hook de preprocessing
+
+**Objectif** : Ajouter une classe CSS personnalisée au `<body>`.
+
+<Steps>
+
+1. Créez le fichier `tailstore.theme` :
+   ```bash
+   touch tailstore.theme
+   ```
+
+2. Ajoutez ce code :
+   ```php
+   <?php
+   
+   function tailstore_preprocess_html(&$variables) {
+     $variables['attributes']['class'][] = 'tailstore-active';
+   }
+   ```
+
+3. Videz le cache :
+   ```bash
+   drush cr
+   ```
+
+4. Inspectez le HTML (F12) : vous devriez voir :
+   ```html
+   <body class="tailstore-active">
+   ```
+
+</Steps>
+
+**Validation** : ✅ La classe `tailstore-active` apparaît dans le `<body>`
+
+---
+
+### Exercice 3 : Charger un CSS personnalisé
+
+**Objectif** : Créer et charger un fichier CSS de test.
+
+<Steps>
+
+1. Créez la structure CSS :
+   ```bash
+   mkdir -p css
+   ```
+
+2. Créez `css/test.css` avec un style visible :
+   ```css
+   body {
+     background-color: #ffe6e6;
+     border-top: 5px solid #dc3545;
+   }
+   ```
+
+3. Créez `tailstore.libraries.yml` :
+   ```yaml
+   global:
+     version: 1.0.0
+     css:
+       theme:
+         css/test.css: {}
+   ```
+
+4. Déclarez la librairie dans `tailstore.info.yml` :
+   ```yaml
+   libraries:
+     - tailstore/global
+   ```
+
+5. Videz le cache et rechargez :
+   ```bash
+   drush cr
+   ```
+
+</Steps>
+
+**Validation** : ✅ Le fond de la page doit être rose clair avec une bordure rouge en haut
+
+**Si ça ne fonctionne pas** :
+- Vérifiez le chemin dans `libraries.yml` (relatif au dossier du thème)
+- Inspectez F12 → Network : le fichier `test.css` doit être chargé (statut 200)
+- Vérifiez la console pour des erreurs 404
+
+---
+
+### Exercice 4 : Ajouter les régions e-commerce
+
+**Objectif** : Personnaliser les régions pour le projet TailStore.
+
+<Steps>
+
+1. Modifiez la section `regions:` dans `tailstore.info.yml` pour ajouter :
+   ```yaml
+   regions:
+     header: 'Header'
+     cart_header: 'Cart icon'
+     primary_menu: 'Primary menu'
+     content: 'Content'
+     sidebar: 'Sidebar'
+     footer_top: 'Footer'
+   ```
+
+2. Videz le cache :
+   ```bash
+   drush cr
+   ```
+
+3. Allez dans **Structure** → **Block layout** (`/admin/structure/block`)
+
+4. Vérifiez que vos nouvelles régions apparaissent
+
+</Steps>
+
+**Validation** : ✅ Les régions "Cart icon" et "Sidebar" sont visibles dans la page de placement des blocs
+
+## ✅ Checklist complète
+
+| Étape | Fichier/Action | Statut | Commande de validation |
+|-------|----------------|--------|------------------------|
+| 1 | Créer `themes/custom/tailstore/` | ⬜ | `ls themes/custom/tailstore` |
+| 2 | `tailstore.info.yml` (minimal) | ⬜ | `drush theme:list \| grep tailstore` |
+| 3 | Régions e-commerce ajoutées | ⬜ | Vérifier `/admin/structure/block` |
+| 4 | `tailstore.libraries.yml` | ⬜ | Valider syntaxe YAML |
+| 5 | `tailstore.theme` avec hook | ⬜ | `php -l themes/custom/tailstore/tailstore.theme` |
+| 6 | CSS de base (reset, typography) | ⬜ | Inspecter `<head>` (F12) |
+| 7 | `tailstore.breakpoints.yml` | ⬜ | `drush pm:enable breakpoint` |
+| 8 | Activer le thème | ⬜ | `drush config:get system.theme default` |
+| 9 | Vider le cache | ⬜ | `drush cr` |
+| 10 | Site fonctionnel | ⬜ | Ouvrir dans le navigateur |
+
+**Temps estimé total** : 45 minutes
+
+<Aside type="tip" title="Sauvegarde recommandée">
+Une fois le thème fonctionnel, créez un snapshot :
+```bash
+drush sql:dump > backup-theme-fonctionnel.sql
+```
+</Aside>
 
 ## 🔜 Prochaine étape
 
