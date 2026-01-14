@@ -4,8 +4,8 @@ description: Comprendre l'organisation d'un projet Drupal 11
 sidebar:
   order: 4
 
-# status: draft
-# last-reviewed: 2025-12-10
+# status: stable
+# last-reviewed: 2026-01-14
 ---
 
 import { FileTree } from '@astrojs/starlight/components';
@@ -133,6 +133,37 @@ config/
 ```
 
 Ce dossier contient les fichiers YAML exportés par `drush cex`. C'est le cœur du système de configuration sync.
+
+:::danger[Sécurité : Configuration hors du docroot]
+
+**Pourquoi sortir la configuration du docroot ?**
+
+Le dossier `config/sync/` est **intentionnellement placé en dehors du docroot** (`web/`) pour des raisons de sécurité critiques :
+
+#### 🚨 Risques si la config était dans le docroot
+
+- **Fuite de données sensibles** : Les fichiers YAML contiennent des informations comme :
+  - Clés API (Stripe, services externes)
+  - Configurations de sécurité
+  - Paramètres système confidentiels
+  - Données de connexion à des services tiers
+
+- **Accès non autorisé** : Si un attaquant accède au serveur web, il pourrait :
+  - Télécharger toute votre configuration
+  - Découvrir des vulnérabilités dans vos services connectés
+  - Comprendre l'architecture de votre site pour mieux l'attaquer
+
+- **Exposition accidentelle** : Une mauvaise configuration du serveur web pourrait rendre ces fichiers accessibles via HTTP.
+
+#### ✅ Avantages de la séparation
+
+- **Isolation des données sensibles** : La config reste inaccessible depuis le web
+- **Contrôle d'accès granulaire** : Seuls les processus système et les admins ont accès
+- **Conformité sécurité** : Respecte les bonnes pratiques de sécurité web
+- **Prévention des fuites** : Même en cas de compromission du site, la config reste protégée
+
+**Rappelez-vous** : Le docroot (`web/`) est public, tout le reste doit être considéré comme privé !
+:::
 
 ## 📄 Fichiers importants
 
@@ -281,6 +312,102 @@ web/themes/custom/tailstore/
 └── js/
     └── script.js
 ```
+
+## 🌍 Multisite Drupal
+
+### Concept
+
+Le **multisite** est une fonctionnalité Drupal permettant de servir plusieurs sites avec une seule installation Drupal. Chaque site peut avoir :
+
+- Sa propre base de données
+- Ses propres modules et thèmes activés
+- Sa propre configuration
+- Son propre système de fichiers
+
+### Structure multisite
+
+```
+web/sites/
+├── sites.php              # Détermination du site
+├── default/               # Site principal
+│   ├── settings.php
+│   ├── services.yml
+│   └── files/
+├── site1.local/           # Deuxième site
+│   ├── settings.php
+│   ├── services.yml
+│   └── files/
+└── site2.com/             # Troisième site
+    ├── settings.php
+    ├── services.yml
+    └── files/
+```
+
+### Comment ça marche ?
+
+1. **Détermination du site** : Le fichier `sites.php` vérifie le domaine/host de la requête
+2. **Configuration par site** : Chaque dossier `sites/<nom>/` contient sa propre configuration
+3. **Base de données dédiée** : `settings.php` spécifie quelle BDD utiliser
+4. **Isolation** : Les fichiers uploadés sont isolés par site
+
+### Exemple de sites.php
+
+```php
+<?php
+
+// Détermination automatique basée sur le domaine HTTP_HOST
+$sites = [
+    'site1.local' => 'site1.local',
+    'www.site1.local' => 'site1.local',
+    'site2.com' => 'site2.com',
+    'www.site2.com' => 'site2.com',
+];
+
+if (isset($sites[$_SERVER['HTTP_HOST']])) {
+    $site_dir = $sites[$_SERVER['HTTP_HOST']];
+}
+```
+
+### Exemple de settings.php (site1.local)
+
+```php
+<?php
+
+// Configuration spécifique au site 1
+$databases['default']['default'] = [
+    'database' => 'site1_db',
+    'username' => 'db_user',
+    'password' => 'db_pass',
+    'host' => 'db',
+    'driver' => 'mysql',
+];
+
+$settings['config_sync_directory'] = '../../config/site1';
+```
+
+:::tip[Avantages]
+✅ Une seule installation Drupal à maintenir
+✅ Mises à jour simplifiées pour tous les sites
+✅ Économies de ressources serveur
+✅ Gestion centralisée des modules
+:::
+
+:::caution[Limitations]
+⚠️ Plus complexe à configurer
+⚠️ Modules activés globalement (même si différentes configurations)
+⚠️ Performance : une seule instance PHP pour tous les sites
+⚠️ Peu utilisé en production (préférence pour instances séparées)
+:::
+
+### Cas d'usage
+
+Le multisite est généralement utilisé pour :
+
+- **Réseaux de sites** : Agences avec plusieurs clients
+- **Localisation** : Un site par langue avec contenu partagé
+- **Prototypes** : Tester plusieurs configurations du même site
+
+**Pour la plupart des projets** : Une instance Drupal = un domaine. C'est plus simple et plus robuste.
 
 ## 🔍 Où trouver quoi ?
 
