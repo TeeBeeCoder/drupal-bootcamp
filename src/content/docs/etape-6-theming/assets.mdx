@@ -3,20 +3,60 @@ title: Assets (CSS/JS)
 description: Gérer les fichiers CSS et JavaScript dans un thème Drupal
 sidebar:
   order: 3
+
+# status: stable
+# last-reviewed: 2026-01-14
 ---
 
 import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
 
-## 📚 Système de librairies
+## 📚 Système de librairies Drupal
 
-Drupal utilise un système de **librairies** pour gérer les assets CSS et JavaScript. Chaque librairie est déclarée dans le fichier `*.libraries.yml`.
+Drupal utilise un système de **librairies** pour gérer les assets CSS et JavaScript. Contrairement à l'inclusion classique de fichiers dans le `<head>`, ce système offre un contrôle granulaire et des optimisations automatiques.
 
-### Avantages
+### 🎯 Pourquoi un système de librairies ?
 
-- Chargement conditionnel
-- Gestion des dépendances
-- Agrégation et minification
-- Cache optimisé
+**Problèmes de l'approche classique** :
+```html
+<!-- ❌ Mauvais : Chargement non optimisé #}
+<link rel="stylesheet" href="/style.css">
+<script src="/script.js"></script>
+```
+
+**Avantages du système Drupal** :
+- ✅ **Chargement conditionnel** : Ne charger que ce qui est nécessaire
+- ✅ **Gestion des dépendances** : Ordre de chargement automatique
+- ✅ **Agrégation** : Combine plusieurs fichiers en un seul
+- ✅ **Minification** : Réduit la taille des fichiers en production
+- ✅ **Cache optimisé** : Cache navigateur avec busting automatique
+- ✅ **Prévention des doublons** : Un fichier n'est chargé qu'une seule fois
+
+### 🔄 Cycle de vie d'un asset
+
+```
+1. Déclaration dans .libraries.yml
+         ↓
+2. Attachement (global, template, PHP)
+         ↓
+3. Résolution des dépendances
+         ↓
+4. Agrégation (si activée)
+         ↓
+5. Minification (si activée)
+         ↓
+6. Injection dans le HTML (<head> ou avant </body>)
+         ↓
+7. Cache navigateur avec version
+```
+
+### 🌐 Vue d'ensemble
+
+| Fichier | Rôle | Exemple |
+|---------|-------|----------|
+| `*.libraries.yml` | Déclare les librairies | `tailstore.libraries.yml` |
+| `*.info.yml` | Attache globalement | `libraries: - tailstore/global` |
+| `*.theme` | Attache en PHP | `$variables['#attached']['library'][]` |
+| Templates Twig | Attache dans un template | `{{ attach_library('tailstore/slider') }}` |
 
 ## 🎨 Déclarer des CSS
 
@@ -553,6 +593,409 @@ function tailstore_preprocess_page(&$variables) {
 }
 ```
 
+## 🎯 Exercices pratiques
+
+### Exercice 1 : Créer une librairie CSS basique
+
+**Objectif** : Créer et attacher une librairie CSS simple pour personnaliser les boutons.
+
+<Steps>
+
+1. Créez le fichier CSS :
+   ```bash
+   mkdir -p themes/custom/tailstore/css/components
+   touch themes/custom/tailstore/css/components/buttons.css
+   ```
+
+2. Ajoutez des styles de test :
+   ```css
+   /* css/components/buttons.css */
+   .btn-test {
+     background-color: #ff6b6b;
+     color: white;
+     padding: 10px 20px;
+     border-radius: 5px;
+     border: none;
+   }
+   ```
+
+3. Déclarez la librairie dans `tailstore.libraries.yml` :
+   ```yaml
+   buttons:
+     version: 1.0.0
+     css:
+       component:
+         css/components/buttons.css: {}
+   ```
+
+4. Attachez-la globalement dans `tailstore.info.yml` :
+   ```yaml
+   libraries:
+     - tailstore/global
+     - tailstore/buttons
+   ```
+
+5. Videz le cache :
+   ```bash
+   drush cr
+   ```
+
+6. Testez en ajoutant un bouton quelque part :
+   ```html
+   <button class="btn-test">Test Button</button>
+   ```
+
+</Steps>
+
+**Validation** : ✅ Le bouton doit avoir un fond rouge avec le style appliqué
+
+---
+
+### Exercice 2 : Librairie JavaScript avec Drupal.behaviors
+
+**Objectif** : Créer un script qui affiche une alerte au clic sur un bouton.
+
+<Steps>
+
+1. Créez le fichier JS :
+   ```bash
+   mkdir -p themes/custom/tailstore/js
+   touch themes/custom/tailstore/js/alert.js
+   ```
+
+2. Ajoutez le code :
+   ```javascript
+   (function (Drupal, once) {
+     'use strict';
+     
+     Drupal.behaviors.testAlert = {
+       attach: function (context, settings) {
+         once('test-alert', '.btn-alert', context).forEach(function (button) {
+           button.addEventListener('click', function () {
+             alert('Hello from Drupal!');
+           });
+         });
+       }
+     };
+     
+   })(Drupal, once);
+   ```
+
+3. Déclarez dans `tailstore.libraries.yml` :
+   ```yaml
+   alert:
+     version: 1.0.0
+     js:
+       js/alert.js: {}
+     dependencies:
+       - core/drupal
+       - core/once
+   ```
+
+4. Attachez dans un template ou globalement
+
+5. Testez avec :
+   ```html
+   <button class="btn-alert">Click me!</button>
+   ```
+
+</Steps>
+
+**Validation** : ✅ Un clic sur le bouton doit afficher "Hello from Drupal!"
+
+---
+
+### Exercice 3 : Chargement conditionnel
+
+**Objectif** : Charger une librairie uniquement sur les pages produit.
+
+<Steps>
+
+1. Créez une librairie pour les produits :
+   ```yaml
+   # tailstore.libraries.yml
+   product-zoom:
+     version: 1.0.0
+     js:
+       js/product-zoom.js: {}
+     dependencies:
+       - tailstore/global
+   ```
+
+2. Attachez conditionnellement dans `tailstore.theme` :
+   ```php
+   function tailstore_preprocess_node(&$variables) {
+     $node = $variables['node'];
+     
+     if ($node->bundle() === 'product') {
+       $variables['#attached']['library'][] = 'tailstore/product-zoom';
+     }
+   }
+   ```
+
+3. Videz le cache et testez :
+   ```bash
+   drush cr
+   ```
+
+4. Vérifiez (F12 → Network) :
+   - Sur une page produit : `product-zoom.js` est chargé
+   - Sur une autre page : `product-zoom.js` n'est PAS chargé
+
+</Steps>
+
+**Validation** : ✅ La librairie ne se charge que sur les pages produit
+
+---
+
+### Exercice 4 : Utiliser drupalSettings
+
+**Objectif** : Passer des données PHP vers JavaScript.
+
+<Steps>
+
+1. Dans `tailstore.theme`, ajoutez des settings :
+   ```php
+   function tailstore_preprocess_page(&$variables) {
+     $variables['#attached']['drupalSettings']['tailstore'] = [
+       'siteUrl' => \Drupal::request()->getSchemeAndHttpHost(),
+       'currency' => '€',
+       'locale' => 'fr-FR',
+     ];
+   }
+   ```
+
+2. Créez `js/settings-test.js` :
+   ```javascript
+   (function (Drupal, drupalSettings) {
+     'use strict';
+     
+     Drupal.behaviors.settingsTest = {
+       attach: function (context, settings) {
+         console.log('Site URL:', drupalSettings.tailstore.siteUrl);
+         console.log('Currency:', drupalSettings.tailstore.currency);
+         console.log('Locale:', drupalSettings.tailstore.locale);
+       }
+     };
+     
+   })(Drupal, drupalSettings);
+   ```
+
+3. Déclarez la librairie et attachez-la
+
+4. Ouvrez la console (F12) et vérifiez les logs
+
+</Steps>
+
+**Validation** : ✅ Les valeurs PHP apparaissent dans la console JavaScript
+
+## 🧠 Bonnes pratiques essentielles
+
+### ⚡ Performance
+
+**1. Charger uniquement ce qui est nécessaire**
+
+```php
+// ❌ Mauvais - Charge partout
+// Dans tailstore.info.yml
+libraries:
+  - tailstore/slider
+  - tailstore/cart
+  - tailstore/filters
+
+// ✅ Bon - Charge conditionnellement
+function tailstore_preprocess_page(&$variables) {
+  // Slider uniquement sur homepage
+  if (\Drupal::service('path.matcher')->isFrontPage()) {
+    $variables['#attached']['library'][] = 'tailstore/slider';
+  }
+  
+  // Panier uniquement si utilisateur connecté
+  if (\Drupal::currentUser()->isAuthenticated()) {
+    $variables['#attached']['library'][] = 'tailstore/cart';
+  }
+}
+```
+
+**2. Utiliser defer pour les scripts non critiques**
+
+```yaml
+analytics:
+  version: 1.0.0
+  js:
+    js/analytics.js:
+      attributes:
+        defer: true  # Charge après le DOM
+```
+
+**3. Précharger les ressources critiques**
+
+```php
+function tailstore_preprocess_html(&$variables) {
+  $variables['#attached']['html_head_link'][][] = [
+    'rel' => 'preload',
+    'href' => '/themes/custom/tailstore/fonts/inter.woff2',
+    'as' => 'font',
+    'type' => 'font/woff2',
+    'crossorigin' => 'anonymous',
+  ];
+}
+```
+
+**4. Activer l'agrégation en production**
+
+```bash
+# Mode production
+drush config:set system.performance css.preprocess true -y
+drush config:set system.performance js.preprocess true -y
+drush cr
+```
+
+<Aside type="tip" title="Impact performance">
+**Sans agrégation** : 15 requêtes CSS + 20 requêtes JS = 35 requêtes  
+**Avec agrégation** : 1 requête CSS + 1 requête JS = 2 requêtes
+
+🚀 **Gain** : 94% de requêtes en moins !
+</Aside>
+
+### 🔒 Sécurité
+
+**1. Toujours déclarer les dépendances**
+
+```yaml
+# ❌ Dangereux - Suppose que Drupal est disponible
+cart:
+  js:
+    js/cart.js: {}
+
+# ✅ Sécurisé - Déclare explicitement
+cart:
+  js:
+    js/cart.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+```
+
+**2. Valider les données drupalSettings**
+
+```javascript
+// ❌ Dangereux - Peut crasher si non défini
+const apiUrl = drupalSettings.tailstore.apiUrl;
+
+// ✅ Sécurisé - Vérifie l'existence
+const apiUrl = drupalSettings.tailstore?.apiUrl || '/api/default';
+```
+
+**3. Éviter eval() et innerHTML**
+
+```javascript
+// ❌ Dangereux - Faille XSS
+element.innerHTML = userInput;
+
+// ✅ Sécurisé
+element.textContent = userInput;
+// Ou
+element.insertAdjacentText('beforeend', userInput);
+```
+
+### 📝 Conventions de code
+
+**1. Nommage des librairies**
+
+```yaml
+# Format : theme-nom/fonctionnalite
+tailstore/global          # Librairie de base
+tailstore/product-zoom    # Fonctionnalité spécifique
+tailstore/cart            # Composant
+```
+
+**2. Structure JavaScript**
+
+```javascript
+(function (Drupal, once) {
+  'use strict';
+  
+  // 1. Namespace pour éviter les conflits
+  Drupal.tailstore = Drupal.tailstore || {};
+  
+  // 2. Fonctions privées
+  function privateHelper() {
+    // ...
+  }
+  
+  // 3. Behavior Drupal
+  Drupal.behaviors.myFeature = {
+    attach: function (context, settings) {
+      once('my-feature', '.selector', context).forEach(function (element) {
+        // Code d'initialisation
+      });
+    }
+  };
+  
+  // 4. Fonctions publiques
+  Drupal.tailstore.publicMethod = function () {
+    return privateHelper();
+  };
+  
+})(Drupal, once);
+```
+
+**3. Commentaires obligatoires**
+
+```javascript
+/**
+ * @file
+ * Product gallery functionality.
+ */
+
+/**
+ * Gallery behavior.
+ * 
+ * Handles thumbnail clicks and updates the main image.
+ */
+Drupal.behaviors.productGallery = {
+  // ...
+};
+```
+
+### ♿ Accessibilité
+
+**1. Annoncer les changements dynamiques**
+
+```javascript
+// Utiliser Drupal.announce() pour les lecteurs d'écran
+button.addEventListener('click', function () {
+  addToCart(productId);
+  Drupal.announce(Drupal.t('Product added to cart'));
+});
+```
+
+**2. Gérer le focus**
+
+```javascript
+// Après ouverture d'une modale
+modal.querySelector('.modal__close').focus();
+
+// Piège du focus dans la modale
+modal.addEventListener('keydown', function (e) {
+  if (e.key === 'Tab') {
+    // Logique de trap focus
+  }
+});
+```
+
+**3. Support clavier**
+
+```javascript
+element.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    this.click();
+  }
+});
+```
+
 ## 🔧 Vérifier le chargement
 
 ```bash
@@ -568,6 +1011,324 @@ drush cr
 ```
 
 Inspectez le code source HTML pour voir les fichiers chargés.
+
+<Aside type="tip" title="Outils de débogage">
+**Dans le navigateur (F12)** :
+- **Network** : Voir tous les fichiers chargés (CSS, JS)
+- **Console** : Voir les erreurs JavaScript
+- **Performance** : Analyser les temps de chargement
+
+**Commandes Drush** :
+```bash
+# Lister les librairies d'un thème
+drush php-eval "print_r(\Drupal::service('library.discovery')->getLibrariesByExtension('tailstore'));"
+
+# Vérifier si une librairie existe
+drush php-eval "var_dump(\Drupal::service('library.discovery')->getLibraryByName('tailstore', 'global'));"
+```
+</Aside>
+
+## ✅ Checklist de validation
+
+### Librairies créées
+
+| Librairie | Contenu | Attachement | Statut |
+|-----------|---------|-------------|--------|
+| `global` | CSS/JS de base | Global (`info.yml`) | ⬜ |
+| `buttons` | Styles boutons | Global | ⬜ |
+| `product-zoom` | JS zoom images | Conditionnel (produits) | ⬜ |
+| `cart` | JS panier | Conditionnel | ⬜ |
+
+### Vérifications techniques
+
+<Steps>
+
+1. **Fichiers déclarés dans .libraries.yml**
+   ```bash
+   # Vérifier la syntaxe YAML
+   cat themes/custom/tailstore/tailstore.libraries.yml | grep -A 5 "global:"
+   ```
+   **Attendu** : Syntaxe YAML valide, `version:` obligatoire
+
+2. **Fichiers existent sur le disque**
+   ```bash
+   # Vérifier que les fichiers CSS/JS existent
+   find themes/custom/tailstore -name "*.css" -o -name "*.js"
+   ```
+   **Attendu** : Tous les fichiers déclarés sont présents
+
+3. **Librairies chargées dans le HTML**
+   ```bash
+   # Inspecter le code source (Ctrl+U)
+   # Chercher <link> et <script>
+   curl -s http://localhost/ | grep -E "<link|<script" | head -10
+   ```
+   **Attendu** : Fichiers CSS dans `<head>`, JS avant `</body>`
+
+4. **Pas d'erreurs 404**
+   ```bash
+   # Ouvrir F12 → Network → Filtrer par "CSS" et "JS"
+   # Vérifier que tous les fichiers sont en statut 200
+   ```
+
+5. **JavaScript fonctionnel**
+   ```bash
+   # Ouvrir F12 → Console
+   # Vérifier qu'il n'y a pas d'erreurs
+   ```
+
+6. **Agrégation (production uniquement)**
+   ```bash
+   # Vérifier la config
+   drush config:get system.performance css.preprocess
+   drush config:get system.performance js.preprocess
+   
+   # En production, les deux doivent être à true
+   ```
+
+</Steps>
+
+### Tests fonctionnels
+
+- [ ] Les styles CSS sont appliqués (boutons, cartes, etc.)
+- [ ] Les Drupal.behaviors fonctionnent (interactions)
+- [ ] Les librairies conditionnelles se chargent au bon moment
+- [ ] drupalSettings est accessible en JavaScript
+- [ ] Pas d'erreurs dans la console (F12)
+- [ ] Performance acceptable (< 3s chargement)
+- [ ] Responsive fonctionne (mobile, tablette, desktop)
+
+### Script de validation complet
+
+```bash
+#!/bin/bash
+
+echo "=== Vérification Assets TailStore ==="
+
+# 1. Vérifier fichiers CSS
+echo "\n🎨 Fichiers CSS :"
+find themes/custom/tailstore -name "*.css" -type f | wc -l
+echo "fichiers CSS trouvés"
+
+# 2. Vérifier fichiers JS
+echo "\n📜 Fichiers JavaScript :"
+find themes/custom/tailstore -name "*.js" -type f | wc -l
+echo "fichiers JS trouvés"
+
+# 3. Vérifier syntaxe YAML
+echo "\n⚙️ Validation YAML :"
+if command -v yamllint &> /dev/null; then
+  yamllint themes/custom/tailstore/tailstore.libraries.yml
+else
+  echo "yamllint non installé, validation manuelle nécessaire"
+fi
+
+# 4. Vérifier agrégation
+echo "\n📦 Agrégation CSS/JS :"
+drush config:get system.performance css.preprocess
+drush config:get system.performance js.preprocess
+
+# 5. Vérifier erreurs logs
+echo "\n⚠️ Erreurs récentes :"
+drush watchdog:show --severity=Error --count=5 | grep -i "javascript\|css" || echo "Aucune erreur asset"
+
+echo "\n✅ Vérification terminée"
+```
+
+**Temps estimé total** : 2-3 heures pour créer et tester tous les assets
+
+## 🚨 Erreurs courantes et solutions
+
+### Erreur 1 : Fichier CSS/JS non chargé (404)
+
+**Symptôme** : Erreur 404 dans Network (F12)
+
+**Causes possibles** :
+- Chemin incorrect dans `.libraries.yml`
+- Fichier n'existe pas sur le disque
+- Permissions incorrectes
+
+**Solution** :
+```bash
+# 1. Vérifier le chemin exact
+ls -la themes/custom/tailstore/css/style.css
+
+# 2. Vérifier la déclaration dans .libraries.yml
+cat themes/custom/tailstore/tailstore.libraries.yml | grep "css/style.css"
+
+# 3. Vérifier les permissions
+chmod 644 themes/custom/tailstore/css/*.css
+chmod 644 themes/custom/tailstore/js/*.js
+
+# 4. Vider le cache
+drush cr
+```
+
+### Erreur 2 : JavaScript ne fonctionne pas
+
+**Symptôme** : Pas d'erreur mais le code ne s'exécute pas
+
+**Causes** :
+- Dépendances manquantes (`core/drupal`, `core/once`)
+- Syntaxe JavaScript incorrecte
+- `once()` mal utilisé
+
+**Solution** :
+```javascript
+// ❌ Mauvais - Dépendances manquantes
+(function () {
+  document.querySelectorAll('.btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      // ...
+    });
+  });
+})();
+
+// ✅ Bon - Drupal.behaviors + once
+(function (Drupal, once) {
+  'use strict';
+  
+  Drupal.behaviors.myFeature = {
+    attach: function (context, settings) {
+      once('my-feature', '.btn', context).forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          // ...
+        });
+      });
+    }
+  };
+  
+})(Drupal, once);
+```
+
+```yaml
+# Déclarer les dépendances
+my-library:
+  js:
+    js/script.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+```
+
+### Erreur 3 : "Drupal is not defined"
+
+**Symptôme** : Erreur console JavaScript
+
+**Cause** : Librairie chargée avant `core/drupal`
+
+**Solution** :
+```yaml
+# Toujours déclarer core/drupal en dépendance
+my-library:
+  js:
+    js/script.js: {}
+  dependencies:
+    - core/drupal  # 👈 Obligatoire !
+```
+
+### Erreur 4 : Styles CSS ne s'appliquent pas
+
+**Symptôme** : Fichier chargé (200) mais styles invisibles
+
+**Causes** :
+- Spécificité CSS insuffisante
+- Cache navigateur
+- Ordre de chargement
+
+**Solution** :
+```bash
+# 1. Vider le cache Drupal
+drush cr
+
+# 2. Vider le cache navigateur
+# Ctrl+Shift+R (Chrome/Firefox)
+
+# 3. Vérifier l'ordre de chargement
+# Utiliser weight dans .libraries.yml
+```
+
+```yaml
+global:
+  css:
+    theme:
+      css/base.css:
+        weight: -10  # Charge en premier
+      css/custom.css:
+        weight: 10   # Charge après
+```
+
+### Erreur 5 : "once is not defined"
+
+**Symptôme** : Erreur JavaScript en production
+
+**Cause** : Dépendance `core/once` non déclarée
+
+**Solution** :
+```yaml
+my-library:
+  js:
+    js/script.js: {}
+  dependencies:
+    - core/drupal
+    - core/once     # 👈 Nécessaire pour once()
+```
+
+### Erreur 6 : Agrégation casse le site
+
+**Symptôme** : Site fonctionne en dev mais casse en production
+
+**Cause** : Ordre de chargement changé avec l'agrégation
+
+**Solution** :
+```yaml
+# Utiliser weight pour contrôler l'ordre
+my-library:
+  js:
+    js/init.js:
+      weight: -10   # Charge en premier
+    js/main.js:
+      weight: 0     # Charge après
+```
+
+```bash
+# Tester avec agrégation activée localement
+drush config:set system.performance js.preprocess true -y
+drush cr
+```
+
+<Aside type="tip" title="Débogage avancé">
+**Module Devel** : Affiche les librairies chargées sur chaque page
+
+```bash
+composer require --dev drupal/devel
+drush pm:enable devel
+```
+
+En bas de page, cliquez sur l'onglet "Devel" pour voir toutes les librairies actives.
+</Aside>
+
+## 📚 Ressources complémentaires
+
+### Documentation officielle
+
+- [Asset Libraries](https://www.drupal.org/docs/theming-drupal/adding-assets-css-js-to-a-drupal-theme) - Guide complet
+- [JavaScript API](https://www.drupal.org/docs/develop/standards/javascript/javascript-api-overview) - Drupal.behaviors, once
+- [Library Definitions](https://www.drupal.org/node/2274843) - Format .libraries.yml
+- [Aggregation](https://www.drupal.org/docs/administering-a-drupal-site/optimizing-performance) - Optimisation
+
+### Outils recommandés
+
+- **Vite** : Bundler moderne ultra-rapide (utilisé dans ce projet)
+- **PostCSS** : Transformations CSS (autoprefixer, etc.)
+- **ESLint** : Linter JavaScript
+- **Stylelint** : Linter CSS
+- **Prettier** : Formateur de code automatique
+
+### Exemples de code
+
+- [Drupal Core Libraries](https://git.drupalcode.org/project/drupal/-/blob/11.x/core/core.libraries.yml) - Exemples officiels
+- [Olivero Libraries](https://git.drupalcode.org/project/drupal/-/blob/11.x/core/themes/olivero/olivero.libraries.yml) - Thème moderne
 
 ## ✅ Checklist
 
