@@ -1,30 +1,58 @@
 ---
 title: Autres Modules Utiles
-description: Admin Toolbar, Simple Sitemap, et autres modules pour améliorer TailStore
+description: Admin Toolbar, Simple Sitemap, et autres modules essentiels pour professionnaliser TailStore
 sidebar:
   order: 5
+
+# status: stable
+# last-reviewed: 2026-01-14
 ---
 
 import { Tabs, TabItem, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+<Aside type="note" title="Modules complémentaires">
+Les modules présentés ici améliorent significativement :
+- **La productivité** : Interface admin optimisée
+- **Le SEO** : Sitemap, redirections
+- **La sécurité** : Protection contre les attaques courantes
+- **L'expérience** : Médias optimisés, gestion facilitée
+
+Pour TailStore, ils sont **fortement recommandés** en production.
+</Aside>
 
 ## 🧰 Modules d'administration
 
 ### Admin Toolbar
 
-Améliore la barre d'outils avec des menus déroulants.
+Améliore drastiquement la barre d'outils avec des menus déroulants multi-niveaux.
 
 ```bash
 ddev composer require drupal/admin_toolbar
 ddev drush en admin_toolbar admin_toolbar_tools -y
 ```
 
-**Sous-modules :**
+**Sous-modules disponibles :**
 
-| Module | Fonctionnalité |
-|--------|----------------|
-| `admin_toolbar` | Menus déroulants |
-| `admin_toolbar_tools` | Raccourcis (flush cache, cron) |
-| `admin_toolbar_search` | Recherche dans le menu |
+| Module | Fonctionnalité | Recommandé |
+|--------|----------------|------------|
+| `admin_toolbar` | Menus déroulants | ✅ Essentiel |
+| `admin_toolbar_tools` | Raccourcis (flush cache, cron, dev) | ✅ Très utile |
+| `admin_toolbar_search` | Recherche dans le menu admin | ⭐ Optionnel |
+| `admin_toolbar_links_access_filter` | Filtre les liens selon permissions | ⭐ Optionnel |
+
+**Avantages** :
+- ⚡ Accès rapide à toutes les pages admin sans navigation
+- 🔄 Bouton "Vider le cache" toujours visible
+- 🚀 Gain de temps : réduction de 50% des clics
+- 👥 Adapté aux débutants comme aux experts
+
+<Aside type="tip" title="Raccourcis utiles">
+Avec Admin Toolbar Tools, ajoutez des raccourcis personnalisés :
+- **Vider le cache** (dans la toolbar)
+- **Lancer le cron**
+- **Activer/Désactiver mode maintenance**
+- **Générer du contenu de test** (avec Devel)
+</Aside>
 
 ### Gin Admin Theme
 
@@ -180,19 +208,52 @@ ddev drush en username_enumeration_prevention -y
 
 ## 🛠️ Développement
 
+<Aside type="caution" title="⚠️ Environnement local uniquement">
+Les modules de développement suivants NE DOIVENT **JAMAIS** être activés en production :
+- 🚨 **Risques de sécurité** : Exposition d'informations sensibles
+- 🐌 **Performance** : Ralentissement significatif du site
+- 🔒 **Accès** : Outils de debug accessibles publiquement
+
+Installez-les avec `--dev` pour qu'ils ne soient pas déployés automatiquement.
+</Aside>
+
 ### Devel
 
-Outils de développement essentiels.
+Outils de développement essentiels pour debugger.
 
 ```bash
+# Installer en dépendance de développement
 ddev composer require --dev drupal/devel
 ddev drush en devel devel_generate -y
 ```
 
-**Fonctionnalités :**
-- Génération de contenu test
-- Affichage des variables (dpm, kint)
-- Inspection des routes
+**Fonctionnalités principales** :
+- 🐛 **Debug** : `dpm()`, `kint()` pour afficher des variables
+- 📊 **Génération** : Créer des contenus, utilisateurs, termes de test
+- 🔍 **Inspection** : Routes, hooks, thèmes, variables
+- 🔧 **Outils** : Rebuild menus, clear cache, reinstall modules
+
+**Exemples d'utilisation** :
+```php
+// Dans un template Twig
+{{ kint(node) }}
+
+// Dans un module PHP
+\Drupal::service('devel.dumper')->dpm($variable);
+dpm($node); // Raccourci
+```
+
+**Générer du contenu de test** :
+```bash
+# 50 produits
+ddev drush devel-generate:content 50 --bundles=product
+
+# 20 termes de taxonomie
+ddev drush devel-generate:terms category 20
+
+# 10 utilisateurs
+ddev drush devel-generate:users 10
+```
 
 ### Webprofiler
 
@@ -350,24 +411,145 @@ ddev drush theme:enable gin -y
 ddev drush config-set system.theme admin gin -y
 ```
 
-## ✅ Checklist finale
+## 📋 Checklist finale
 
-### Production
+### Production (obligatoires)
 
-- [ ] Pathauto configuré
-- [ ] Metatag configuré
+- [ ] Pathauto configuré (URLs propres)
+- [ ] Metatag configuré (SEO + Open Graph)
 - [ ] Webform avec formulaire contact
 - [ ] Simple Sitemap généré
-- [ ] Redirect activé
+- [ ] Redirect activé (redirections 301)
 - [ ] Honeypot anti-spam
 - [ ] Admin Toolbar installé
 - [ ] Gin theme admin
 
-### Développement
+### Production (recommandés)
+
+- [ ] Focal Point (images)
+- [ ] Security Kit (protection)
+- [ ] Google Tag (analytics)
+- [ ] Password Policy (sécurité mots de passe)
+- [ ] Symfony Mailer (emails transactionnels)
+
+### Développement uniquement
 
 - [ ] Devel activé (local uniquement)
 - [ ] Webprofiler activé (local uniquement)
 - [ ] Stage File Proxy configuré
+
+## 🚀 Installation complète TailStore
+
+### Commande unique pour tous les modules essentiels
+
+```bash
+# Modules production
+ddev composer require \
+  drupal/pathauto \
+  drupal/metatag \
+  drupal/webform \
+  drupal/redirect \
+  drupal/simple_sitemap \
+  drupal/admin_toolbar \
+  drupal/gin \
+  drupal/token \
+  drupal/focal_point \
+  drupal/honeypot \
+  drupal/seckit \
+  drupal/google_tag
+
+# Modules dev
+ddev composer require --dev \
+  drupal/devel \
+  drupal/webprofiler \
+  drupal/stage_file_proxy
+
+# Activer les modules production
+ddev drush en \
+  pathauto token \
+  metatag metatag_open_graph metatag_twitter_cards \
+  webform webform_ui \
+  redirect simple_sitemap \
+  admin_toolbar admin_toolbar_tools \
+  focal_point honeypot seckit google_tag -y
+
+# Activer Gin comme thème admin
+ddev drush theme:enable gin -y
+ddev drush config-set system.theme admin gin -y
+
+# Modules dev (local uniquement)
+ddev drush en devel devel_generate webprofiler -y
+```
+
+<Aside type="tip" title="Automatisation avec script">
+Créez un script `scripts/install-modules.sh` :
+
+```bash
+#!/bin/bash
+set -e
+
+echo "📦 Installation des modules TailStore..."
+
+# Production
+composer require drupal/pathauto drupal/metatag drupal/webform # ...
+
+# Dev
+composer require --dev drupal/devel drupal/webprofiler
+
+# Activation
+drush en pathauto metatag webform -y
+
+# Config
+drush theme:enable gin -y
+drush config-set system.theme admin gin -y
+
+echo "✅ Installation terminée !"
+```
+
+Exécuter : `bash scripts/install-modules.sh`
+</Aside>
+
+## 📊 Matrice de recommandations
+
+### Par besoin
+
+| Besoin | Module | Priorité | Complexité |
+|--------|--------|----------|-------------|
+| **URLs propres** | Pathauto + Token | 🔴 Critique | 🟢 Facile |
+| **SEO** | Metatag + Simple Sitemap | 🔴 Critique | 🟡 Moyen |
+| **Formulaires** | Webform | 🔴 Critique | 🟡 Moyen |
+| **Admin moderne** | Gin + Admin Toolbar | 🟠 Important | 🟢 Facile |
+| **Anti-spam** | Honeypot | 🟠 Important | 🟢 Facile |
+| **Redirections** | Redirect | 🟠 Important | 🟢 Facile |
+| **Sécurité** | Security Kit | 🟡 Recommandé | 🟡 Moyen |
+| **Images** | Focal Point | 🟡 Recommandé | 🟢 Facile |
+| **Analytics** | Google Tag | 🟡 Recommandé | 🟢 Facile |
+| **Debug** | Devel (dev only) | 🟡 Recommandé | 🟢 Facile |
+
+### Par environnement
+
+**Local (dev)** :
+```bash
+✅ Tous les modules production
+✅ Devel + Devel Generate
+✅ Webprofiler
+✅ Stage File Proxy
+```
+
+**Staging** :
+```bash
+✅ Tous les modules production
+❌ PAS de modules dev
+✅ Configuration identique à prod
+```
+
+**Production** :
+```bash
+✅ Modules essentiels uniquement
+❌ AUCUN module dev
+✅ Cache et performance optimisés
+✅ Logs et monitoring actifs
+```
 
 ## 🔜 Prochaine étape
 
