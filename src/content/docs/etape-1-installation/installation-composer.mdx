@@ -16,10 +16,10 @@ Composer est le gestionnaire de dépendances standard pour PHP. C'est l'outil **
 
 ### Avant Composer (Drupal 7 et avant)
 
-- Téléchargement manuel des modules depuis drupal.org
-- Gestion manuelle des mises à jour
-- Conflits de dépendances fréquents
-- Pas de versionnement des dépendances
+- ❌ Téléchargement manuel des modules depuis drupal.org
+- ❌ Gestion manuelle des mises à jour
+- ❌ Conflits de dépendances fréquents
+- ❌ Pas de versionnement des dépendances
 
 ### Avec Composer (Drupal 8+)
 
@@ -311,6 +311,28 @@ Vérifiez avec :
 ```bash
 composer show drupal/*
 ```
+
+## 🔤 Comprendre le PSR-4
+
+Le **PSR-4** (PHP Standard Recommendation 4) est une norme qui définit comment charger automatiquement les classes PHP. Au lieu d'utiliser `require()` ou `include()` manuellement, le PSR-4 permet à Composer de charger les classes automatiquement en fonction de leur namespace.
+
+### Avant (sans Composer/PSR-4)
+```php
+require_once 'includes/MyClass.php';
+$obj = new MyClass();
+```
+
+### Avec Composer et PSR-4
+```php
+// Composer charge automatiquement MyClass via vendor/autoload.php
+$obj = new MyClass();
+```
+
+Le fichier `vendor/autoload.php` généré par Composer gère toute cette magie. C'est pourquoi il est essentiel de l'inclure dans le point d'entrée de votre application.
+
+Pour plus de détails, consultez:
+- [PSR-4 sur PHP-FIG](https://www.php-fig.org/psr/psr-4/) - La spécification officielle
+- [Autoloading dans la documentation Composer](https://getcomposer.org/doc/01-basic-usage.md#autoloading)
 
 ## 🚀 Étape suivante
 
