@@ -3,6 +3,9 @@ title: Structure d'un Module
 description: Architecture et fichiers de base d'un module Drupal custom
 sidebar:
   order: 1
+
+# status: stable
+# last-reviewed: 2026-01-14
 ---
 
 import { Tabs, TabItem, Aside, Steps, FileTree } from '@astrojs/starlight/components';
@@ -22,7 +25,7 @@ Un module Drupal nécessite au minimum un fichier `.info.yml` :
 
 ## 📝 Fichier .info.yml
 
-C'est la carte d'identité du module :
+C'est la **carte d'identité** du module. Sans ce fichier, Drupal ne reconnaît pas le module.
 
 ```yaml
 # tailstore_cart.info.yml
@@ -33,29 +36,72 @@ core_version_requirement: ^10 || ^11
 package: TailStore
 version: 1.0.0
 
-# Dépendances
+# Dépendances (modules requis)
 dependencies:
-  - drupal:node
-  - drupal:user
+  - drupal:node          # Pour charger les produits
+  - drupal:user          # Pour gérer les utilisateurs
 
 # Dépendances de test (optionnel)
 test_dependencies:
   - drupal:phpunit
 
-# Configuration à installer
+# Page de configuration (optionnel)
 configure: tailstore_cart.settings
 ```
 
 ### Propriétés importantes
 
-| Propriété | Description |
-|-----------|-------------|
-| `name` | Nom affiché dans l'admin |
-| `type` | `module`, `theme`, ou `profile` |
-| `description` | Description courte |
-| `core_version_requirement` | Versions Drupal compatibles |
-| `package` | Groupe dans la liste des modules |
-| `dependencies` | Modules requis |
+| Propriété | Description | Obligatoire |
+|-----------|-------------|-------------|
+| `name` | Nom affiché dans l'interface admin | ✅ |
+| `type` | `module`, `theme`, ou `profile` | ✅ |
+| `description` | Description courte (< 255 caractères) | Recommandé |
+| `core_version_requirement` | Versions Drupal compatibles | ✅ |
+| `package` | Groupe dans la liste des modules | Optionnel |
+| `version` | Version du module (x.y.z) | Optionnel |
+| `dependencies` | Modules requis | Si nécessaire |
+| `configure` | Route de configuration | Si applicable |
+
+<Aside type="tip" title="Versions compatibles">
+**Format** : `^10 || ^11`
+- `^10` : Compatible avec Drupal 10.x
+- `||` : OU logique
+- `^11` : Compatible avec Drupal 11.x
+
+**Anciennes versions** :
+```yaml
+# Drupal 8/9 (obsolète)
+core: 8.x
+
+# Drupal 9+ (déprécié)
+core_version_requirement: ^9 || ^10
+```
+</Aside>
+
+### Dépendances
+
+**Format** : `[project]:[module]`
+
+```yaml
+dependencies:
+  # Modules core
+  - drupal:node
+  - drupal:user
+  - drupal:field
+  
+  # Modules contrib
+  - pathauto:pathauto
+  - token:token
+  
+  # Modules custom
+  - tailstore_base:tailstore_base
+```
+
+<Aside type="caution" title="Ordre d'activation">
+Drupal active les dépendances dans l'ordre. Si `tailstore_cart` dépend de `token`, Drupal activera automatiquement `token` en premier.
+
+**Erreur courante** : Dépendance circulaire (A dépend de B, B dépend de A) = Impossible à activer.
+</Aside>
 
 ## 🏗️ Structure complète
 
