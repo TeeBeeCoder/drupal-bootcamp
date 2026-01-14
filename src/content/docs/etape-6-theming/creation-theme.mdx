@@ -36,7 +36,7 @@ Un **thème Drupal** est un ensemble de fichiers qui contrôle l'apparence visue
 | **Localisation** | `themes/custom/` | `modules/custom/` |
 | **Modifie** | Comment les choses apparaissent | Ce que les choses font |
 
-**Pour TailStore** : Le thème gère l'apparence e-commerce (grilles produits, panier visuel, animations), tandis que les modules Drupal Commerce gèrent la logique (prix, stock, commandes, paiement).
+**Pour TailStore** : Le thème gère l'apparence e-commerce (grilles produits, panier visuel, animations), tandis que les modules custom gèrent la logique métier (panier, session, traitement des commandes avec Stripe).
 
 ### Héritage des thèmes
 
@@ -654,7 +654,7 @@ function tailstore_preprocess_page(&$variables) {
   
   // Panier chargé UNIQUEMENT sur les pages produit et panier
   $route_name = \Drupal::routeMatch()->getRouteName();
-  if (in_array($route_name, ['entity.node.canonical', 'commerce_cart.page'])) {
+  if (in_array($route_name, ['entity.node.canonical', 'tailstore.cart'])) {
     $variables['#attached']['library'][] = 'tailstore/cart';
   }
 }

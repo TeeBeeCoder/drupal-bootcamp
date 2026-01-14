@@ -288,42 +288,32 @@ drush cc css-js
 - 🟡 Priorité basse — Fonctionnalités avancées (quand le reste fonctionne)
 - 🔵 Bonus/Expert — Fonctionnalités complexes (si temps disponible)
 
-## � Spécificités e-commerce (Drupal Commerce)
+## 🎨 Système de design
 
-### Distinction importante
+### Architecture des composants
 
-Ce thème doit gérer **deux types d'entités différentes** :
+Le thème suit une approche atomique pour une maintenabilité optimale :
 
-#### 1. Contenus Drupal classiques (Nodes)
-- **Articles de blog** : `node--article.html.twig`
-- **Pages statiques** : `node--page.html.twig`
-- Templates dans : `templates/node/`
+#### 1. Atomes (Atoms)
+- **Boutons** : `.btn`, `.btn-primary`, `.btn-secondary`
+- **Champs de formulaire** : `.form-input`, `.form-select`
+- **Icônes** : `.icon`, `.icon--large`
 
-#### 2. Entités Drupal Commerce
-- **Commerce Products** : Fiches produits avec variations, prix, stock
-- **Orders** : Panier, commandes, historique
-- **Checkout Flow** : Tunnel de paiement
+#### 2. Molécules (Molecules)
+- **Product Card** : Image + titre + prix + bouton
+- **Search Bar** : Input + bouton recherche
+- **Navigation Item** : Lien + icône
 
-:::caution[⚠️ Attention : Products ≠ Nodes]
-Dans Drupal Commerce, les **produits ne sont PAS des nodes** mais des entités `commerce_product`.
-
-Templates spécifiques :
-```
-templates/commerce/
-├── commerce-product.html.twig
-├── commerce-product--default.html.twig
-├── commerce-product--teaser.html.twig
-├── commerce-cart-block.html.twig
-├── commerce-checkout-flow.html.twig
-└── commerce-order-receipt.html.twig
-```
-:::
+#### 3. Organismes (Organisms)
+- **Header** : Logo + menu + recherche + panier
+- **Footer** : Liens + newsletter + réseaux sociaux
+- **Product Grid** : Collection de product cards
 
 ### Parcours utilisateur e-commerce
 
 ```
 1. Homepage → 2. Catalogue → 3. Fiche produit → 4. Panier → 5. Checkout → 6. Confirmation
-   (page.html)   (views)       (commerce-product)   (cart)      (checkout)   (order-receipt)
+   (page.html)   (views)       (node--product)    (custom)    (custom)     (custom)
 ```
 
 Chaque étape nécessite des templates et styles spécifiques.
