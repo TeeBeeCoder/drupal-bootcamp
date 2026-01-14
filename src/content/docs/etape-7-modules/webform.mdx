@@ -3,6 +3,9 @@ title: Webform
 description: Créer des formulaires de contact et de commande
 sidebar:
   order: 4
+
+# status: stable
+# last-reviewed: 2026-01-14
 ---
 
 import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
@@ -301,38 +304,129 @@ Utilisez le format d'entrée "Full HTML" :
 <drupal-entity data-entity-type="webform" data-entity-uuid="[UUID]"></drupal-entity>
 ```
 
-## 🔒 Anti-spam
+## 🔒 Anti-spam et sécurité
 
-### Honeypot
+### Honeypot (recommandé)
 
 ```bash
 ddev composer require drupal/honeypot
 ddev drush en honeypot -y
 ```
 
-Activé automatiquement sur les webforms.
+**Configuration** : `/admin/config/content/honeypot`
 
-### CAPTCHA
+```yaml
+Protéger tous les formulaires: Oui
+Délai minimum: 5 secondes
+Nom du champ: url (ou autre nom piège)
+```
+
+**Avantages** : Invisible pour l'utilisateur, très efficace contre les bots.
+
+### CAPTCHA / reCAPTCHA
 
 ```bash
 ddev composer require drupal/captcha drupal/recaptcha
 ddev drush en captcha recaptcha -y
 ```
 
-Configuration :
-1. Obtenir les clés API Google reCAPTCHA
+**Configuration** :
+1. Créer des clés sur [Google reCAPTCHA](https://www.google.com/recaptcha/admin)
 2. **Configuration** → **CAPTCHA** → **reCAPTCHA**
-3. Ajouter l'élément CAPTCHA au webform
+3. Entrer les clés Site key et Secret key
+4. Choisir reCAPTCHA v3 (invisible) ou v2 (case à cocher)
+
+**Ajouter au webform** :
+- Élément → **CAPTCHA**
+- Type : reCAPTCHA
+
+<Aside type="caution" title="UX vs Sécurité">
+**Honeypot** est recommandé en premier car invisible pour l'utilisateur.
+
+N'ajoutez un **CAPTCHA** que si vous subissez beaucoup de spam malgré Honeypot.
+Les CAPTCHAs peuvent réduire le taux de conversion de 10-30%.
+</Aside>
 
 ### Limite de soumissions
 
 Dans **Paramètres** → **Limites des soumissions** :
 
 ```yaml
-Limite par utilisateur: 3 par jour
-Limite totale: 100 par jour
-Message limite: "Vous avez atteint la limite..."
+# Par utilisateur
+Limite par utilisateur: 3
+Période: 1 jour
+
+# Globale
+Limite totale: 100
+Période: 1 jour
+
+Message: "Vous avez atteint la limite de soumissions. Réessayez demain."
 ```
+
+### Validation des données
+
+**Email** :
+```yaml
+Type: Email
+Validation: Format email valide (automatique)
+```
+
+**Téléphone** :
+```yaml
+Type: Tel
+Masque: "+33 X XX XX XX XX"
+Validation: Expression régulière
+```
+
+**Champs obligatoires** :
+Marquez toujours les champs critiques comme requis.
+
+<Aside type="tip" title="Bonnes pratiques UX">
+**Formulaires efficaces** :
+- ✅ Gardez-les courts (< 7 champs idéalement)
+- ✅ Labels clairs au-dessus des champs
+- ✅ Messages d'erreur explicites
+- ✅ Placeholder avec exemples
+- ✅ Bouton submit avec texte d'action ("Envoyer ma demande" > "Valider")
+- ✅ Confirmation visible après soumission
+- ✅ Email de confirmation automatique
+
+**Accessibilité** :
+- ✅ Labels liés aux champs (for/id)
+- ✅ Messages d'erreur avec role="alert"
+- ✅ Navigation au clavier (tab)
+- ✅ Indicateurs visuels pour champs requis
+</Aside>
+
+## 📊 RGPD et confidentialité
+
+### Consentement
+
+Ajoutez un champ checkbox obligatoire :
+
+```yaml
+Type: Checkbox
+Clé: gdpr_consent
+Libellé: "J'accepte la politique de confidentialité"
+Requis: Oui
+Description: "Vos données sont utilisées uniquement pour traiter votre demande. [Lien politique de confidentialité]"
+```
+
+### Conservation des données
+
+**Configuration** → **Webforms** → **Paramètres** → **Purge** :
+
+```yaml
+Supprimer les soumissions après: 90 jours
+Conserver les soumissions non traitées: Oui
+Email de notification avant suppression: contact@tailstore.com
+```
+
+### Export et suppression
+
+Les utilisateurs ont le droit de :
+- Accéder à leurs données (export CSV)
+- Demander la suppression (bouton dans les résultats)
 
 ## 📱 Formulaire responsive
 
