@@ -7,17 +7,94 @@ sidebar:
 
 import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
 
-## 🏔️ Pourquoi Alpine.js ?
+## 🏔️ Qu'est-ce qu'Alpine.js ?
 
-**Alpine.js** est un framework JavaScript léger (~15kb) parfait pour :
+**Alpine.js** est un framework JavaScript minimaliste (~15kb gzippé) qui apporte la réactivité de Vue.js directement dans votre HTML. C'est l'outil parfait pour ajouter de l'interactivité sans la complexité d'un framework full-stack.
 
-- Ajouter de l'interactivité sans framework lourd
-- Syntaxe déclarative directement dans le HTML
-- Excellent avec Tailwind CSS
-- Pas de build step requis
+### 🆚 Alpine.js vs autres frameworks
 
-<Aside type="note" title="Alpine.js vs autres frameworks">
-Alpine.js est idéal pour les interactions légères. Pour les applications complexes (SPA), considérez React ou Vue.
+| Framework | Taille | Philosophie | Cas d'usage |
+|-----------|--------|-------------|-------------|
+| **Alpine.js** | 15 KB | Déclaratif dans HTML | Interactivité légère, composants |
+| **jQuery** | 87 KB | Impératif, manipulation DOM | Legacy, événements simples |
+| **React** | 44 KB + | Component-based, Virtual DOM | SPA, apps complexes |
+| **Vue.js** | 34 KB + | Component-based, réactif | SPA, apps moyennes-complexes |
+| **Vanilla JS** | 0 KB | Natif navigateur | Micro-interactions |
+
+### ✅ Pourquoi Alpine.js pour Drupal ?
+
+**Avantages spécifiques** :
+- ✅ **Taille minimale** : 15 KB vs 87 KB jQuery (déjà inclus dans Drupal)
+- ✅ **Pas de build** : Fonctionne directement en CDN ou via Vite
+- ✅ **Syntaxe déclarative** : `x-data`, `x-show`, `x-on` dans le HTML
+- ✅ **Réactivité automatique** : Les données se synchronisent automatiquement
+- ✅ **Parfait avec Twig** : Pas de conflit avec les templates Drupal
+- ✅ **Composants réutilisables** : via `Alpine.data()` et `Alpine.store()`
+- ✅ **Compatible Tailwind** : Même philosophie utility-first
+
+**Cas d'usage dans TailStore** :
+- 🛒 Panier e-commerce avec LocalStorage
+- 🎨 Filtres produits dynamiques
+- 📱 Menu mobile avec drawer
+- 🖼️ Galeries images interactives
+- 🔔 Notifications toast
+- ✅ Formulaires avec validation
+
+### 🏗️ Architecture Alpine.js + Drupal
+
+```
+┌─────────────────────────────────────────┐
+│   Templates Twig (.html.twig)          │
+│   Directives Alpine (x-data, x-on)     │
+└──────────────┬──────────────────────────┘
+               │
+               ↓
+┌─────────────────────────────────────────┐
+│   Alpine.js (assets/main.js)           │
+│   - Alpine.store (état global)          │
+│   - Alpine.data (composants)            │
+└──────────────┬──────────────────────────┘
+               │
+               ↓
+┌─────────────────────────────────────────┐
+│   LocalStorage / SessionStorage         │
+│   (persistance données)                 │
+└─────────────────────────────────────────┘
+```
+
+### 🎯 Alpine.js vs jQuery dans Drupal
+
+**Approche jQuery (ancienne)** :
+```javascript
+// Impératif, verbeux
+(function ($, Drupal) {
+  Drupal.behaviors.myFeature = {
+    attach: function (context) {
+      $('.btn', context).once('myFeature').on('click', function () {
+        var count = parseInt($('.count').text());
+        count++;
+        $('.count').text(count);
+      });
+    }
+  };
+})(jQuery, Drupal);
+```
+
+**Approche Alpine.js (moderne)** :
+```html
+<!-- Déclaratif, concis -->
+<div x-data="{ count: 0 }">
+  <button @click="count++" class="btn">Increment</button>
+  <span x-text="count" class="count"></span>
+</div>
+```
+
+<Aside type="tip" title="Alpine.js dans Drupal 11">
+Drupal 11 inclut toujours jQuery par défaut, mais **Alpine.js est recommandé** pour les nouvelles fonctionnalités :
+- Plus léger (15 KB vs 87 KB)
+- Syntaxe moderne et réactive
+- Meilleure DX (Developer Experience)
+- Compatible avec les outils modernes (Vite, Tailwind)
 </Aside>
 
 ## 📦 Installation
@@ -95,6 +172,209 @@ global:
   js:
     dist/assets/main.js: { minified: true }
 ```
+
+## 🎯 Exercices pratiques
+
+### Exercice 1 : Premier composant Alpine (compteur)
+
+**Objectif** : Comprendre `x-data`, `x-text`, et `@click`.
+
+<Steps>
+
+1. Créez un template de test `test-alpine.html.twig` :
+   ```twig
+   <div class="p-8">
+     <div x-data="{ count: 0 }" class="text-center">
+       <h2 class="text-2xl font-bold mb-4">Compteur Alpine.js</h2>
+       <p class="text-4xl mb-4" x-text="count"></p>
+       <div class="flex gap-2 justify-center">
+         <button @click="count--" class="btn btn-secondary">-</button>
+         <button @click="count = 0" class="btn btn-outline">Reset</button>
+         <button @click="count++" class="btn btn-primary">+</button>
+       </div>
+     </div>
+   </div>
+   ```
+
+2. Vérifiez qu'Alpine.js est chargé (F12 → Console) :
+   ```javascript
+   typeof Alpine !== 'undefined' // Doit retourner true
+   ```
+
+3. Testez le compteur : les clics doivent mettre à jour le nombre
+
+</Steps>
+
+**Validation** : ✅ Le compteur s'incrémente/décrémente au clic
+
+---
+
+### Exercice 2 : Toggle avec x-show
+
+**Objectif** : Maîtriser `x-show` et les transitions.
+
+<Steps>
+
+1. Créez un composant accordéon :
+   ```twig
+   <div x-data="{ open: false }" class="border rounded-lg p-4">
+     <button 
+       @click="open = !open" 
+       class="flex items-center justify-between w-full font-semibold"
+     >
+       <span>Détails du produit</span>
+       <svg 
+         class="w-5 h-5 transition-transform"
+         :class="{ 'rotate-180': open }"
+         fill="none" 
+         stroke="currentColor" 
+         viewBox="0 0 24 24"
+       >
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+       </svg>
+     </button>
+     
+     <div 
+       x-show="open"
+       x-transition:enter="transition ease-out duration-200"
+       x-transition:enter-start="opacity-0 -translate-y-2"
+       x-transition:enter-end="opacity-100 translate-y-0"
+       x-transition:leave="transition ease-in duration-150"
+       x-transition:leave-start="opacity-100 translate-y-0"
+       x-transition:leave-end="opacity-0 -translate-y-2"
+       class="mt-4 text-gray-600"
+     >
+       <p>Contenu qui apparaît/disparaît avec animation.</p>
+     </div>
+   </div>
+   ```
+
+2. Testez l'accordéon : le contenu doit apparaître avec animation
+
+</Steps>
+
+**Validation** : ✅ Le contenu apparaît/disparaît avec transition fluide
+
+---
+
+### Exercice 3 : Boucle avec x-for
+
+**Objectif** : Afficher une liste dynamique avec `x-for`.
+
+<Steps>
+
+1. Créez une liste de tâches simple :
+   ```twig
+   <div 
+     x-data="{
+       newTask: '',
+       tasks: ['Créer le thème', 'Ajouter Tailwind', 'Intégrer Alpine']
+     }"
+     class="p-8 max-w-md mx-auto"
+   >
+     <h2 class="text-2xl font-bold mb-4">Todo List</h2>
+     
+     <form @submit.prevent="tasks.push(newTask); newTask = ''" class="mb-4">
+       <div class="flex gap-2">
+         <input 
+           x-model="newTask"
+           type="text" 
+           placeholder="Nouvelle tâche..."
+           class="form-input flex-1"
+         >
+         <button type="submit" class="btn btn-primary">Ajouter</button>
+       </div>
+     </form>
+     
+     <ul class="space-y-2">
+       <template x-for="(task, index) in tasks" :key="index">
+         <li class="flex items-center justify-between p-3 bg-gray-50 rounded">
+           <span x-text="task"></span>
+           <button 
+             @click="tasks.splice(index, 1)"
+             class="text-red-500 hover:text-red-700"
+           >
+             ✕
+           </button>
+         </li>
+       </template>
+     </ul>
+   </div>
+   ```
+
+2. Testez :
+   - Ajoutez des tâches
+   - Supprimez des tâches
+   - Vérifiez que tout est réactif
+
+</Steps>
+
+**Validation** : ✅ Les tâches s'ajoutent/suppriment instantanément
+
+---
+
+### Exercice 4 : Store global (panier simple)
+
+**Objectif** : Utiliser `Alpine.store()` pour un état partagé.
+
+<Steps>
+
+1. Dans `assets/main.js`, ajoutez un store :
+   ```javascript
+   import Alpine from 'alpinejs';
+   
+   // Store panier
+   Alpine.store('cart', {
+     items: [],
+     
+     add(product) {
+       this.items.push(product);
+     },
+     
+     remove(index) {
+       this.items.splice(index, 1);
+     },
+     
+     get count() {
+       return this.items.length;
+     }
+   });
+   
+   window.Alpine = Alpine;
+   Alpine.start();
+   ```
+
+2. Créez un bouton "Ajouter au panier" :
+   ```twig
+   <div x-data="{ product: { id: 1, name: 'T-Shirt', price: 29.99 } }">
+     <button 
+       @click="$store.cart.add(product)"
+       class="btn btn-primary"
+     >
+       Ajouter au panier
+     </button>
+   </div>
+   ```
+
+3. Affichez le compteur du panier :
+   ```twig
+   <div x-data>
+     <button class="relative btn btn-outline">
+       🛒 Panier
+       <span 
+         x-show="$store.cart.count > 0"
+         x-text="$store.cart.count"
+         class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"
+       ></span>
+     </button>
+   </div>
+   ```
+
+4. Testez : ajoutez des produits et vérifiez que le compteur se met à jour
+
+</Steps>
+
+**Validation** : ✅ Le compteur du panier se met à jour en temps réel
 
 ## 🛒 Composants TailStore
 
@@ -471,6 +751,455 @@ Ajoutez dans votre code pour debug :
 ```
 
 Ou utilisez l'extension navigateur **Alpine.js devtools**.
+
+## 🧠 Bonnes pratiques essentielles
+
+### ⚡ Performance
+
+**1. Lazy loading des stores**
+
+```javascript
+// ❌ Mauvais - Charge tout au démarrage
+Alpine.store('products', {
+  items: await fetchAllProducts() // Bloquant
+});
+
+// ✅ Bon - Charge à la demande
+Alpine.store('products', {
+  items: [],
+  async load() {
+    if (this.items.length === 0) {
+      this.items = await fetchAllProducts();
+    }
+  }
+});
+```
+
+**2. Utiliser x-cloak pour éviter le flash**
+
+```css
+/* Dans votre CSS */
+[x-cloak] {
+  display: none !important;
+}
+```
+
+```twig
+<!-- Évite le flash de contenu non-initialisé -->
+<div x-data="{ loaded: false }" x-cloak>
+  <div x-show="loaded">
+    <!-- Contenu -->
+  </div>
+</div>
+```
+
+**3. Éviter les x-data trop volumineux**
+
+```twig
+<!-- ❌ Mauvais - Trop de logique dans x-data -->
+<div x-data="{
+  products: [],
+  filters: {},
+  sort: 'name',
+  async loadProducts() { /* 50 lignes */ },
+  filterProducts() { /* 30 lignes */ },
+  sortProducts() { /* 20 lignes */ }
+}">
+
+<!-- ✅ Bon - Extraire dans Alpine.data() -->
+<div x-data="productList">
+```
+
+```javascript
+// assets/components/productList.js
+Alpine.data('productList', () => ({
+  products: [],
+  filters: {},
+  sort: 'name',
+  
+  async loadProducts() {
+    // Logique claire et testable
+  },
+  
+  filterProducts() {
+    // ...
+  }
+}));
+```
+
+### 🔒 Sécurité
+
+**1. Échapper les données Drupal**
+
+```twig
+<!-- ❌ Dangereux - XSS possible -->
+<div x-data="{ name: '{{ node.title }}' }">
+
+<!-- ✅ Sécurisé - Échappement JavaScript -->
+<div x-data="{ name: '{{ node.title|escape('js') }}' }">
+
+<!-- ✅ Encore mieux - JSON encode -->
+<div x-data="{ product: {{ product|json_encode|raw }} }">
+```
+
+**2. Valider les inputs**
+
+```javascript
+Alpine.store('cart', {
+  add(product) {
+    // ✅ Validation
+    if (!product?.id || !product?.price) {
+      console.error('Invalid product');
+      return;
+    }
+    
+    // ✅ Sanitize
+    this.items.push({
+      id: parseInt(product.id),
+      name: String(product.name).slice(0, 100),
+      price: parseFloat(product.price)
+    });
+  }
+});
+```
+
+**3. Limiter les actions sensibles**
+
+```twig
+<!-- ❌ Permet suppression directe -->
+<button @click="$store.cart.items = []">Vider</button>
+
+<!-- ✅ Confirmation requise -->
+<button @click="confirm('Vider le panier ?') && $store.cart.clear()">Vider</button>
+```
+
+### 📝 Conventions de code
+
+**1. Nommage des directives**
+
+```twig
+<!-- Préfixer les handlers avec 'on' ou 'handle' -->
+<button @click="handleAddToCart(product)">Ajouter</button>
+<form @submit.prevent="onSubmitForm">...</form>
+
+<!-- Nommer les toggles avec 'is' ou 'show' -->
+<div x-data="{ isOpen: false, showModal: false }">
+```
+
+**2. Organisation des fichiers**
+
+```
+assets/
+├── main.js              # Point d'entrée
+├── style.css            # Styles globaux
+├── stores/              # États globaux
+│   ├── cart.js
+│   ├── wishlist.js
+│   └── filters.js
+└── components/          # Composants Alpine.data()
+    ├── productCard.js
+    ├── productGallery.js
+    └── mobileMenu.js
+```
+
+**3. Commenter les composants complexes**
+
+```javascript
+/**
+ * Product Gallery Component
+ * 
+ * Gère l'affichage d'images produit avec thumbnails.
+ * Supporte clavier (←/→) et swipe mobile.
+ * 
+ * @usage <div x-data="productGallery" x-init="init({{ images|json_encode }})">
+ */
+Alpine.data('productGallery', () => ({
+  active: 0,
+  images: [],
+  
+  init(images) {
+    this.images = images;
+    this.setupKeyboard();
+  },
+  
+  // ...
+}));
+```
+
+### ♿ Accessibilité
+
+**1. Gérer le focus**
+
+```javascript
+Alpine.data('modal', () => ({
+  open: false,
+  
+  show() {
+    this.open = true;
+    // Focus sur le premier élément
+    this.$nextTick(() => {
+      this.$refs.closeButton.focus();
+    });
+  },
+  
+  hide() {
+    this.open = false;
+    // Retour au trigger
+    this.$refs.trigger.focus();
+  }
+}));
+```
+
+```twig
+<div x-data="modal">
+  <button @click="show" x-ref="trigger">Ouvrir</button>
+  
+  <div x-show="open" @keydown.escape="hide">
+    <button @click="hide" x-ref="closeButton">✕</button>
+  </div>
+</div>
+```
+
+**2. Attributs ARIA**
+
+```twig
+<!-- Menu déroulant accessible -->
+<div x-data="{ open: false }">
+  <button 
+    @click="open = !open"
+    :aria-expanded="open"
+    aria-controls="menu"
+    aria-haspopup="true"
+  >
+    Menu
+  </button>
+  
+  <div 
+    x-show="open"
+    id="menu"
+    role="menu"
+    @click.outside="open = false"
+  >
+    <a role="menuitem" href="/products">Produits</a>
+  </div>
+</div>
+```
+
+**3. Annoncer les changements**
+
+```twig
+<div x-data="{ count: 0 }">
+  <button @click="count++; $dispatch('announce', `${count} produits`)">+</button>
+  
+  <!-- Zone ARIA live -->
+  <div 
+    @announce.window="$el.textContent = $event.detail"
+    aria-live="polite" 
+    aria-atomic="true"
+    class="sr-only"
+  ></div>
+</div>
+```
+
+## 🚨 Erreurs courantes et solutions
+
+### Erreur 1 : "Alpine is not defined"
+
+**Symptôme** : Console JavaScript affiche l'erreur
+
+**Causes** :
+- Alpine.js non chargé
+- Script chargé après l'utilisation
+- Conflit de versions
+
+**Solution** :
+```yaml
+# tailstore.libraries.yml - Vérifier l'ordre
+global:
+  js:
+    dist/assets/main.js: {}  # Alpine doit être dans main.js
+  dependencies:
+    - core/drupal
+```
+
+```javascript
+// main.js - Vérifier l'initialisation
+import Alpine from 'alpinejs';
+
+window.Alpine = Alpine;  // ✅ Exposer globalement
+Alpine.start();          // ✅ Démarrer Alpine
+```
+
+### Erreur 2 : x-data ne fonctionne pas
+
+**Symptôme** : Les directives Alpine sont ignorées
+
+**Cause** : Alpine démarré avant le DOM
+
+**Solution** :
+```javascript
+// ❌ Mauvais
+Alpine.start();
+document.addEventListener('DOMContentLoaded', () => {
+  // Trop tard
+});
+
+// ✅ Bon
+import Alpine from 'alpinejs';
+
+// Enregistrer stores et components
+Alpine.store('cart', { /* ... */ });
+
+// Démarrer (Alpine attend automatiquement le DOM)
+Alpine.start();
+```
+
+### Erreur 3 : x-for ne met pas à jour la liste
+
+**Symptôme** : Items ajoutés mais pas affichés
+
+**Cause** : Mutation d'array sans réactivité
+
+**Solution** :
+```twig
+<!-- ❌ Mauvais - Mutation directe -->
+<button @click="items[0] = newItem">Update</button>
+
+<!-- ✅ Bon - Remplacement complet -->
+<button @click="items = [...items.slice(0, -1), newItem]">Update</button>
+
+<!-- ✅ Ou utiliser des méthodes réactives -->
+<button @click="items.push(newItem)">Add</button>
+<button @click="items.splice(index, 1)">Remove</button>
+```
+
+### Erreur 4 : Store non partagé entre composants
+
+**Symptôme** : Modifications dans un composant n'apparaissent pas ailleurs
+
+**Cause** : Store non enregistré globalement
+
+**Solution** :
+```javascript
+// ❌ Mauvais - Store local
+Alpine.data('cart', () => ({
+  items: []  // Chaque instance a sa propre copie
+}));
+
+// ✅ Bon - Store global
+Alpine.store('cart', {
+  items: []  // Partagé entre tous les composants
+});
+```
+
+### Erreur 5 : Données perdues au refresh
+
+**Symptôme** : Panier vidé au rechargement de page
+
+**Cause** : Pas de persistance
+
+**Solution** :
+```javascript
+// Option 1 : Plugin persist (recommandé)
+import persist from '@alpinejs/persist';
+Alpine.plugin(persist);
+
+Alpine.store('cart', {
+  items: Alpine.$persist([]).as('cart_items')
+});
+
+// Option 2 : Manuel avec localStorage
+Alpine.store('cart', {
+  items: JSON.parse(localStorage.getItem('cart') || '[]'),
+  
+  add(item) {
+    this.items.push(item);
+    this.save();
+  },
+  
+  save() {
+    localStorage.setItem('cart', JSON.stringify(this.items));
+  }
+});
+```
+
+### Erreur 6 : Transitions saccadées
+
+**Symptôme** : Animations ne sont pas fluides
+
+**Cause** : Propriétés non optimisées pour GPU
+
+**Solution** :
+```css
+/* ❌ Mauvais - Pas optimisé GPU */
+.dropdown {
+  transition: height 0.3s;
+}
+
+/* ✅ Bon - GPU accelerated */
+.dropdown {
+  transition: transform 0.3s, opacity 0.3s;
+  will-change: transform, opacity;
+}
+```
+
+```twig
+<!-- Utiliser les transitions Alpine optimisées -->
+<div 
+  x-show="open"
+  x-transition:enter="transition ease-out duration-300"
+  x-transition:enter-start="opacity-0 scale-95"
+  x-transition:enter-end="opacity-100 scale-100"
+>
+```
+
+<Aside type="tip" title="Debug Alpine.js">
+**Extensions navigateur** :
+- [Alpine.js DevTools](https://chrome.google.com/webstore/detail/alpinejs-devtools) (Chrome/Edge)
+- Console : `Alpine.version` pour vérifier la version
+- Console : `$data` dans les éléments x-data pour voir l'état
+
+**Mode debug** :
+```javascript
+// main.js
+if (import.meta.env.DEV) {
+  window.Alpine = Alpine;
+  Alpine.start();
+  console.log('Alpine version:', Alpine.version);
+}
+```
+</Aside>
+
+## 📚 Ressources complémentaires
+
+### Documentation officielle
+
+- [Alpine.js Official Docs](https://alpinejs.dev/) - Documentation complète
+- [Alpine.js Essentials](https://alpinejs.dev/essentials/installation) - Guide de démarrage
+- [Directives Reference](https://alpinejs.dev/directives/data) - Toutes les directives
+- [Magics Reference](https://alpinejs.dev/magics/el) - `$el`, `$refs`, `$store`, etc.
+- [Plugins](https://alpinejs.dev/plugins/persist) - Persist, Focus, Collapse, etc.
+
+### Plugins utiles
+
+```bash
+npm install @alpinejs/persist    # Persistance localStorage
+npm install @alpinejs/focus      # Gestion focus
+npm install @alpinejs/collapse   # Animations collapse
+npm install @alpinejs/intersect  # Intersection Observer
+```
+
+### Composants open-source
+
+- [Alpine Components](https://alpinejs.dev/components) - Collection officielle
+- [Alpine Toolbox](https://www.alpinetoolbox.com/) - Composants communautaires
+- [Alpine UI](https://alpine-ui.com/) - Composants e-commerce
+
+### Intégrations
+
+- [Alpine + Tailwind](https://tailwindcss.com/docs/hover-focus-and-other-states#using-arbitrary-variants) - États dynamiques
+- [Alpine + htmx](https://htmx.org/) - Requêtes AJAX
+- [Alpine + Drupal](https://www.drupal.org/project/alpine) - Module Drupal (optionnel)
 
 ## ✅ Checklist
 
