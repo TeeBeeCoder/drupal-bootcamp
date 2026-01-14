@@ -3,6 +3,9 @@ title: Étape 6 - Theming Drupal
 description: Créer un thème personnalisé avec Twig, CSS et JavaScript
 sidebar:
   order: 0
+
+# status: stable
+# last-reviewed: 2026-01-14
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
@@ -22,11 +25,50 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
 
 ## 📋 Prérequis
 
-- [x] Étape 5 terminée
-- [x] Connaissance de base en HTML/CSS
-- [x] Template TailStore analysé (Étape 1)
+- [x] Étape 5 terminée (navigation, blocs, menus)
+- [x] **HTML/CSS** : Structure sémantique, flexbox/grid, responsive design
+- [x] **Twig** : Notion de templating (sera approfondi dans cette étape)
+- [x] Template TailStore analysé (référence visuelle depuis l'Étape 1)
+- [x] Node.js >= 18.x et npm >= 9.x installés (pour Tailwind/Alpine.js)
+
+## 🧰 Avant de commencer
+
+### Vérifier votre environnement
+
+```bash
+# Node.js et npm (pour Tailwind/Alpine)
+node --version  # >= 18.x
+npm --version   # >= 9.x
+
+# Composer (pour dépendances Drupal)
+composer --version  # >= 2.x
+
+# Drush
+drush --version  # >= 12.x
+```
+
+### Créer un backup de sécurité
+
+```bash
+# Sauvegarder la base de données avant modifications
+drush sql:dump > backup-avant-etape6.sql
+
+# En cas de problème, restaurer avec :
+# drush sql:cli < backup-avant-etape6.sql
+```
+
+### Activer le mode développement
+
+```bash
+# Désactiver le cache pour voir les modifications en temps réel
+drush state:set system.performance css_preprocess 0 --input-format=string
+drush state:set system.performance js_preprocess 0 --input-format=string
+drush cr
+```
 
 ## 📚 Sommaire
+
+**Approche progressive** : Nous suivrons une méthodologie logique — d'abord la structure du thème, puis les outils (CSS/JS), ensuite les templates Twig pour personnaliser l'affichage, et enfin l'interactivité avec Alpine.js.
 
 <CardGrid>
   <Card title="1. Créer un thème" icon="setting">
@@ -112,6 +154,14 @@ themes/custom/tailstore/
 
 ## 🎨 Design System TailStore
 
+### Tokens CSS (Design Tokens)
+
+💡 **Pourquoi des tokens ?**
+- Centraliser les valeurs de design (couleurs, espacements, typographie)
+- Faciliter le rebranding (modifier une variable = tout le site)
+- Supporter le mode sombre (dark mode) facilement
+- Assurer la cohérence visuelle sur tout le site
+
 ### Couleurs
 
 | Variable | Hex | Usage |
@@ -151,17 +201,28 @@ themes/custom/tailstore/
 ### Mode développement
 
 ```bash
-# Désactiver le cache pour le développement
+# Désactiver l'agrégation CSS/JS via Drush
 drush state:set system.performance css_preprocess 0 --input-format=string
 drush state:set system.performance js_preprocess 0 --input-format=string
+```
 
-# Activer le débogage Twig
-# Dans sites/default/services.yml :
-# twig.config:
-#   debug: true
-#   cache: false
+**Activer le débogage Twig** dans `sites/default/services.yml` :
 
-# Vider le cache
+```yaml
+parameters:
+  twig.config:
+    debug: true
+    auto_reload: true
+    cache: false
+```
+
+:::caution[⚠️ Mode développement uniquement]
+Cette configuration doit être désactivée en production pour des raisons de performance.
+Le débogage Twig génère des commentaires HTML volumineux.
+:::
+
+```bash
+# Vider le cache après modification
 drush cr
 ```
 
@@ -204,28 +265,226 @@ drush cc css-js
 <!-- BEGIN OUTPUT from 'themes/custom/tailstore/templates/node/node--product.html.twig' -->
 ```
 
-## 📊 Composants à créer
+## 📊 Composants à créer (par ordre de développement)
 
-### Pages
+**Stratégie** : Commencer par les composants de base (header, footer), puis les éléments de contenu (produits), et enfin les interactions avancées (slider, panier dynamique).
 
-| Page | Template | Description |
-|------|----------|-------------|
-| Homepage | `page--front.html.twig` | Slider + produits + blog |
-| Shop | `page--shop.html.twig` | Catalogue avec sidebar |
-| Product | `node--product--full.html.twig` | Fiche produit |
-| Cart | `page--cart.html.twig` | Panier |
-| Blog | `page--blog.html.twig` | Liste articles |
+| Priorité | Composant | Template | Difficulté | Étape | Temps |
+|----------|-----------|----------|------------|-------|-------|
+| 🔴 1 | Header + Logo | `block--system-branding-block.html.twig` | ⭐ Facile | 6.1-6.2 | 30min |
+| 🔴 2 | Footer | `region--footer.html.twig` | ⭐ Facile | 6.2 | 30min |
+| 🔴 3 | Product Card | `node--product--card.html.twig` | ⭐⭐ Moyen | 6.2 | 1h |
+| 🟠 4 | Product Teaser | `node--product--teaser.html.twig` | ⭐⭐ Moyen | 6.2 | 45min |
+| 🟠 5 | Homepage Layout | `page--front.html.twig` | ⭐⭐ Moyen | 6.4 | 1h30 |
+| 🟠 6 | Shop/Catalog | `page--shop.html.twig` | ⭐⭐ Moyen | 6.4 | 1h |
+| 🟡 7 | Mega Menu | `menu--main.html.twig` | ⭐⭐⭐ Difficile | 6.5 | 2h |
+| 🟡 8 | Hero Slider | `block--hero-banner.html.twig` | ⭐⭐⭐ Difficile | 6.5 | 2h |
+| 🟢 9 | Cart Icon (dynamique) | `block--cart-summary.html.twig` | ⭐⭐⭐ Difficile | 6.5 | 1h30 |
+| 🔵 10 | Fiche produit complète | `node--product--full.html.twig` | ⭐⭐⭐⭐ Expert | 6.2-6.5 | 2h |
 
-### Composants
+**Légende priorités** :
+- 🔴 Priorité haute — Fondations du thème (commencer par là)
+- 🟠 Priorité moyenne — Contenu principal (après les bases)
+- 🟡 Priorité basse — Fonctionnalités avancées (quand le reste fonctionne)
+- 🔵 Bonus/Expert — Fonctionnalités complexes (si temps disponible)
 
-| Composant | Template/CSS | Description |
-|-----------|--------------|-------------|
-| Product Card | `node--product--card.html.twig` | Carte produit grille |
-| Product Teaser | `node--product--teaser.html.twig` | Produit sidebar |
-| Hero Slider | `block--hero-banner.html.twig` | Carousel homepage |
-| Mega Menu | `menu--main.html.twig` | Navigation |
-| Cart Icon | `block--cart-summary.html.twig` | Icône panier |
+## � Spécificités e-commerce (Drupal Commerce)
+
+### Distinction importante
+
+Ce thème doit gérer **deux types d'entités différentes** :
+
+#### 1. Contenus Drupal classiques (Nodes)
+- **Articles de blog** : `node--article.html.twig`
+- **Pages statiques** : `node--page.html.twig`
+- Templates dans : `templates/node/`
+
+#### 2. Entités Drupal Commerce
+- **Commerce Products** : Fiches produits avec variations, prix, stock
+- **Orders** : Panier, commandes, historique
+- **Checkout Flow** : Tunnel de paiement
+
+:::caution[⚠️ Attention : Products ≠ Nodes]
+Dans Drupal Commerce, les **produits ne sont PAS des nodes** mais des entités `commerce_product`.
+
+Templates spécifiques :
+```
+templates/commerce/
+├── commerce-product.html.twig
+├── commerce-product--default.html.twig
+├── commerce-product--teaser.html.twig
+├── commerce-cart-block.html.twig
+├── commerce-checkout-flow.html.twig
+└── commerce-order-receipt.html.twig
+```
+:::
+
+### Parcours utilisateur e-commerce
+
+```
+1. Homepage → 2. Catalogue → 3. Fiche produit → 4. Panier → 5. Checkout → 6. Confirmation
+   (page.html)   (views)       (commerce-product)   (cart)      (checkout)   (order-receipt)
+```
+
+Chaque étape nécessite des templates et styles spécifiques.
+
+## 🚨 Erreurs courantes à éviter
+
+### ❌ Erreur 1 : Oublier de vider le cache
+**Symptôme** : Modifications CSS/Twig non visibles dans le navigateur  
+**Solution** : `drush cr` après **CHAQUE** modification de template ou CSS  
+💡 **Astuce** : En mode dev avec `cache: false`, seul le cache de routing nécessite un flush
+
+### ❌ Erreur 2 : Mélanger Tailwind et CSS custom
+**Problème** : Conflits entre utility classes et CSS personnalisé  
+**Bonne pratique** : Utiliser Tailwind à 95%, CSS custom pour &lt;5% des cas exceptionnels  
+**Exemple valide** : Animations complexes, reset CSS spécifique
+
+### ❌ Erreur 3 : Modifier les templates du core
+**Danger** : Modifications perdues lors des mises à jour Drupal  
+**Bonne pratique** : TOUJOURS copier les templates dans `themes/custom/tailstore/templates/`  
+**Jamais** : Modifier directement dans `core/themes/` ou `modules/contrib/`
+
+### ❌ Erreur 4 : Template trop générique
+**Problème** : `node.html.twig` s'applique à TOUS les types de contenu  
+**Bonne pratique** : Utiliser les suggestions spécifiques :  
+- ✅ `node--product--full.html.twig` (type + mode d'affichage)  
+- ✅ `node--product.html.twig` (type de contenu)  
+- ❌ `node.html.twig` (trop large)
+
+### ❌ Erreur 5 : Ignorer le responsive
+**Problème** : Site cassé sur mobile/tablette  
+**Bonne pratique** : Tester sur plusieurs tailles (F12 → Toggle Device Toolbar)  
+**Points de rupture Tailwind** : `sm:` (640px), `md:` (768px), `lg:` (1024px), `xl:` (1280px)
+
+### ❌ Erreur 6 : Charger tous les assets globalement
+**Problème** : 200KB de JS/CSS sur toutes les pages, même inutiles  
+**Bonne pratique** : Charger conditionnellement via `hook_preprocess_HOOK()`  
+Exemple : Slider JS uniquement sur la homepage
+
+## 🎯 Mission finale de cette étape
+
+À la fin de l'étape 6, vous devrez avoir réalisé :
+
+### Livrables obligatoires
+
+- [ ] **Thème fonctionnel** : Structure complète avec `tailstore.info.yml` et `tailstore.libraries.yml`
+- [ ] **3 templates Twig personnalisés** : Au minimum header, product card, footer
+- [ ] **Tailwind CSS intégré** : Configuration fonctionnelle avec purge activé
+- [ ] **1 interaction Alpine.js** : Menu mobile, modale, ou panier dynamique
+- [ ] **Homepage stylisée** : Reprenant visuellement le template TailStore
+
+### Critères de validation
+
+✅ **Fonctionnel** : Le site affiche correctement tous les contenus  
+✅ **Responsive** : Mise en page adaptée mobile/tablette/desktop  
+✅ **Performance** : CSS &lt; 100KB, pas de JS inutile chargé  
+✅ **Code propre** : Templates commentés, structure logique  
+✅ **Debug désactivé** : Pas de `{{ dump() }}` oublié dans les templates
+
+### 💡 Checkpoint de progression
+
+Après chaque sous-étape, vérifiez :
+
+| Sous-étape | Résultat visible |
+|------------|------------------|
+| 6.1 Création thème | Thème activable dans l'admin, logo affiché |
+| 6.2 Twig | Header et footer personnalisés visibles |
+| 6.3 Assets | CSS chargé (inspecter le `<head>`) |
+| 6.4 Tailwind | Classes Tailwind appliquées (ex: `bg-blue-500` fonctionne) |
+| 6.5 Alpine.js | Menu mobile ou interaction fonctionnelle |
+
+## 🧠 Bonnes pratiques essentielles
+
+### 🔒 Sécurité Twig
+
+:::caution[⚠️ Échappement automatique]
+Twig échappe automatiquement toutes les variables pour prévenir les attaques XSS.
+
+**Ne JAMAIS utiliser** `{{ variable|raw }}` sauf si vous êtes **absolument certain** du contenu.
+
+**Préférer** :
+```twig
+{{ content.field_body }}  {# Échappe automatiquement #}
+{{ content }}             {# Rendu Drupal sécurisé #}
+```
+
+**Éviter** :
+```twig
+{{ unsafe_html|raw }}     {# Danger XSS ! #}
+```
+:::
+
+### ⚡ Performance
+
+:::tip[💡 Optimisation Tailwind]
+**Problème** : Tailwind génère 3MB+ de CSS en mode développement.
+
+**Solution** : Configurer le **purge** pour supprimer les classes inutilisées en production.
+
+**Objectif** : &lt; 50KB de CSS final après purge et minification.
+
+**Configuration dans `tailwind.config.js`** :
+```js
+module.exports = {
+  content: [
+    './templates/**/*.twig',
+    './js/**/*.js',
+  ],
+  // ... autres configs
+}
+```
+
+Le purge analyse vos fichiers et ne garde que les classes utilisées.
+:::
+
+### ♿ Accessibilité (WCAG)
+
+:::note[♿ Checklist accessibilité]
+Chaque composant créé **DOIT** respecter :
+
+✅ **Contraste** : Minimum WCAG AA (4.5:1 pour texte normal, 3:1 pour texte large)  
+✅ **Navigation clavier** : Tab, Enter, Esc fonctionnels  
+✅ **Attributs ARIA** : `aria-label`, `role`, `aria-expanded` quand nécessaire  
+✅ **Ordre des headings** : h1 → h2 → h3 (pas de saut de niveau)  
+✅ **Images** : Attribut `alt` obligatoire (description ou `alt=""` si décorative)
+
+**Outils de test** :
+- Extension Chrome/Firefox : [axe DevTools](https://www.deque.com/axe/devtools/)
+- Lecteur d'écran : NVDA (Windows), JAWS, VoiceOver (Mac)
+- Vérificateur de contraste : [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/)
+:::
+
+## 🎨 Ressources et inspirations
+
+### Thèmes Drupal à étudier
+
+- **Olivero** (thème par défaut Drupal 10/11) : Système de tokens CSS moderne
+- **Claro** (admin theme) : Composants UI accessibles
+- **Gin** (contrib) : Interface admin moderne avec design system
+
+### Librairies CSS/JS recommandées
+
+- [**Tailwind UI**](https://tailwindui.com/) : Composants e-commerce prêts à l'emploi (payant)
+- [**Flowbite**](https://flowbite.com/) : Composants Tailwind + Alpine.js (gratuit)
+- [**DaisyUI**](https://daisyui.com/) : Framework de composants basé sur Tailwind
+- [**Headless UI**](https://headlessui.com/) : Composants accessibles sans style (à combiner avec Tailwind)
+
+### Documentation technique
+
+- [Twig Documentation](https://twig.symfony.com/doc/) : Référence complète du moteur de template
+- [Drupal Twig Functions](https://drupal.org/docs/theming-drupal/twig-in-drupal) : Fonctions et filtres Drupal
+- [Drupal Theme System](https://www.drupal.org/docs/theming-drupal) : Guide officiel theming
+- [Tailwind CSS v4 Docs](https://tailwindcss.com/docs) : Documentation officielle Tailwind
+
+### Outils de développement
+
+**Extensions VS Code recommandées** :
+- **Drupal Syntax Highlighting** : Coloration syntaxique Drupal
+- **Twig Language 2** : Support Twig avec autocomplétion
+- **Tailwind CSS IntelliSense** : Autocomplétion classes Tailwind
+- **Alpine.js IntelliSense** : Support Alpine.js
 
 ## 🚀 C'est parti !
 
-Commencez par [Créer le thème](/etape-6-theming/creation-theme/).
+Vous avez maintenant une vision complète de l'étape 6. Commencez par [Créer le thème](/etape-6-theming/creation-theme/).
