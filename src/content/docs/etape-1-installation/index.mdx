@@ -90,6 +90,20 @@ tailstore/                     # Votre projet Drupal
 └── composer.lock
 ```
 
+:::tip[Convention Drupal : Dossiers `/custom` vs `/contrib`]
+**Règle importante** : En Drupal, on sépare strictement le code personnalisé du code téléchargé.
+
+- **`/custom`** : Contient UNIQUEMENT le code que **vous créez** (modules et thèmes personnalisés)
+- **`/contrib`** : Contient UNIQUEMENT le code téléchargé via **Composer** (modules et thèmes de la communauté)
+
+Cette séparation facilite :
+- 🔄 Les mises à jour (les dépendances Composer ne risquent pas d'écraser votre code)
+- 🎯 La maintenance (vous savez où chercher votre code)
+- 🚀 Le déploiement (le `/custom` est versionnél, le `/contrib` peut être ignorer du contrôle de version)
+
+**Tout au long du cours**, quand vous créerez des modules ou thèmes personnalisés, respectez cette convention.
+:::
+
 ## 🔧 Installation de Drush
 
 **Drush** est l'outil en ligne de commande indispensable pour gérer Drupal. Il vous permet de :
