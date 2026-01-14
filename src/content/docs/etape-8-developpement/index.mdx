@@ -1,8 +1,11 @@
 ---
 title: Étape 8 - Développement Custom
-description: Créer des modules Drupal personnalisés avec routing, controllers et services
+description: Créer le module de panier e-commerce avec htmx et paiement Stripe pour TailStore
 sidebar:
   order: 0
+
+# status: stable
+# last-reviewed: 2026-01-14
 ---
 
 import { Card, CardGrid, Aside } from '@astrojs/starlight/components';
@@ -13,19 +16,57 @@ import { Card, CardGrid, Aside } from '@astrojs/starlight/components';
 
 À la fin de cette étape, vous serez capable de :
 
-- ✅ Créer un module Drupal custom
-- ✅ Définir des routes et des controllers
-- ✅ Utiliser l'injection de dépendances
-- ✅ Créer des services et des plugins
-- ✅ Intégrer htmx pour des interactions dynamiques
-- ✅ Implémenter Stripe Checkout
+- ✅ **Créer un module Drupal custom** professionnel et maintenable
+- ✅ **Définir des routes et controllers** selon les standards Drupal
+- ✅ **Maîtriser l'injection de dépendances** et le container Symfony
+- ✅ **Créer des services métier** réutilisables et testables
+- ✅ **Intégrer htmx** pour des interactions dynamiques sans JavaScript complexe
+- ✅ **Implémenter Stripe Checkout** en mode sécurisé
+- ✅ **Appliquer les bonnes pratiques** de développement Drupal moderne
+
+<Aside type="note" title="Contexte e-commerce">
+Cette étape est le **cœur technique** de TailStore. Nous allons développer le module `tailstore_cart` qui gère :
+- 🛒 **Panier persistant** : Stockage en session avec support multi-utilisateurs
+- ⚡ **Interactions temps réel** : Ajout/suppression via htmx (AJAX sans JavaScript)
+- 💳 **Paiement sécurisé** : Intégration Stripe Checkout en mode redirect
+- 📧 **Notifications** : Emails de confirmation de commande
+
+Ce module peut être réutilisé et adapté pour d'autres projets e-commerce Drupal.
+</Aside>
 
 ## 📋 Prérequis
 
-- [x] Étapes 1-7 terminées
-- [x] Connaissances PHP orienté objet
-- [x] Notions de PSR-4 et autoloading
-- [x] Compte Stripe (gratuit en mode test)
+### Connaissances requises
+
+- [x] **Étapes 1-7 terminées** : Structure Drupal, contenus, thème
+- [x] **PHP orienté objet** : Classes, interfaces, namespaces
+- [x] **PSR-4 autoloading** : Organisation des classes
+- [x] **Notions de design patterns** : Dependency Injection, Service Container
+- [x] **HTTP/REST** : Méthodes GET, POST, PATCH, DELETE
+
+<Aside type="caution" title="Niveau technique">
+Cette étape nécessite des **bases solides en PHP**. Si vous débutez en POO :
+1. Révisez les concepts : classes, interfaces, namespaces
+2. Lisez la doc Symfony sur le [Dependency Injection](https://symfony.com/doc/current/service_container.html)
+3. Familiarisez-vous avec [PSR-4](https://www.php-fig.org/psr/psr-4/)
+
+Le développement de modules est plus complexe que la configuration.
+</Aside>
+
+### Outils nécessaires
+
+- [x] **Compte Stripe** : [Créer un compte test gratuit](https://dashboard.stripe.com/register)
+- [x] **Éditeur avec autocomplétion** : PHPStorm, VS Code + PHP Intelephense
+- [x] **Xdebug** (recommandé) : Pour debugger le code PHP
+
+```bash
+# Vérifier Xdebug
+ddev exec php -v | grep Xdebug
+
+# Activer si nécessaire
+ddev config --xdebug-enabled
+ddev restart
+```
 
 ## 📚 Sommaire
 
@@ -109,25 +150,55 @@ modules/custom/tailstore_cart/
 
 ### PSR-4 Autoloading
 
-Drupal utilise le standard PSR-4 pour le chargement automatique des classes :
+Drupal utilise le standard **PSR-4** pour le chargement automatique des classes :
 
 ```
 Namespace: Drupal\tailstore_cart\Controller\CartController
 Fichier:   modules/custom/tailstore_cart/src/Controller/CartController.php
 ```
 
+**Règles de nommage** :
+- Namespace racine : `Drupal\[nom_module]`
+- Dossier `src/` : Point d'entrée du namespace
+- Sous-dossiers : Ajoutés au namespace
+- Nom de fichier : Identique au nom de la classe
+
+<Aside type="tip" title="Bonne pratique">
+**Organisation par type** :
+- `Controller/` : Logique de présentation et réponses HTTP
+- `Service/` : Logique métier réutilisable
+- `Form/` : Formulaires Drupal Form API
+- `Plugin/` : Plugins (blocs, champs, actions...)
+- `EventSubscriber/` : Écouteurs d'événements
+
+Cette organisation facilite la navigation et la maintenance.
+</Aside>
+
 ### Injection de dépendances
 
-Pattern central dans Drupal :
+Pattern **central** dans Drupal moderne (depuis Drupal 8) :
 
 ```php
 class CartController extends ControllerBase {
   
+  /**
+   * Constructor avec dépendances injectées.
+   *
+   * @param CartService $cartService
+   *   Service de gestion du panier.
+   * @param EntityTypeManagerInterface $entityTypeManager
+   *   Gestionnaire d'entités pour charger les produits.
+   */
   public function __construct(
     private readonly CartService $cartService,
     private readonly EntityTypeManagerInterface $entityTypeManager,
   ) {}
   
+  /**
+   * {@inheritdoc}
+   *
+   * Méthode statique appelée par le container.
+   */
   public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('tailstore_cart.cart'),
@@ -137,17 +208,52 @@ class CartController extends ControllerBase {
 }
 ```
 
+**Avantages** :
+- ✅ **Testabilité** : Facile de mocker les dépendances
+- ✅ **Flexibilité** : Changement d'implémentation sans toucher au controller
+- ✅ **Clarté** : Dépendances explicites
+- ✅ **Réutilisabilité** : Services partagés entre modules
+
+<Aside type="caution" title="⚠️ À éviter">
+**NE PAS utiliser** `\Drupal::service()` dans les controllers/services :
+
+```php
+// ❌ Mauvais (couplage fort, difficile à tester)
+public function myMethod() {
+  $cart = \Drupal::service('tailstore_cart.cart');
+}
+
+// ✅ Bon (injection de dépendances)
+public function __construct(
+  private readonly CartService $cartService,
+) {}
+```
+
+Exceptions acceptées : `.module`, hooks, procéduraux.
+</Aside>
+
 ### Container de services
 
-Drupal utilise le container Symfony :
+Drupal utilise le **Service Container** de Symfony :
 
 ```yaml
 # tailstore_cart.services.yml
 services:
+  # Déclaration du service
   tailstore_cart.cart:
     class: Drupal\tailstore_cart\Service\CartService
-    arguments: ['@session', '@entity_type.manager']
+    arguments: 
+      - '@request_stack'          # Service injecté
+      - '@entity_type.manager'    # Service injecté
+    
+  # Alias avec interface (recommandé)
+  Drupal\tailstore_cart\Service\CartServiceInterface: '@tailstore_cart.cart'
 ```
+
+**Conventions de nommage** :
+- Format : `[module].[nom_service]`
+- Exemples : `tailstore_cart.cart`, `tailstore_cart.stripe`
+- Services core : Point au début (ex: `.entity_type.manager`)
 
 ## 🔌 Technologies intégrées
 
@@ -239,32 +345,107 @@ return new RedirectResponse($session->url);
 
 ## 🔐 Sécurité
 
-### CSRF Protection
+### Protection CSRF
 
-Drupal gère automatiquement les tokens CSRF pour les formulaires. Pour les requêtes htmx :
+Drupal gère automatiquement les tokens CSRF pour les **formulaires Form API**.
+
+Pour les requêtes AJAX/htmx, ajoutez la validation :
 
 ```php
 // Dans le controller
-$token = \Drupal::csrfToken()->get('cart');
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
-// Validation
-if (!\Drupal::csrfToken()->validate($request->headers->get('X-CSRF-Token'), 'cart')) {
-  throw new AccessDeniedHttpException();
+public function add(int $product_id, Request $request): Response {
+  // Vérifier le token CSRF
+  $token = $request->headers->get('X-CSRF-Token');
+  if (!\Drupal::csrfToken()->validate($token, 'cart_action')) {
+    throw new AccessDeniedHttpException('Invalid CSRF token');
+  }
+  
+  // Traitement...
+}
+```
+
+```html
+<!-- Dans le template -->
+<button 
+  hx-post="/cart/add/42"
+  hx-headers='{"X-CSRF-Token": "{{ csrf_token('cart_action') }}"}'>
+  Ajouter
+</button>
+```
+
+### Validation des données
+
+**Toujours valider** les entrées utilisateur :
+
+```php
+public function add(int $product_id, Request $request): Response {
+  // Validation du product_id
+  $product = $this->entityTypeManager
+    ->getStorage('node')
+    ->load($product_id);
+  
+  if (!$product || $product->bundle() !== 'product') {
+    throw new NotFoundHttpException('Product not found');
+  }
+  
+  // Validation de la quantité
+  $quantity = (int) $request->request->get('quantity', 1);
+  if ($quantity < 1 || $quantity > 99) {
+    throw new BadRequestHttpException('Invalid quantity');
+  }
+  
+  // Traitement sécurisé...
 }
 ```
 
 ### Permissions
 
+Définissez des **permissions granulaires** :
+
 ```yaml
 # tailstore_cart.permissions.yml
+access cart:
+  title: 'Access shopping cart'
+  description: 'View and manage own shopping cart'
+  
 access checkout:
   title: 'Access checkout'
-  description: 'Allows users to proceed to checkout'
+  description: 'Proceed to payment and place orders'
   
-administer cart:
-  title: 'Administer cart settings'
+administer tailstore cart:
+  title: 'Administer TailStore Cart'
+  description: 'Configure cart settings and view all carts'
   restrict access: true
 ```
+
+Utilisez dans les routes :
+
+```yaml
+tailstore_cart.cart:
+  path: '/cart'
+  defaults:
+    _controller: '\Drupal\tailstore_cart\Controller\CartController::index'
+  requirements:
+    _permission: 'access cart'
+```
+
+<Aside type="caution" title="Sécurité Stripe">
+**Clés API** :
+- ❌ **Jamais** committer les clés dans Git
+- ✅ Utiliser des variables d'environnement
+- ✅ Clés différentes dev/prod
+- ✅ Mode test par défaut en dev
+
+**Webhook** :
+- ✅ Valider la signature Stripe
+- ✅ Log tous les webhooks
+- ✅ Gestion d'erreurs robuste
+
+Voir section [Stripe Checkout](/etape-8-developpement/stripe/) pour détails.
+</Aside>
 
 ## 🧪 Tests
 
