@@ -1,8 +1,11 @@
 ---
 title: Étape 7 - Modules Contributifs
-description: Installer et configurer les modules essentiels de la communauté Drupal
+description: Installer et configurer les modules essentiels de la communauté Drupal pour un site e-commerce professionnel
 sidebar:
   order: 0
+
+# status: stable
+# last-reviewed: 2026-01-14
 ---
 
 import { Card, CardGrid, Aside } from '@astrojs/starlight/components';
@@ -13,11 +16,20 @@ import { Card, CardGrid, Aside } from '@astrojs/starlight/components';
 
 À la fin de cette étape, vous serez capable de :
 
-- ✅ Installer des modules avec Composer
-- ✅ Configurer les URL automatiques (Pathauto)
-- ✅ Améliorer le SEO (Metatag)
-- ✅ Créer des formulaires (Webform)
-- ✅ Optimiser l'administration (Admin Toolbar)
+- ✅ Installer et gérer des modules avec Composer de manière professionnelle
+- ✅ Configurer les URL automatiques SEO-friendly (Pathauto)
+- ✅ Optimiser le référencement avec les métadonnées (Metatag)
+- ✅ Créer des formulaires de contact et de devis (Webform)
+- ✅ Améliorer l'expérience d'administration (Admin Toolbar, Gin)
+- ✅ Mettre en place les bonnes pratiques de maintenance
+
+<Aside type="note" title="Pourquoi cette étape est cruciale">
+Les modules contributifs sont la force de Drupal. Pour TailStore, ils nous permettront de :
+- **Améliorer le SEO** : URLs propres, métadonnées optimisées pour le partage social
+- **Faciliter la gestion** : Interface admin moderne, outils de productivité
+- **Engager les clients** : Formulaires de contact, demandes de devis
+- **Professionnaliser le site** : Redirections, sitemap XML, sécurité renforcée
+</Aside>
 
 ## 📋 Prérequis
 
@@ -183,19 +195,47 @@ ddev drush updatedb -y
 ddev drush cr
 ```
 
-## 🔒 Sécurité
+## 🔒 Sécurité et maintenance
 
-### Recevoir les alertes
+### Recevoir les alertes de sécurité
 
+<Aside type="caution" title="Sécurité critique">
+Les failles de sécurité Drupal sont annoncées publiquement. Vous **devez** :
 1. S'abonner aux [Security advisories](https://www.drupal.org/security)
-2. Configurer les notifications email
-3. Vérifier régulièrement
+2. Configurer les notifications email dans votre profil drupal.org
+3. Vérifier **chaque semaine** les mises à jour de sécurité
+4. Appliquer les correctifs critiques sous **48h**
+</Aside>
+
+**Où vérifier** :
+- **Drupal.org** : [https://www.drupal.org/security](https://www.drupal.org/security)
+- **Interface admin** : Rapports → Mises à jour disponibles → Onglet Sécurité
+- **Drush** : `drush pm:security`
 
 ### Modules à éviter
 
-- ❌ Modules abandonnés (pas de commit > 1 an)
-- ❌ Modules non compatibles Drupal 10/11
-- ❌ Modules avec issues de sécurité non résolues
+| ⚠️ Critère | Pourquoi éviter | Comment vérifier |
+|-----------|-----------------|------------------|
+| **Abandonné** | Pas de commit > 1 an | Page du module → onglet Commits |
+| **Non compatible** | Pas de version Drupal 11 | Badge de compatibilité |
+| **Faille de sécurité** | Issues non résolues | [Security advisories](https://www.drupal.org/security) |
+| **Peu utilisé** | < 100 installations | Statistiques d'utilisation |
+| **Pas maintenu** | Status "Unsupported" | En-tête de la page du module |
+
+<Aside type="tip" title="Bonnes pratiques">
+**Avant d'installer un module** :
+1. ✅ Vérifier le statut : "Actively maintained"
+2. ✅ Lire les issues récentes (bugs connus ?)
+3. ✅ Consulter la documentation
+4. ✅ Tester sur un environnement local d'abord
+5. ✅ Avoir un plan de rollback
+
+**Workflow de mise à jour sécurisé** :
+1. Sauvegarder la base de données
+2. Tester sur staging
+3. Déployer en production
+4. Vérifier les logs d'erreurs
+</Aside>
 
 ## 📁 Structure après installation
 
@@ -214,6 +254,24 @@ web/
     └── config/sync/       # Config exportée des modules
 ```
 
-## 🚀 C'est parti !
+## � Prochaine étape
 
-Commencez par [Gestion des modules](/etape-7-modules/gestion-modules/).
+Commencez par la [Gestion des modules](/etape-7-modules/gestion-modules/) pour comprendre le workflow professionnel Composer + Drush.
+
+<Aside type="tip" title="Conseil pédagogique">
+**Approche recommandée** pour cette étape :
+
+1. **Suivre l'ordre** : Chaque section prépare la suivante
+2. **Tester immédiatement** : Validez chaque configuration avant de continuer
+3. **Exporter régulièrement** : `drush cex -y` après chaque module configuré
+4. **Commiter souvent** : Versionnez votre progression
+5. **Lire les documentations** : Liens vers drupal.org pour approfondir
+
+**Temps de réalisation** :
+- Théorie : 1h30 (lecture et compréhension)
+- Pratique : 2h30 (exercices)
+- **Total** : ~4h
+
+**Résultat attendu** :
+Un site TailStore avec une base technique solide, des URLs propres, un SEO optimisé et des formulaires professionnels. Prêt pour le développement custom de l'étape 8.
+</Aside>
