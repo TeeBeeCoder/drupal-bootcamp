@@ -1,0 +1,907 @@
+---
+title: TD 2 - Config API & Alpine Search
+description: Atelier pratique Drupal 11 - Créer un bloc d'informations boutique et un moteur de recherche
+sidebar:
+  order: 11
+---
+
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+<div class="duration-badge">⏱️ Durée estimée : 4h</div>
+
+## 📋 Introduction
+
+Cet atelier vous permet de maîtriser deux concepts essentiels :
+
+- ⚙️ La **Config API** pour les configurations administrables
+- 🔍 L'**autocomplétion** avec Fetch API et Alpine.js
+
+<Aside type="note" title="Prérequis">
+Avoir complété le [TD 1](/etape-8-developpement/td-blocs-programmatiques-1/)
+</Aside>
+
+---
+
+## 🎯 Objectif : Créer 2 modules indépendants
+
+<Aside type="note" title="Objectif">
+Construire :
+1. Un module **Store Info** avec configuration admin
+2. Un module **Search** avec autocomplétion AJAX
+</Aside>
+
+---
+
+## ⚙️ Module : Store Info (Config API)
+
+### Structure du module
+
+```
+modules/custom/tailstore_store_info/
+├── config/
+│   ├── schema/
+│   │   └── tailstore_store_info.schema.yml
+│   └── install/
+│       └── tailstore_store_info.settings.yml
+├── src/
+│   ├── Form/
+│   │   └── StoreSettingsForm.php
+│   └── Plugin/
+│       └── Block/
+│           └── StoreInfoBlock.php
+├── tailstore_store_info.info.yml
+├── tailstore_store_info.routing.yml
+└── templates/
+    └── store-info-block.html.twig
+```
+
+---
+
+### 📦 Étape 1 : Déclaration du module
+
+```yaml
+# modules/custom/tailstore_store_info/tailstore_store_info.info.yml
+name: 'TailStore Store Info'
+type: module
+description: 'Affiche les informations de la boutique configurables'
+core_version_requirement: ^10 || ^11
+package: TailStore
+```
+
+---
+
+### 📋 Étape 2 : Schema de configuration
+
+<Aside type="tip" title="Rappel">
+**Concepts** : Le schema définit la structure et la validation des configs.
+</Aside>
+
+```yaml
+# config/schema/tailstore_store_info.schema.yml
+tailstore_store_info.settings:
+  type: config_object
+  label: 'Store Information Settings'
+  mapping:
+    store_name:
+      type: string
+      label: 'Store Name'
+    address:
+      type: text
+      label: 'Address'
+    phone:
+      type: string
+      label: 'Phone Number'
+    email:
+      type: email
+      label: 'Email Address'
+    opening_hours:
+      type: text
+      label: 'Opening Hours'
+    map_url:
+      type: uri
+      label: 'Google Maps URL'
+```
+
+---
+
+### 📄 Étape 3 : Configuration par défaut
+
+```yaml
+# config/install/tailstore_store_info.settings.yml
+store_name: 'TailStore'
+address: '123 Rue de la Mode, 67000 Strasbourg'
+phone: '+33 3 88 00 00 00'
+email: 'contact@tailstore.fr'
+opening_hours: |
+  Lundi - Samedi : 10h00 - 19h00
+  Dimanche : Fermé
+map_url: ''
+```
+
+---
+
+### 📝 Étape 4 : Formulaire de configuration
+
+<Aside type="tip" title="Rappel">
+**Concepts** : ConfigFormBase pour les formulaires de config.
+</Aside>
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\tailstore_store_info\Form;
+
+use Drupal\Core\Form\ConfigFormBase;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
+final class StoreSettingsForm extends ConfigFormBase {
+
+  protected function getEditableConfigNames(): array {
+    return ['tailstore_store_info.settings'];
+  }
+
+  public function getFormId(): string {
+    return 'tailstore_store_info_settings';
+  }
+
+  public function buildForm(array $form, FormStateInterface $form_state): array {
+    $config = $this->config('tailstore_store_info.settings');
+    
+    $form['store_info'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('General Information'),
+    ];
+    
+    // 🔍 TODO : Ajouter le champ store_name
+    // Aide : '#type' => 'textfield', '#default_value' => $config->get('store_name')
+    
+    $form['store_info']['store_name'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Store Name'),
+      '#default_value' => $config->get('store_name'),
+      '#required' => TRUE,
+    ];
+    
+    $form['store_info']['address'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Address'),
+      '#default_value' => $config->get('address'),
+      '#rows' => 3,
+      '#required' => TRUE,
+    ];
+    
+    $form['contact'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Contact Information'),
+    ];
+    
+    $form['contact']['phone'] = [
+      '#type' => 'tel',
+      '#title' => $this->t('Phone Number'),
+      '#default_value' => $config->get('phone'),
+    ];
+    
+    $form['contact']['email'] = [
+      '#type' => 'email',
+      '#title' => $this->t('Email Address'),
+      '#default_value' => $config->get('email'),
+    ];
+    
+    $form['hours'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Opening Hours'),
+    ];
+    
+    $form['hours']['opening_hours'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Opening Hours'),
+      '#default_value' => $config->get('opening_hours'),
+      '#rows' => 5,
+    ];
+    
+    $form['map'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Map & Location'),
+    ];
+    
+    $form['map']['map_url'] = [
+      '#type' => 'url',
+      '#title' => $this->t('Google Maps URL'),
+      '#default_value' => $config->get('map_url'),
+    ];
+    
+    return parent::buildForm($form, $form_state);
+  }
+
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
+    $email = $form_state->getValue('email');
+    if ($email && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+      $form_state->setErrorByName('email', $this->t('Invalid email address.'));
+    }
+  }
+
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
+    // 🔍 TODO : Sauvegarder chaque valeur
+    // Aide : $this->config('...')->set('key', $value)->save()
+    
+    $this->config('tailstore_store_info.settings')
+      ->set('store_name', $form_state->getValue('store_name'))
+      ->set('address', $form_state->getValue('address'))
+      ->set('phone', $form_state->getValue('phone'))
+      ->set('email', $form_state->getValue('email'))
+      ->set('opening_hours', $form_state->getValue('opening_hours'))
+      ->set('map_url', $form_state->getValue('map_url'))
+      ->save();
+    
+    $this->messenger()->addStatus($this->t('Settings saved.'));
+    parent::submitForm($form, $form_state);
+  }
+
+}
+```
+
+<details>
+<summary>🔐 Correction - StoreSettingsForm</summary>
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\tailstore_store_info\Form;
+
+use Drupal\Core\Form\ConfigFormBase;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
+final class StoreSettingsForm extends ConfigFormBase {
+
+  protected function getEditableConfigNames(): array {
+    return ['tailstore_store_info.settings'];
+  }
+
+  public function getFormId(): string {
+    return 'tailstore_store_info_settings';
+  }
+
+  public function buildForm(array $form, FormStateInterface $form_state): array {
+    $config = $this->config('tailstore_store_info.settings');
+    
+    $form['store_info'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('General Information'),
+    ];
+    
+    $form['store_info']['store_name'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Store Name'),
+      '#default_value' => $config->get('store_name'),
+      '#required' => TRUE,
+    ];
+    
+    $form['store_info']['address'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Address'),
+      '#default_value' => $config->get('address'),
+      '#rows' => 3,
+      '#required' => TRUE,
+    ];
+    
+    $form['contact'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Contact Information'),
+    ];
+    
+    $form['contact']['phone'] = [
+      '#type' => 'tel',
+      '#title' => $this->t('Phone Number'),
+      '#default_value' => $config->get('phone'),
+    ];
+    
+    $form['contact']['email'] = [
+      '#type' => 'email',
+      '#title' => $this->t('Email Address'),
+      '#default_value' => $config->get('email'),
+    ];
+    
+    $form['hours'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Opening Hours'),
+    ];
+    
+    $form['hours']['opening_hours'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Opening Hours'),
+      '#default_value' => $config->get('opening_hours'),
+      '#rows' => 5,
+    ];
+    
+    $form['map'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Map & Location'),
+    ];
+    
+    $form['map']['map_url'] = [
+      '#type' => 'url',
+      '#title' => $this->t('Google Maps URL'),
+      '#default_value' => $config->get('map_url'),
+    ];
+    
+    return parent::buildForm($form, $form_state);
+  }
+
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
+    $email = $form_state->getValue('email');
+    if ($email && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+      $form_state->setErrorByName('email', $this->t('Invalid email address.'));
+    }
+  }
+
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
+    $this->config('tailstore_store_info.settings')
+      ->set('store_name', $form_state->getValue('store_name'))
+      ->set('address', $form_state->getValue('address'))
+      ->set('phone', $form_state->getValue('phone'))
+      ->set('email', $form_state->getValue('email'))
+      ->set('opening_hours', $form_state->getValue('opening_hours'))
+      ->set('map_url', $form_state->getValue('map_url'))
+      ->save();
+    
+    $this->messenger()->addStatus($this->t('Settings saved.'));
+    parent::submitForm($form, $form_state);
+  }
+
+}
+```
+
+</details>
+
+---
+
+### 🧱 Étape 5 : Le bloc Store Info
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\tailstore_store_info\Plugin\Block;
+
+use Drupal\Core\Block\Attribute\Block;
+use Drupal\Core\Block\BlockBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
+#[Block(
+  id: 'tailstore_store_info_block',
+  admin_label: new TranslatableMarkup('Store Information'),
+  category: new TranslatableMarkup('TailStore'),
+)]
+final class StoreInfoBlock extends BlockBase {
+
+  public function build(): array {
+    $config = $this->config('tailstore_store_info.settings');
+    
+    return [
+      '#theme' => 'tailstore_store_info_block',
+      '#store_name' => $config->get('store_name'),
+      '#address' => $config->get('address'),
+      '#phone' => $config->get('phone'),
+      '#email' => $config->get('email'),
+      '#opening_hours' => $config->get('opening_hours'),
+      '#map_url' => $config->get('map_url'),
+      '#cache' => [
+        'contexts' => ['config'],
+        'tags' => ['config:tailstore_store_info.settings'],
+      ],
+    ];
+  }
+
+}
+```
+
+---
+
+### 🎨 Étape 6 : Le template Twig
+
+```twig
+{# templates/store-info-block.html.twig #}
+<div class="store-info-block" itemscope itemtype="https://schema.org/Store">
+  {% if store_name %}
+    <h3 class="store-name" itemprop="name">{{ store_name }}</h3>
+  {% endif %}
+  
+  {% if address %}
+    <address class="store-address" itemprop="address">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+        <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+      <span>{{ address|nl2br }}</span>
+    </address>
+  {% endif %}
+  
+  <div class="store-contact">
+    {% if phone %}
+      <a href="tel:{{ phone }}" class="contact-phone">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+        </svg>
+        {{ phone }}
+      </a>
+    {% endif %}
+    
+    {% if email %}
+      <a href="mailto:{{ email }}" class="contact-email">{{ email }}</a>
+    {% endif %}
+  </div>
+  
+  {% if opening_hours %}
+    <div class="store-hours">
+      <h4>{{ 'Opening Hours'|t }}</h4>
+      {{ opening_hours|nl2br }}
+    </div>
+  {% endif %}
+  
+  {% if map_url %}
+    <a href="{{ map_url }}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">
+      {{ 'View on Map'|t }}
+    </a>
+  {% endif %}
+</div>
+```
+
+---
+
+### 🛣️ Étape 7 : La route de configuration
+
+```yaml
+# tailstore_store_info.routing.yml
+tailstore_store_info.settings:
+  path: '/admin/config/tailstore/store-info'
+  defaults:
+    _form: '\Drupal\tailstore_store_info\Form\StoreSettingsForm'
+    _title: 'Store Information Settings'
+  requirements:
+    _permission: 'administer site configuration'
+```
+
+---
+
+## 🔍 Module : Product Search (Autocomplétion)
+
+### Structure du module
+
+```
+modules/custom/tailstore_search/
+├── src/
+│   ├── Controller/
+│   │   └── AutocompleteController.php
+│   └── Plugin/
+│       └── Block/
+│           └── ProductSearchBlock.php
+├── js/
+│   └── product-search.js
+├── tailstore_search.info.yml
+├── tailstore_search.routing.yml
+└── templates/
+    └── product-search-block.html.twig
+```
+
+---
+
+### 📦 Étape 1 : Déclaration du module
+
+```yaml
+# modules/custom/tailstore_search/tailstore_search.info.yml
+name: 'TailStore Search'
+type: module
+description: 'Moteur de recherche avec autocomplétion'
+core_version_requirement: ^10 || ^11
+package: TailStore
+```
+
+---
+
+### 🎛️ Étape 2 : Controller d'autocomplétion
+
+<Aside type="tip" title="Rappel">
+**Concepts** : JsonResponse pour les réponses AJAX.
+</Aside>
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\tailstore_search\Controller;
+
+use Drupal\Core\Controller\ControllerBase;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+
+final class AutocompleteController extends ControllerBase {
+
+  public function autocomplete(Request $request): JsonResponse {
+    $query = $request->query->get('q', '');
+    
+    if (strlen($query) < 2) {
+      return new JsonResponse([]);
+    }
+    
+    // 🔍 TODO : Créer une query pour charger les produits
+    // Aide : $this->entityTypeManager()->getStorage('node')->getQuery()
+    
+    $query = $this->entityTypeManager()->getStorage('node')->getQuery();
+    $query->condition('type', 'product')
+      ->condition('status', 1)
+      ->condition('title', '%' . $query . 'LIKE')
+      ->range(0, 8)
+      ->sort('title', 'ASC');
+    
+    $nids = $query->execute();
+    
+    if (empty($nids)) {
+      return new JsonResponse([]);
+    }
+    
+    $nodes = $this->entityTypeManager()->getStorage('node')->loadMultiple($nids);
+    
+    $results = [];
+    foreach ($nodes as $node) {
+      $imageUrl = '';
+      if ($node->hasField('field_images') && !$node->get('field_images')->isEmpty()) {
+        $file = $node->get('field_images')->entity;
+        if ($file) {
+          $imageUrl = \Drupal::service('file_url_generator')
+            ->generateAbsoluteString($file->getFileUri());
+        }
+      }
+      
+      $price = $node->hasField('field_price') 
+        ? $node->get('field_price')->value 
+        : '19.99';
+      
+      $results[] = [
+        'id' => $node->id(),
+        'title' => $node->getTitle(),
+        'url' => $node->toUrl()->toString(),
+        'image' => $imageUrl,
+        'price' => $price,
+      ];
+    }
+    
+    return new JsonResponse($results);
+  }
+
+}
+```
+
+---
+
+### 🛣️ Étape 3 : Routing
+
+```yaml
+# tailstore_search.routing.yml
+tailstore_search.autocomplete:
+  path: '/search/autocomplete'
+  defaults:
+    _controller: '\Drupal\tailstore_search\Controller\AutocompleteController::autocomplete'
+  requirements:
+    _access: 'TRUE'
+```
+
+---
+
+### 🧱 Étape 4 : Le bloc de recherche
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\tailstore_search\Plugin\Block;
+
+use Drupal\Core\Block\Attribute\Block;
+use Drupal\Core\Block\BlockBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
+#[Block(
+  id: 'tailstore_search_block',
+  admin_label: new TranslatableMarkup('Product Search'),
+  category: new TranslatableMarkup('TailStore'),
+)]
+final class ProductSearchBlock extends BlockBase {
+
+  public function build(): array {
+    return [
+      '#theme' => 'tailstore_search_block',
+      '#attached' => [
+        'library' => [
+          'tailstore_search/search',
+        ],
+        'drupalSettings' => [
+          'tailstoreSearch' => [
+            'autocompleteUrl' => '/search/autocomplete',
+          ],
+        ],
+      ],
+    ];
+  }
+
+}
+```
+
+---
+
+### 🎨 Étape 5 : Template Twig avec Alpine.js
+
+```twig
+{# templates/product-search-block.html.twig #}
+<div 
+  x-data="productSearch"
+  class="product-search"
+  data-search-component
+>
+  <div class="search-input-wrapper" data-search-wrapper>
+    <input 
+      type="text"
+      x-model="query"
+      @input="debouncedSearch()"
+      @keydown="handleKeydown()"
+      @focus="if (results.length > 0) isOpen = true"
+      @click.outside="closeResults()"
+      placeholder="{{ 'Search products...'|t }}"
+      class="search-input"
+      autocomplete="off"
+    >
+    
+    {# Loader #}
+    <span x-show="isLoading" class="search-spinner">
+      <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <circle cx="12" cy="12" r="10" stroke-width="3"/>
+      </svg>
+    </span>
+    
+    {# Bouton de recherche #}
+    <button type="button" class="search-button" @click="search()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="M21 21l-4.35-4.35"/>
+      </svg>
+    </button>
+    
+    {# Résultats autocomplétion #}
+    <div 
+      x-show="isOpen"
+      x-transition
+      class="search-results-dropdown"
+    >
+      <template x-for="(result, index) in results" :key="result.id">
+        <div 
+          class="search-result-item"
+          :class="{ 'selected': selectedIndex === index }"
+          @click="selectResult(result)"
+          @mouseenter="selectedIndex = index"
+        >
+          <div class="result-image">
+            <img 
+              :src="result.image || '/themes/custom/tailstore/images/placeholder.png'"
+              :alt="result.title"
+            >
+          </div>
+          
+          <div class="result-info">
+            <span class="result-title" x-text="result.title"></span>
+            <span class="result-price" x-text="result.price + ' €'"></span>
+          </div>
+          
+          <div class="result-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M9 18l6-6-6-6"/>
+            </svg>
+          </div>
+        </div>
+      </template>
+      
+      <div 
+        x-show="query.length >= 2 && results.length === 0 && !isLoading"
+        class="search-no-results"
+      >
+        {{ 'No products found for "|t }}<span x-text="query"></span>{{ '"|t }}
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+---
+
+### 📚 Étape 6 : JavaScript avec Alpine.js
+
+```javascript
+// js/product-search.js
+(function (Drupal) {
+  'use strict';
+
+  Drupal.behaviors.tailstoreSearch = {
+    attach: function (context) {
+      const searchInputs = context.querySelectorAll('[data-search-component]');
+      
+      searchInputs.forEach(input => {
+        if (input.hasAttribute('data-initialized')) return;
+        input.setAttribute('data-initialized', 'true');
+        
+        const wrapper = input.closest('[data-search-wrapper]') || input.parentElement;
+        initAlpineComponent(input, wrapper);
+      });
+    }
+  };
+
+  function initAlpineComponent(input, wrapper) {
+    if (typeof Alpine === 'undefined') return;
+    
+    const autocompleteUrl = Drupal.settings.tailstoreSearch?.autocompleteUrl || '/search/autocomplete';
+    
+    Alpine.data('productSearch', () => ({
+      query: '',
+      results: [],
+      isOpen: false,
+      isLoading: false,
+      selectedIndex: -1,
+      searchTimeout: null,
+      
+      async search() {
+        if (this.query.length < 2) {
+          this.results = [];
+          this.isOpen = false;
+          return;
+        }
+        
+        this.isLoading = true;
+        
+        try {
+          const response = await fetch(
+            autocompleteUrl + '?q=' + encodeURIComponent(this.query)
+          );
+          
+          this.results = await response.json();
+          this.isOpen = this.results.length > 0;
+          this.selectedIndex = -1;
+        } catch (error) {
+          console.error('Search error:', error);
+          this.results = [];
+        }
+        
+        this.isLoading = false;
+      },
+      
+      debouncedSearch() {
+        clearTimeout(this.searchTimeout);
+        this.searchTimeout = setTimeout(() => this.search(), 300);
+      },
+      
+      selectResult(result) {
+        window.location.href = result.url;
+      },
+      
+      closeResults() {
+        setTimeout(() => {
+          this.isOpen = false;
+          this.results = [];
+        }, 200);
+      },
+      
+      handleKeydown(e) {
+        switch(e.key) {
+          case 'ArrowDown':
+            e.preventDefault();
+            this.selectedIndex = Math.min(this.selectedIndex + 1, this.results.length - 1);
+            break;
+          case 'ArrowUp':
+            e.preventDefault();
+            this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
+            break;
+          case 'Enter':
+            if (this.selectedIndex >= 0) {
+              this.selectResult(this.results[this.selectedIndex]);
+            }
+            break;
+          case 'Escape':
+            this.isOpen = false;
+            break;
+        }
+      }
+    }));
+  }
+
+})(Drupal);
+```
+
+---
+
+### 📦 Étape 7 : Librairie
+
+```yaml
+# tailstore_search.libraries.yml
+search:
+  version: 1.0
+  js:
+    js/product-search.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+```
+
+---
+
+## 🚀 Activation et test
+
+```bash
+# Activer les modules
+ddev drush en tailstore_store_info tailstore_search -y
+
+# Vider le cache
+ddev drush cr
+
+# Accéder à la configuration Store Info
+# /admin/config/tailstore/store-info
+
+# Placer les blocs
+# Structure → Block layout → Header → Product Search
+# Structure → Block layout → Footer → Store Information
+```
+
+---
+
+## ✅ Validation Module Store Info
+
+- [ ] Le module s'active sans erreur
+- [ ] La page de configuration est accessible
+- [ ] Les valeurs par défaut sont chargées
+- [ ] Le formulaire valide les entrées
+- [ ] Les modifications sont sauvegardées
+- [ ] Le bloc affiche les informations
+
+## ✅ Validation Module Search
+
+- [ ] Le module s'active sans erreur
+- [ ] Le bloc de recherche s'affiche
+- [ ] L'autocomplétion fonctionne après 2 caractères
+- [ ] Les résultats apparaissent avec image, titre, prix
+- [ ] La navigation au clavier fonctionne
+- [ ] Le clic redirige vers la page produit
+
+---
+
+## 🎯 Résumé des compétences TD 2
+
+| Compétence | Implémentation |
+|------------|----------------|
+| Config API | `StoreSettingsForm`, `ConfigFormBase` |
+| Schema YAML | `config/schema/*.yml` |
+| Config defaults | `config/install/*.yml` |
+| Controller AJAX | `AutocompleteController`, `JsonResponse` |
+| Fetch API | `fetch()` dans JavaScript |
+| Alpine data | `Alpine.data()` dans le template |
+
+---
+
+## 🏆 Félicitations !
+
+Vous avez complété les 2 TD sur les blocs programmatiques. Vous savez maintenant :
+
+### TD 1 - Cart Manager
+- ✅ Créer une entité personnalisée (`CartItem`)
+- ✅ Implémenter un service avec DI (`CartManagerService`)
+- ✅ Créer un bloc programmatique (`MiniCartBlock`)
+- ✅ Utiliser Alpine.js pour l'interactivité
+
+### TD 2 - Config & Search
+- ✅ Gérer la configuration avec Config API
+- ✅ Créer des formulaires d'administration
+- ✅ Implémenter l'autocomplétion avec AJAX
+- ✅ Combiner Alpine.js et Fetch API
