@@ -1,0 +1,223 @@
+---
+title: Sujet Partiel Drupal 11
+description: Sujet officiel du partiel avec les exigences complètes
+sidebar:
+  order: 100
+pagefind: false
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+# Sujet Partiel Drupal 11
+
+## Objectif du projet
+
+Reproduire une partie spécifique d'un site web existant de votre choix (exemples : Le Figaro, Élysée.fr, etc.). Cette reproduction devra inclure plusieurs éléments pour garantir une diversité et une richesse fonctionnelle.
+
+---
+
+## Éléments obligatoires
+
+<CardGrid>
+  <Card title="1. Thème personnalisé" icon="palette">
+    Création et activation d'un thème ou thème enfant personnalisé avec CSS et JS.
+  </Card>
+  <Card title="2. Type de contenu" icon="document">
+    5+ champs avec références, deux formats d'affichage (complet/teaser).
+  </Card>
+  <Card title="3. Vue (Views)" icon="list-format">
+    Liste des contenus avec thumbnail, filtres et tris (facultatif).
+  </Card>
+  <Card title="4. Blocs" icon="puzzle">
+    3 blocs : Views, custom programmé avec DI, et 1 au choix.
+  </Card>
+</CardGrid>
+
+---
+
+### 1. Thème personnalisé
+
+a. Création et activation d'un thème ou thème enfant personnalisé.
+
+b. Ce thème devra être inspiré du design du site que vous reproduisez, avec une intégration CSS et JS personnalisée (la plus fidèle possible sans tomber dans l'excès).
+
+---
+
+### 2. Type de contenu
+
+a. Création d'un type de contenu personnalisé (par exemple, un article).
+
+b. Ce type de contenu doit inclure au moins 5 champs (exemples : texte long, image, lien, date, booléen).
+
+c. Parmi ces champs, inclure au moins un champ de type référence :
+   - Référence à un autre contenu (exemple : un article peut être relié à une page).
+   - Référence à une taxonomie (exemple : un champ permettant d'associer des tags ou une catégorie).
+
+d. Ce type de contenu devra être présenté sous deux formats différents :
+   - Format complet (full).
+   - Format accroche (teaser pour le listing par exemple).
+
+e. Une page devra inclure un exemple concret de ce type de contenu (au format complet ou teaser).
+
+---
+
+### 3. Vue (Views)
+
+a. Création d'une vue qui liste les contenus au format accroche (par exemple, une page catégorie/tags/listing).
+
+b. Cette vue devra inclure une taille d'image personnalisée (thumbnail) pour les miniatures associées à l'accroche.
+
+c. Cette vue pourra être configurée pour inclure des filtres ou tris dynamiques ainsi qu'une pagination (par exemple, filtrer par catégorie ou trier par date). *(Facultatif)*
+
+---
+
+### 4. Blocs sur la page d'accueil
+
+a. Sur la page d'accueil, intégrer 3 blocs :
+   - 1 bloc Views (liste de contenus au format accroche).
+   - 1 bloc custom programmatique avec injection de dépendances (créé dans un module personnalisé).
+   - 1 bloc au choix (bloc de contenu ou autre).
+
+b. Organisez ces blocs dans une mise en page cohérente.
+
+---
+
+### 5. Bloc informations de connexion
+
+a. Module custom avec bloc dans le footer.
+
+b. Affichage dynamiques des informations de connexion admin.
+
+---
+
+### 6. Route et contrôleur personnalisés
+
+a. Créer une page avec une route et un contrôleur personnalisés, inspirée d'une page présente sur la plupart des sites web (exemples : à propos, mentions légales, FAQ, etc.).
+
+b. Cette page doit afficher un contenu statique ou dynamique en fonction de vos choix.
+
+---
+
+### 7. Exportation de configuration
+
+a. Toutes les configurations créées (types de contenu, taxonomie, vues, blocs, etc.) doivent être exportées en utilisant le module Configuration Management.
+
+b. Fournir les fichiers de configuration exportés (.yml).
+
+---
+
+### 8. Scripts CSS et JS
+
+a. Fichier CSS personnalisé contenant le code CSS inspiré du site que vous reproduisez.
+
+b. Fichier JS avec :
+   - Une librairie externe (DataTables, Lightbox, carrousel, etc.) OU
+   - Alpine.js pour l'interactivité
+   - Script inspiré du site reproduit
+
+---
+
+### 9. Modules contrib
+
+a. Installer et activer 5 modules contrib de votre choix. Ces modules doivent être utiles à votre projet (Pathauto, Metatag, Webform, etc.).
+
+---
+
+### 10. Menu principal
+
+a. Mettre en place le menu principal du site, avec ses sous-menus.
+
+b. Afficher ce menu via un bloc dans la mise en page.
+
+---
+
+### 11. Taxonomie
+
+a. Créer une taxonomie pour classer les contenus.
+
+b. Ajouter au moins un vocabulaire avec plusieurs termes (exemple : classification des articles par sujet).
+
+c. Associer cette taxonomie au type de contenu via un champ de référence.
+
+---
+
+### 12. Formulaire programmatiques
+
+a. **(Obligatoire)** Formulaire Symfony dans une page ou un bloc.
+
+b. Exemple : formulaire de contact, formulaire d'inscription à une newsletter, ou formulaire permettant de saisir une donnée affichée en front-office.
+
+c. Soumission AJAX sans rechargement (Alpine.js, htmx, JS).
+
+---
+
+### 13. Service avec Injection de Dépendances
+
+a. **(Optionnel - Bonus 10pts)** Service PHP avec interface.
+
+b. Déclaration dans .services.yml.
+
+c. Injection dans un contrôleur ou bloc.
+
+d. Utilisation pour la logique métier.
+
+---
+
+## Livrables
+
+<CardGrid>
+  <Card title="Code source" icon="code">
+    Projet complet avec modules, thèmes, CSS, JS.
+  </Card>
+  <Card title="Base de données" icon="database">
+    Export SQL et fichiers .yml.
+  </Card>
+  <Card title="Documentation" icon="document">
+    README.md avec étapes d'installation, modules contrib, login admin.
+  </Card>
+</CardGrid>
+
+---
+
+## Critères d'évaluation
+
+| Critère | Description |
+|---------|-------------|
+| Respect des consignes | Toutes les exigences techniques respectées |
+| Qualité technique | Organisation du code, bonnes pratiques Drupal |
+| Fonctionnalités | Intégration correcte des éléments |
+| Formulaire AJAX | Validation et soumission sans rechargement |
+| Documentation | Claire et facile à suivre |
+
+---
+
+## Tableau récapitulatif
+
+| N | Exigence | Points | TD |
+|---|----------|--------|-----|
+| 1 | Thème personnalisé | 10 | [Étape 6](/etape-6-theming/) |
+| 2 | Type de contenu (5+ champs, refs) | 15 | [Étapes 2-3](/etape-2-contenus/) |
+| 3 | Vues | 10 | [Étape 4](/etape-4-vues/) |
+| 4 | Blocs avec DI | 10 | [TD1 Module A](/etape-8-developpement/td-blocs-programmatiques-1/) |
+| 5 | Bloc login admin | 5 | [Étape 5](/etape-5-navigation/) |
+| 6 | Route + contrôleur | 10 | [Étape 8](/etape-8-developpement/) |
+| 7 | Export configuration | 5 | [Config Sync](/etape-1-installation/configuration-sync/) |
+| 8 | CSS/JS + Alpine.js | 5 | [Alpine.js](/etape-6-theming/alpinejs/) |
+| 9 | 5 modules contrib | 5 | [Étape 7](/etape-7-modules/) |
+| 10 | Menu principal | 5 | [Étape 5](/etape-5-navigation/) |
+| 11 | Taxonomie | 5 | [Étape 3](/etape-3-taxonomies/) |
+| 12 | Formulaire + AJAX | 15 | [TD1 Module C](/etape-8-developpement/td-blocs-programmatiques-1/) |
+| 13 | Service DI (bonus) | 10 | [TD1](/etape-8-developpement/td-blocs-programmatiques-1/) |
+|   | **Total** | **110** | |
+
+---
+
+## Ressources
+
+- [Services et DI](/etape-8-developpement/services/)
+- [Blocs personnalisés](/etape-5-navigation/blocs-personnalises/)
+- [Form API](/etape-8-developpement/form-api/)
+- [Alpine.js](/etape-6-theming/alpinejs/)
+- [Configuration Sync](/etape-1-installation/configuration-sync/)
+- [TD 1](/etape-8-developpement/td-blocs-programmatiques-1/)
+- [TD 2](/etape-8-developpement/td-blocs-programmatiques-2/)
