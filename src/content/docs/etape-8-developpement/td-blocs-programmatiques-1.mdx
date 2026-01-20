@@ -1,0 +1,1618 @@
+---
+title: TD 1 - Blocs Programmatiques & Services
+description: Atelier pratique Drupal 11 - Créer un module e-commerce avec blocs, services et Alpine.js
+sidebar:
+  order: 10
+---
+
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+<div class="duration-badge">⏱️ Durée estimée : 4h</div>
+
+## 📋 Introduction
+
+Cet atelier vous guide dans la création d'un **module e-commerce complet** pour TailStore. Vous apprendrez à créer :
+
+- 🛒 Un système de panier avec entité personnalisée
+- 🔧 Des services avec injection de dépendances
+- 📦 Des blocs programmatiques
+- ⚡ Une interface réactive avec Alpine.js
+
+<Aside type="note" title="Prérequis">
+Avoir complété :
+- [Services](/etape-8-developpement/services/)
+- [Blocs](/etape-5-navigation/blocs-personnalises/)
+- [Alpine.js](/etape-6-theming/alpinejs/)
+</Aside>
+
+---
+
+## 🎯 Objectif : Créer le module Cart Manager
+
+<Aside type="note" title="Objectif">
+Construire un module permettant de gérer un panier d'achat avec :
+- Entité `CartItem` pour persister les données
+- Service `CartManagerService` pour la logique métier
+- Bloc `MiniCartBlock` pour l'affichage
+- Alpine.js pour l'interactivité temps réel
+</Aside>
+
+---
+
+## 🗂️ Structure du module
+
+```
+modules/custom/cart_manager/
+├── cart_manager.info.yml
+├── cart_manager.services.yml
+├── cart_manager.install
+├── cart_manager.module
+├── src/
+│   ├── Entity/
+│   │   ├── CartItem.php
+│   │   └── CartItemInterface.php
+│   ├── Service/
+│   │   └── CartManagerService.php
+│   └── Plugin/
+│       └── Block/
+│           └── MiniCartBlock.php
+└── templates/
+    └── mini-cart-block.html.twig
+```
+
+---
+
+## 📦 Étape 1 : Déclaration du module
+
+```yaml
+# modules/custom/cart_manager/cart_manager.info.yml
+name: 'Cart Manager'
+type: module
+description: 'Module de gestion du panier e-commerce pour TailStore'
+core_version_requirement: ^10 || ^11
+package: TailStore
+dependencies:
+  - drupal:node
+  - drupal:user
+```
+
+---
+
+## 🗄️ Étape 2 : Schema de base de données
+
+<Aside type="tip" title="Rappel">
+**Concepts** : hook_schema() définit la structure des tables.
+</Aside>
+
+```php
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for Cart Manager.
+ */
+
+declare(strict_types=1);
+
+/**
+ * Implements hook_schema().
+ */
+function cart_manager_schema(): array {
+  $schema['cart_item'] = [
+    'description' => 'Stores cart items for users.',
+    'fields' => [
+      'id' => [
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique cart item ID.',
+      ],
+      'uuid' => [
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => FALSE,
+        'description' => 'The cart item UUID.',
+      ],
+      'uid' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The user ID (owner).',
+      ],
+      'product_id' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'The product node ID.',
+      ],
+      'quantity' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 1,
+        'description' => 'The quantity of this product.',
+      ],
+      'created' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Created timestamp.',
+      ],
+      'changed' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Changed timestamp.',
+      ],
+    ],
+    'primary key' => ['id'],
+    'indexes' => [
+      'uid' => ['uid'],
+      'product_id' => ['product_id'],
+    ],
+    'foreign keys' => [
+      'uid' => [
+        'table' => 'users',
+        'columns' => ['uid' => 'uid'],
+      ],
+      'product_id' => [
+        'table' => 'node',
+        'columns' => ['product_id' => 'nid'],
+      ],
+    ],
+  ];
+
+  return $schema;
+}
+```
+
+<details>
+<summary>🔐 Correction</summary>
+
+Le code ci-dessus est complet et correct. Il crée la table `cart_item` avec :
+- `id` : Clé primaire auto-incrémentée
+- `uuid` : Identifiant unique universel
+- `uid` : Référence vers l'utilisateur
+- `product_id` : Référence vers le produit
+- `quantity` : Quantité du produit
+- `created` / `changed` : Timestamps
+
+</details>
+
+---
+
+## 🧩 Étape 3 : L'interface CartItemInterface
+
+<Aside type="tip" title="Rappel">
+**Concepts** : Les interfaces définissent le contrat que la classe doit respecter.
+</Aside>
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\cart_manager\Entity;
+
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityChangedInterface;
+use Drupal\user\UserInterface;
+
+/**
+ * Interface for the cart item entity.
+ */
+interface CartItemInterface extends ContentEntityInterface, EntityChangedInterface {
+
+  /**
+   * Gets the user who owns this cart item.
+   */
+  public function getOwner(): UserInterface;
+
+  /**
+   * Gets the user ID who owns this cart item.
+   */
+  public function getOwnerId(): int;
+
+  /**
+   * Sets the user ID who owns this cart item.
+   */
+  public function setOwnerId(int $uid): static;
+
+  /**
+   * Sets the user who owns this cart item.
+   */
+  public function setOwner(UserInterface $account): static;
+
+  /**
+   * Gets the product ID.
+   */
+  public function getProductId(): int;
+
+  /**
+   * Sets the product ID.
+   */
+  public function setProductId(int $product_id): static;
+
+  /**
+   * Gets the quantity.
+   */
+  public function getQuantity(): int;
+
+  /**
+   * Sets the quantity.
+   */
+  public function setQuantity(int $quantity): static;
+
+  /**
+   * Gets the creation timestamp.
+   */
+  public function getCreatedTime(): int;
+
+  /**
+   * Sets the creation timestamp.
+   */
+  public function setCreatedTime(int $timestamp): static;
+
+}
+```
+
+<details>
+<summary>🔐 Correction</summary>
+
+Ce code est complet. L'interface étend :
+- `ContentEntityInterface` : Pour les entités de contenu
+- `EntityChangedInterface` : Pour les timestamps de modification
+
+</details>
+
+---
+
+## 🏗️ Étape 4 : L'entité CartItem (ContentEntityBase)
+
+<Aside type="tip" title="Rappel">
+**Concepts** : ContentEntityBase fournit toute la logique de base pour les entités.
+</Aside>
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\cart_manager\Entity;
+
+use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\EntityChangedTrait;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\user\UserInterface;
+
+/**
+ * Defines the cart item entity class.
+ *
+ * @ContentEntityType(
+ *   id = "cart_item",
+ *   label = @Translation("Cart Item"),
+ *   label_collection = @Translation("Cart Items"),
+ *   label_singular = @Translation("cart item"),
+ *   label_plural = @Translation("cart items"),
+ *   entity_keys = {
+ *     "id" = "id",
+ *     "uuid" = "uuid",
+ *     "uid" = "uid",
+ *   },
+ *   handlers = {
+ *     "storage" = "Drupal\Core\Entity\Sql\SqlContentEntityStorage",
+ *     "access" = "Drupal\Core\Entity\UncacheableEntityAccessControlHandler",
+ *     "list_builder" = "Drupal\cart_manager\CartItemListBuilder",
+ *   },
+ *   base_table = "cart_item",
+ *   admin_permission = "administer cart item",
+ *   links = {
+ *     "collection" = "/admin/content/cart-items",
+ *   },
+ * )
+ */
+class CartItem extends ContentEntityBase implements CartItemInterface {
+
+  use EntityChangedTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function baseFieldDefinitions(EntityTypeInterface $entity_type): array {
+
+    $fields = parent::baseFieldDefinitions($entity_type);
+
+    // Champ utilisateur (owner)
+    $fields['uid'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('User'))
+      ->setDescription(t('The user ID.'))
+      ->setSetting('target_type', 'user')
+      ->setRequired(TRUE)
+      ->setDisplayOptions('form', [
+        'type' => 'entity_reference_autocomplete',
+        'weight' => 5,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'hidden',
+        'type' => 'author',
+        'weight' => 0,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
+
+    // Champ product_id
+    $fields['product_id'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Product ID'))
+      ->setDescription(t('The product node ID.'))
+      ->setRequired(TRUE)
+      ->setDisplayOptions('form', [
+        'type' => 'number',
+        'weight' => 10,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayOptions('view', [
+        'type' => 'number_integer',
+        'weight' => 10,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
+
+    // Champ quantity
+    $fields['quantity'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Quantity'))
+      ->setDescription(t('The quantity.'))
+      ->setDefaultValue(1)
+      ->setRequired(TRUE)
+      ->setDisplayOptions('form', [
+        'type' => 'number',
+        'weight' => 20,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayOptions('view', [
+        'type' => 'number_integer',
+        'weight' => 20,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
+
+    // Champ created
+    $fields['created'] = BaseFieldDefinition::create('created')
+      ->setLabel(t('Created'))
+      ->setDescription(t('The time that the entity was created.'));
+
+    // Champ changed
+    $fields['changed'] = BaseFieldDefinition::create('changed')
+      ->setLabel(t('Changed'))
+      ->setDescription(t('The time that the entity was last edited.'));
+
+    return $fields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCreatedTime(): int {
+    return (int) $this->get('created')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setCreatedTime(int $timestamp): static {
+    $this->set('created', $timestamp);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOwner(): UserInterface {
+    return $this->get('uid')->entity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOwnerId(): int {
+    return (int) $this->get('uid')->target_id;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setOwnerId($uid): static {
+    $this->set('uid', $uid);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setOwner(UserInterface $account): static {
+    $this->set('uid', $account->id());
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getProductId(): int {
+    return (int) $this->get('product_id')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setProductId(int $product_id): static {
+    $this->set('product_id', $product_id);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getQuantity(): int {
+    return (int) $this->get('quantity')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setQuantity(int $quantity): static {
+    $this->set('quantity', $quantity);
+    return $this;
+  }
+
+}
+```
+
+<details>
+<summary>🔐 Correction</summary>
+
+Ce code est complet et correct. L'entité :
+- Étend `ContentEntityBase` pour bénéficier de toute la logique CRUD
+- Définit 5 champs : `uid`, `product_id`, `quantity`, `created`, `changed`
+- Implémente `CartItemInterface`
+- Utilise `EntityChangedTrait` pour automatiquement mettre à jour `changed`
+
+</details>
+
+---
+
+## ⚙️ Étape 5 : Déclaration des services
+
+```yaml
+# modules/custom/cart_manager/cart_manager.services.yml
+services:
+  cart_manager.cart_manager:
+    class: Drupal\cart_manager\Service\CartManagerService
+    arguments: ['@entity_type.manager', '@current_user']
+```
+
+<Aside type="tip" title="Rappel">
+**Concepts** : Le fichier .services.yml déclare les services au container DI.
+</Aside>
+
+---
+
+## 🛠️ Étape 6 : Le service CartManagerService
+
+<Aside type="tip" title="Rappel">
+**Concepts** : Les services encapsulent la logique métier réutilisable.
+</Aside>
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\cart_manager\Service;
+
+use Drupal\cart_manager\Entity\CartItem;
+use Drupal\cart_manager\Entity\CartItemInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Session\AccountProxyInterface;
+
+/**
+ * Service for managing cart items.
+ */
+class CartManagerService {
+
+  /**
+   * The entity type manager.
+   */
+  protected EntityTypeManagerInterface $entityTypeManager;
+
+  /**
+   * The current user.
+   */
+  protected AccountProxyInterface $currentUser;
+
+  /**
+   * Constructs a CartManagerService object.
+   */
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, AccountProxyInterface $current_user) {
+    $this->entityTypeManager = $entity_type_manager;
+    $this->currentUser = $current_user;
+  }
+
+  /**
+   * Adds a product to the cart.
+   */
+  public function addToCart(int $productId, int $quantity = 1): CartItemInterface {
+    // 🔍 TODO : Vérifier si le produit existe déjà dans le panier
+    // Aide : $this->getCartItemByProductId($productId)
+    
+    $cartItem = $this->getCartItemByProductId($productId);
+    if ($cartItem) {
+      // Le produit existe déjà, incrémenter la quantité
+      // 🔍 TODO : Ajouter $quantity à la quantité actuelle
+      // Aide : $cartItem->getQuantity() + $quantity
+    }
+    else {
+      // Créer un nouveau cart item
+      // 🔍 TODO : CartItem::create() avec uid, product_id, quantity
+    }
+    
+    return $cartItem;
+  }
+
+  /**
+   * Removes a product from the cart.
+   */
+  public function removeFromCart(int $productId): bool {
+    $cartItem = $this->getCartItemByProductId($productId);
+    if ($cartItem) {
+      // 🔍 TODO : Supprimer l'item
+      // Aide : $cartItem->delete()
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
+   * Updates the quantity of a product in the cart.
+   */
+  public function updateQuantity(int $productId, int $quantity): ?CartItemInterface {
+    $cartItem = $this->getCartItemByProductId($productId);
+    if ($cartItem) {
+      // 🔍 TODO : Mettre à jour la quantité
+      // Aide : $cartItem->setQuantity($quantity)
+      return $cartItem;
+    }
+    return NULL;
+  }
+
+  /**
+   * Gets all cart items for the current user.
+   */
+  public function getCartItems(): array {
+    $query = $this->entityTypeManager->getStorage('cart_item')->getQuery();
+    // 🔍 TODO : Condition sur uid de l'utilisateur courant
+    // Aide : $this->currentUser->id()
+    
+    $query->condition('uid', $this->currentUser->id());
+    $query->accessCheck(FALSE);
+    $ids = $query->execute();
+    return $this->entityTypeManager->getStorage('cart_item')->loadMultiple($ids);
+  }
+
+  /**
+   * Gets the total count of items in the cart.
+   */
+  public function getCount(): int {
+    $cartItems = $this->getCartItems();
+    $count = 0;
+    // 🔍 TODO : Additionner les quantités
+    foreach ($cartItems as $item) {
+      // Aide : $count += $item->getQuantity()
+    }
+    return $count;
+  }
+
+  /**
+   * Gets the total price of the cart.
+   */
+  public function getTotal(): float {
+    $cartItems = $this->getCartItems();
+    $total = 0.0;
+    
+    foreach ($cartItems as $item) {
+      // Charger le produit pour obtenir le prix
+      $product = $this->entityTypeManager->getStorage('node')->load($item->getProductId());
+      if ($product && $product->hasField('field_price')) {
+        $price = (float) $product->get('field_price')->value;
+        $total += $price * $item->getQuantity();
+      }
+    }
+    
+    return $total;
+  }
+
+  /**
+   * Clears the cart for the current user.
+   */
+  public function clearCart(): void {
+    $cartItems = $this->getCartItems();
+    // 🔍 TODO : Supprimer tous les items
+    // Aide : $this->entityTypeManager->getStorage('cart_item')->delete($cartItems)
+  }
+
+  /**
+   * Gets a cart item by product ID for the current user.
+   */
+  protected function getCartItemByProductId(int $productId): ?CartItemInterface {
+    $query = $this->entityTypeManager->getStorage('cart_item')->getQuery();
+    $query->condition('uid', $this->currentUser->id());
+    $query->condition('product_id', $productId);
+    $query->accessCheck(FALSE);
+    $ids = $query->execute();
+    
+    if (!empty($ids)) {
+      // 🔍 TODO : Charger et retourner le premier item
+      // Aide : $this->entityTypeManager->getStorage('cart_item')->load(reset($ids))
+    }
+    return NULL;
+  }
+
+}
+```
+
+<details>
+<summary>🔐 Correction - CartManagerService</summary>
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\cart_manager\Service;
+
+use Drupal\cart_manager\Entity\CartItem;
+use Drupal\cart_manager\Entity\CartItemInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Session\AccountProxyInterface;
+
+class CartManagerService {
+
+  protected EntityTypeManagerInterface $entityTypeManager;
+  protected AccountProxyInterface $currentUser;
+
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, AccountProxyInterface $current_user) {
+    $this->entityTypeManager = $entity_type_manager;
+    $this->currentUser = $current_user;
+  }
+
+  public function addToCart(int $productId, int $quantity = 1): CartItemInterface {
+    $cartItem = $this->getCartItemByProductId($productId);
+    if ($cartItem) {
+      $cartItem->setQuantity($cartItem->getQuantity() + $quantity);
+      $cartItem->save();
+      return $cartItem;
+    }
+    else {
+      $cartItem = CartItem::create([
+        'uid' => $this->currentUser->id(),
+        'product_id' => $productId,
+        'quantity' => $quantity,
+      ]);
+      $cartItem->save();
+      return $cartItem;
+    }
+  }
+
+  public function removeFromCart(int $productId): bool {
+    $cartItem = $this->getCartItemByProductId($productId);
+    if ($cartItem) {
+      $cartItem->delete();
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  public function updateQuantity(int $productId, int $quantity): ?CartItemInterface {
+    $cartItem = $this->getCartItemByProductId($productId);
+    if ($cartItem) {
+      $cartItem->setQuantity($quantity);
+      $cartItem->save();
+      return $cartItem;
+    }
+    return NULL;
+  }
+
+  public function getCartItems(): array {
+    $query = $this->entityTypeManager->getStorage('cart_item')->getQuery();
+    $query->condition('uid', $this->currentUser->id());
+    $query->accessCheck(FALSE);
+    $ids = $query->execute();
+    return $this->entityTypeManager->getStorage('cart_item')->loadMultiple($ids);
+  }
+
+  public function getCount(): int {
+    $cartItems = $this->getCartItems();
+    $count = 0;
+    foreach ($cartItems as $item) {
+      $count += $item->getQuantity();
+    }
+    return $count;
+  }
+
+  public function getTotal(): float {
+    $cartItems = $this->getCartItems();
+    $total = 0.0;
+    
+    foreach ($cartItems as $item) {
+      $product = $this->entityTypeManager->getStorage('node')->load($item->getProductId());
+      if ($product && $product->hasField('field_price')) {
+        $price = (float) $product->get('field_price')->value;
+        $total += $price * $item->getQuantity();
+      }
+    }
+    
+    return $total;
+  }
+
+  public function clearCart(): void {
+    $cartItems = $this->getCartItems();
+    $this->entityTypeManager->getStorage('cart_item')->delete($cartItems);
+  }
+
+  protected function getCartItemByProductId(int $productId): ?CartItemInterface {
+    $query = $this->entityTypeManager->getStorage('cart_item')->getQuery();
+    $query->condition('uid', $this->currentUser->id());
+    $query->condition('product_id', $productId);
+    $query->accessCheck(FALSE);
+    $ids = $query->execute();
+    
+    if (!empty($ids)) {
+      return $this->entityTypeManager->getStorage('cart_item')->load(reset($ids));
+    }
+    return NULL;
+  }
+
+}
+```
+
+</details>
+
+---
+
+## 🧱 Étape 7 : Le bloc MiniCartBlock
+
+<Aside type="tip" title="Rappel">
+**Concepts** : BlockBase crée des blocs programmatiques.
+</Aside>
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\cart_manager\Plugin\Block;
+
+use Drupal\Core\Block\Attribute\Block;
+use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\cart_manager\Service\CartManagerService;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+/**
+ * Provides a mini cart block for the header.
+ */
+#[Block(
+  id: 'cart_manager_mini_cart',
+  admin_label: new TranslatableMarkup('Mini Cart'),
+  category: new TranslatableMarkup('Custom'),
+)]
+final class MiniCartBlock extends BlockBase implements ContainerFactoryPluginInterface {
+
+  /**
+   * Constructs the plugin instance.
+   */
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    private readonly CartManagerService $cartManager,
+  ) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): self {
+    return new self(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('cart_manager.cart_manager'),
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function build(): array {
+    // 🔍 TODO : Récupérer le count et le total depuis le service
+    // Aide : $this->cartManager->getCount() et getTotal()
+    
+    return [
+      '#theme' => 'cart_manager_mini_cart',
+      '#count' => 0, // 🔍 À remplacer
+      '#total' => 0.0, // 🔍 À remplacer
+      '#attached' => [
+        'library' => [
+          'cart_manager/cart',
+        ],
+      ],
+      '#cache' => [
+        'contexts' => ['session', 'user'],
+        'tags' => ['cart_items'],
+      ],
+    ];
+  }
+
+}
+```
+
+<details>
+<summary>🔐 Correction - MiniCartBlock</summary>
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\cart_manager\Plugin\Block;
+
+use Drupal\Core\Block\Attribute\Block;
+use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\cart_manager\Service\CartManagerService;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+#[Block(
+  id: 'cart_manager_mini_cart',
+  admin_label: new TranslatableMarkup('Mini Cart'),
+  category: new TranslatableMarkup('Custom'),
+)]
+final class MiniCartBlock extends BlockBase implements ContainerFactoryPluginInterface {
+
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    private readonly CartManagerService $cartManager,
+  ) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
+
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): self {
+    return new self(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('cart_manager.cart_manager'),
+    );
+  }
+
+  public function build(): array {
+    return [
+      '#theme' => 'cart_manager_mini_cart',
+      '#count' => $this->cartManager->getCount(),
+      '#total' => $this->cartManager->getTotal(),
+      '#attached' => [
+        'library' => [
+          'cart_manager/cart',
+        ],
+      ],
+      '#cache' => [
+        'contexts' => ['session', 'user'],
+        'tags' => ['cart_items'],
+      ],
+    ];
+  }
+
+}
+```
+
+</details>
+
+---
+
+## 🎨 Étape 8 : Le template Twig avec Alpine.js
+
+<Aside type="tip" title="Rappel">
+**Concepts** : Alpine.js avec x-data, x-bind, x-on pour l'interactivité.
+</Aside>
+
+```twig
+{# modules/custom/cart_manager/templates/mini-cart-block.html.twig #}
+<div 
+  x-data="{ 
+    count: {{ count }}, 
+    total: {{ total }},
+    loading: false,
+    
+    init() {
+      // Écouter les événements de mise à jour du panier
+      document.addEventListener('cart-updated', (e) => {
+        this.count = e.detail.count;
+        this.total = e.detail.total;
+      });
+    },
+    
+    async updateQuantity(productId, delta) {
+      this.loading = true;
+      try {
+        // Appel AJAX pour mettre à jour la quantité
+        const response = await fetch('/cart/update', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            product_id: productId,
+            delta: delta
+          })
+        });
+        
+        if (response.ok) {
+          // Émettre l'événement de mise à jour
+          const data = await response.json();
+          this.count = data.count;
+          this.total = data.total;
+          
+          document.dispatchEvent(new CustomEvent('cart-updated', {
+            detail: { count: this.count, total: this.total }
+          }));
+        }
+      } catch (error) {
+        console.error('Erreur:', error);
+      }
+      this.loading = false;
+    }
+  }"
+  class="mini-cart"
+>
+  <a href="/cart" class="cart-link">
+    <svg class="cart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17"/>
+      <circle cx="9" cy="21" r="1"/>
+      <circle cx="20" cy="21" r="1"/>
+    </svg>
+    
+    <span 
+      x-show="count > 0"
+      x-text="count"
+      class="cart-badge"
+    ></span>
+    
+    <span class="cart-total" x-text="'$' + total.toFixed(2)">
+      ${{ total }}
+    </span>
+  </a>
+  
+  {# Dropdown du panier #}
+  <div 
+    x-show="count > 0"
+    x-transition
+    class="cart-dropdown"
+  >
+    <div class="cart-items">
+      <p class="text-sm text-gray-600">
+        <span x-text="count"></span> articles dans votre panier
+      </p>
+      <p class="font-bold">
+        Total: <span x-text="'$' + total.toFixed(2)"></span>
+      </p>
+    </div>
+    
+    <a href="/cart" class="btn btn-primary btn-sm w-full mt-2">
+      Voir le panier
+    </a>
+  </div>
+  
+  {# Loading overlay #}
+  <div 
+    x-show="loading"
+    class="absolute inset-0 bg-white/50 flex items-center justify-center"
+  >
+    <svg class="animate-spin h-5 w-5 text-primary" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+    </svg>
+  </div>
+</div>
+```
+
+---
+
+## 📚 Étape 9 : La librairie JavaScript
+
+```yaml
+# modules/custom/cart_manager/cart_manager.libraries.yml
+cart:
+  version: 1.0
+  js:
+    js/cart.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+```
+
+```javascript
+// modules/custom/cart_manager/js/cart.js
+(function (Drupal) {
+  'use strict';
+
+  Drupal.behaviors.cartManager = {
+    attach: function (context) {
+      // Store global Alpine pour le panier
+      if (typeof Alpine !== 'undefined') {
+        Alpine.store('cart', {
+          items: [],
+          
+          get count() {
+            return this.items.reduce((sum, item) => sum + item.quantity, 0);
+          },
+          
+          get total() {
+            return this.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+          },
+          
+          add(product) {
+            const existing = this.items.find(i => i.id === product.id);
+            if (existing) {
+              existing.quantity++;
+            } else {
+              this.items.push({ ...product, quantity: 1 });
+            }
+            
+            // Émettre l'événement de mise à jour
+            this.notify(`${product.name} ajouté`);
+          },
+          
+          remove(productId) {
+            this.items = this.items.filter(i => i.id !== productId);
+            this.notify('Produit retiré');
+          },
+          
+          notify(message) {
+            document.dispatchEvent(new CustomEvent('toast', { 
+              detail: { message, type: 'success' } 
+            }));
+          }
+        });
+      }
+    }
+  };
+
+})(Drupal);
+```
+
+---
+
+## 🚀 Étape 10 : Activer et tester
+
+```bash
+# Activer le module
+ddev drush en cart_manager -y
+
+# Vider le cache
+ddev drush cr
+
+# Installer les dépendances de la base de données
+ddev drush updb
+
+# Placer le bloc dans la région header
+# Structure → Block layout → Header → Place block → Mini Cart
+```
+
+---
+
+## ✅ Validation
+
+- [ ] Le module est activé sans erreur
+- [ ] La table `cart_item` est créée
+- [ ] Le bloc "Mini Cart" apparaît dans la liste
+- [ ] Le bloc affiche le count et le total
+- [ ] Alpine.js fonctionne (compteur réactif)
+- [ ] Le cache par session fonctionne
+
+---
+
+## 🎯 Résumé des compétences
+
+| Compétence | Implémentation |
+|------------|----------------|
+| Entité personnalisée | `CartItem` avec `ContentEntityBase` |
+| Schema BDD | `hook_schema()` dans `.install` |
+| Service DI | `CartManagerService` avec injections |
+| Bloc programmatique | `MiniCartBlock` avec `BlockBase` |
+| Alpine.js | Store global et reactivity |
+| Cache per-user | `'contexts' => ['session', 'user']` |
+
+---
+
+## 📧 Module C : Newsletter Block (Form API + AJAX)
+
+<Aside type="note" title="Objectif">
+Créer un bloc avec formulaire d'inscription à la newsletter utilisant la Form API et Alpine.js pour le feedback utilisateur.
+</Aside>
+
+### Structure du module
+
+```
+modules/custom/tailstore_newsletter/
+├── src/
+│   ├── Form/
+│   │   └── NewsletterSubscribeForm.php
+│   └── Plugin/
+│       └── Block/
+│           └── NewsletterBlock.php
+├── tailstore_newsletter.info.yml
+├── tailstore_newsletter.routing.yml
+└── templates/
+    └── newsletter-block.html.twig
+```
+
+---
+
+### 📦 Étape 1 : Déclaration du module
+
+```yaml
+# modules/custom/tailstore_newsletter/tailstore_newsletter.info.yml
+name: 'TailStore Newsletter'
+type: module
+description: 'Module d\'inscription à la newsletter'
+core_version_requirement: ^10 || ^11
+package: TailStore
+```
+
+---
+
+### 📝 Étape 2 : Le formulaire (avec trous)
+
+<Aside type="tip" title="Rappel">
+**Concepts** : Form API Drupal avec validation et soumission.
+</Aside>
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\tailstore_newsletter\Form;
+
+use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+/**
+ * Formulaire d'inscription à la newsletter.
+ */
+final class NewsletterSubscribeForm extends FormBase {
+
+  public function __construct(
+    private readonly MessengerInterface $messenger,
+  ) {}
+
+  public static function create(ContainerInterface $container): self {
+    return new self(
+      $container->get('messenger'),
+    );
+  }
+
+  public function getFormId(): string {
+    return 'tailstore_newsletter_subscribe';
+  }
+
+  public function buildForm(array $form, FormStateInterface $form_state): array {
+    $form['email'] = [
+      '#type' => 'email',
+      '#title' => $this->t('Your email address'),
+      '#placeholder' => $this->t('Enter your email'),
+      '#required' => TRUE,
+      '#attributes' => [
+        'class' => ['form-control'],
+        'x-model' => 'email',
+      ],
+    ];
+
+    // Champ honeypot anti-spam
+    $form['website'] = [
+      '#type' => 'text',
+      '#attributes' => [
+        'style' => 'display:none',
+        'tabindex' => '-1',
+      ],
+    ];
+
+    $form['actions'] = [
+      '#type' => 'actions',
+      'submit' => [
+        '#type' => 'submit',
+        '#value' => $this->t('Subscribe'),
+        '#attributes' => [
+          'class' => ['btn btn-primary'],
+          'x-bind:disabled' => '!email',
+        ],
+      ],
+    ];
+
+    return $form;
+  }
+
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
+    $email = $form_state->getValue('email');
+    $website = $form_state->getValue('website');
+    
+    // Vérification honeypot
+    if (!empty($website)) {
+      $form_state->setErrorByName('', $this->t('Submission rejected.'));
+    }
+    
+    // Validation email
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+      $form_state->setErrorByName('email', $this->t('Please enter a valid email address.'));
+    }
+  }
+
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
+    $email = $form_state->getValue('email');
+    
+    // 🔍 TODO : Enregistrer l'email (en prod, envoyer à un service externe)
+    // Aide : $this->messenger()->addStatus()
+    
+    $this->messenger()->addStatus(
+      $this->t('Thank you for subscribing with @email!', ['@email' => $email])
+    );
+    
+    $form_state->setValue('email', '');
+  }
+
+}
+```
+
+<details>
+<summary>🔐 Correction - NewsletterSubscribeForm</summary>
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\tailstore_newsletter\Form;
+
+use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+final class NewsletterSubscribeForm extends FormBase {
+
+  public function __construct(
+    private readonly MessengerInterface $messenger,
+  ) {}
+
+  public static function create(ContainerInterface $container): self {
+    return new self(
+      $container->get('messenger'),
+    );
+  }
+
+  public function getFormId(): string {
+    return 'tailstore_newsletter_subscribe';
+  }
+
+  public function buildForm(array $form, FormStateInterface $form_state): array {
+    $form['email'] = [
+      '#type' => 'email',
+      '#title' => $this->t('Your email address'),
+      '#placeholder' => $this->t('Enter your email'),
+      '#required' => TRUE,
+      '#attributes' => [
+        'class' => ['form-control'],
+        'x-model' => 'email',
+      ],
+    ];
+
+    $form['website'] = [
+      '#type' => 'text',
+      '#attributes' => [
+        'style' => 'display:none',
+        'tabindex' => '-1',
+      ],
+    ];
+
+    $form['actions'] = [
+      '#type' => 'actions',
+      'submit' => [
+        '#type' => 'submit',
+        '#value' => $this->t('Subscribe'),
+        '#attributes' => [
+          'class' => ['btn btn-primary'],
+          'x-bind:disabled' => '!email',
+        ],
+      ],
+    ];
+
+    return $form;
+  }
+
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
+    $email = $form_state->getValue('email');
+    $website = $form_state->getValue('website');
+    
+    if (!empty($website)) {
+      $form_state->setErrorByName('', $this->t('Submission rejected.'));
+    }
+    
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+      $form_state->setErrorByName('email', $this->t('Please enter a valid email address.'));
+    }
+  }
+
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
+    $email = $form_state->getValue('email');
+    
+    $this->messenger()->addStatus(
+      $this->t('Thank you for subscribing with @email!', ['@email' => $email])
+    );
+    
+    $form_state->setValue('email', '');
+  }
+
+}
+```
+
+</details>
+
+---
+
+### 🧱 Étape 3 : Le bloc Newsletter
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\tailstore_newsletter\Plugin\Block;
+
+use Drupal\Core\Block\Attribute\Block;
+use Drupal\Core\Block\BlockBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
+#[Block(
+  id: 'tailstore_newsletter_block',
+  admin_label: new TranslatableMarkup('Newsletter Subscribe'),
+  category: new TranslatableMarkup('TailStore'),
+)]
+final class NewsletterBlock extends BlockBase {
+
+  public function build(): array {
+    return [
+      '#theme' => 'tailstore_newsletter_block',
+      '#title' => $this->t('Subscribe to our newsletter'),
+      '#description' => $this->t('Get the latest updates and exclusive offers.'),
+      '#attached' => [
+        'library' => [
+          'tailstore_newsletter/newsletter',
+        ],
+      ],
+    ];
+  }
+
+}
+```
+
+---
+
+### 🎨 Étape 4 : Template Twig avec Alpine.js
+
+```twig
+{# templates/newsletter-block.html.twig #}
+<div 
+  x-data="{
+    email: '',
+    loading: false,
+    success: false,
+    message: '',
+    
+    async submitForm() {
+      if (!this.email) return;
+      
+      this.loading = true;
+      this.success = false;
+      this.message = '';
+      
+      try {
+        const formData = new FormData();
+        formData.append('email', this.email);
+        
+        const response = await fetch('/newsletter/subscribe/ajax', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          this.success = true;
+          this.message = data.message;
+          this.email = '';
+        } else {
+          this.message = data.error || 'An error occurred';
+        }
+      } catch (error) {
+        this.message = 'An error occurred. Please try again.';
+      }
+      
+      this.loading = false;
+    }
+  }"
+  class="newsletter-block"
+>
+  {% if title %}
+    <h3 class="newsletter-title">{{ title }}</h3>
+  {% endif %}
+  
+  {% if description %}
+    <p class="newsletter-description">{{ description }}</p>
+  {% endif %}
+  
+  <div x-show="success" x-transition class="newsletter-success">
+    <p x-text="message"></p>
+  </div>
+  
+  <div x-show="message && !success" x-transition class="newsletter-error">
+    <p x-text="message"></p>
+  </div>
+  
+  <form x-show="!success" @submit.prevent="submitForm()" class="newsletter-form">
+    <div class="form-group">
+      <input 
+        type="email"
+        x-model="email"
+        placeholder="{{ 'Enter your email'|t }}"
+        required
+        class="form-control"
+        :disabled="loading"
+      >
+    </div>
+    
+    <button 
+      type="submit"
+      class="btn btn-primary"
+      :disabled="!email || loading"
+    >
+      <span x-show="!loading">{{ 'Subscribe'|t }}</span>
+      <span x-show="loading">{{ 'Subscribing...'|t }}</span>
+    </button>
+  </form>
+</div>
+```
+
+---
+
+### 🛣️ Étape 5 : Route AJAX
+
+```yaml
+# tailstore_newsletter.routing.yml
+tailstore_newsletter.subscribe_ajax:
+  path: '/newsletter/subscribe/ajax'
+  defaults:
+    _controller: '\Drupal\tailstore_newsletter\Controller\NewsletterController::subscribeAjax'
+  requirements:
+    _access: 'TRUE'
+  methods: [POST]
+```
+
+---
+
+### 🎛️ Étape 6 : Controller AJAX
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\tailstore_newsletter\Controller;
+
+use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Form\FormBuilder;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+
+final class NewsletterController extends ControllerBase {
+
+  public function __construct(
+    private readonly FormBuilder $formBuilder,
+  ) {}
+
+  public static function create(ContainerInterface $container): self {
+    return new self(
+      $container->get('form_builder'),
+    );
+  }
+
+  public function subscribeAjax(Request $request): JsonResponse {
+    $form = $this->formBuilder->getForm(
+      'Drupal\tailstore_newsletter\Form\NewsletterSubscribeForm'
+    );
+    
+    $form_state = new \Drupal\Core\Form\FormState();
+    $form_state->setRequestMethod('POST');
+    $form_state->setUserInput($request->request->all());
+    $form_state->set('always_process', TRUE);
+    
+    $form = $this->formBuilder->submitForm($form, $form_state);
+    
+    if ($form_state->hasErrors()) {
+      $errors = $form_state->getErrors();
+      $firstError = reset($errors);
+      
+      return new JsonResponse([
+        'success' => FALSE,
+        'error' => $firstError->__toString(),
+      ]);
+    }
+    
+    return new JsonResponse([
+      'success' => TRUE,
+      'message' => $this->t('Thank you for subscribing!')->__toString(),
+    ]);
+  }
+
+}
+```
+
+---
+
+### 📦 Étape 7 : Librairie
+
+```yaml
+# tailstore_newsletter.libraries.yml
+newsletter:
+  version: 1.0
+  js:
+    js/newsletter.js: {}
+  dependencies:
+    - core/drupal
+```
+
+---
+
+### 🚀 Activation et test
+
+```bash
+# Activer le module
+ddev drush en tailstore_newsletter -y
+
+# Vider le cache
+ddev drush cr
+
+# Placer le bloc dans le footer
+# Structure → Block layout → Footer → Place block → Newsletter Subscribe
+```
+
+---
+
+## ✅ Validation Module C
+
+- [ ] Le module s'active sans erreur
+- [ ] Le bloc apparaît avec titre et description
+- [ ] Le formulaire s'affiche correctement
+- [ ] La validation email fonctionne
+- [ ] La soumission AJAX fonctionne (pas de rechargement)
+- [ ] Le message de succès s'affiche après inscription
+
+---
+
+## 🔜 Suite
+
+Poursuivez avec [TD 2](/etape-8-developpement/td-blocs-programmatiques-2/) pour découvrir la Config API et créer un bloc d'informations boutique.
