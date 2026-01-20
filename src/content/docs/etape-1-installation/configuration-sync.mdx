@@ -329,38 +329,126 @@ cat config/sync/fichier.yml | python -c "import yaml,sys; yaml.safe_load(sys.std
 | `drush config:set` | `drush cset` | Modifier une configuration |
 | `drush config:list` | | Lister les configurations |
 
+## 📦 Configuration des modules custom
+
+Les modules custom peuvent définir leur configuration par défaut dans `config/install/` :
+
+```
+modules/custom/mon_module/
+├── config/
+│   └── install/
+│       └── mon_module.settings.yml
+```
+
+Exemple :
+
+```yaml
+# config/install/mon_module.settings.yml
+ma_cle: ma_valeur
+```
+
+Cette configuration sera automatiquement installée lors de l'activation du module. Pour exporter des modifications ultérieures :
+
+```bash
+drush cex -y
+```
+
+## 🌍 Configurations spécifiques par environnement
+
+### Overrides dans settings.php
+
+Certaines configurations doivent varier selon l'environnement (dev/staging/prod). Utilisez `$config` dans `settings.php` :
+
+```php
+// settings.php
+
+// Mode maintenance automatique en production
+if (getenv('ENVIRONMENT') === 'prod') {
+  $config['system.maintenance']['message'] = 'Site en maintenance.';
+}
+
+// Configuration de mail en dev (ne pas envoyer de vrais emails)
+if (getenv('ENVIRONMENT') === 'dev') {
+  $config['system.mail']['interface']['default'] = 'test_mail_collector';
+}
+
+// API keys différentes par environnement
+$config['mon_module.settings']['api_key'] = getenv('API_KEY');
+```
+
+:::caution[Important]
+Les overrides via `$config` dans `settings.php` ne sont **pas exportables** et ont toujours la priorité sur les fichiers YAML.
+:::
+
+### Module Configuration Split
+
+Pour des besoins avancés (modules différents par environnement, configurations conditionnelles), utilisez le module **Config Split** :
+
+```bash
+composer require drupal/config_split
+drush en config_split -y
+```
+
+Exemple d'usage : activer Devel uniquement en dev, désactiver le cache en local, etc.
+
+## 🔄 Cache et configuration
+
+Après un import de configuration, **videz toujours le cache** :
+
+```bash
+drush cim -y
+drush cr  # cr = cache:rebuild
+```
+
+Le cache peut contenir d'anciennes références à la configuration. Sans le vider, certains changements peuvent ne pas apparaître.
+
 ## ✅ Exercice pratique
 
-1. Exportez la configuration actuelle :
+<Steps>
+
+1. **Exportez la configuration actuelle**
    ```bash
    drush cex -y
    ```
 
-2. Modifiez le nom du site via l'interface :
+2. **Modifiez le nom du site via l'interface**
    - Aller à `/admin/config/system/site-information`
    - Changer le nom en "TailStore - E-Commerce"
 
-3. Vérifiez les différences :
+3. **Vérifiez les différences**
    ```bash
    drush cst
    ```
 
-4. Exportez à nouveau :
+4. **Exportez à nouveau**
    ```bash
    drush cex -y
    ```
 
-5. Vérifiez le fichier modifié :
+5. **Vérifiez le fichier modifié**
    ```bash
    cat config/sync/system.site.yml | grep name
    ```
 
-6. Commitez :
+6. **Commitez**
    ```bash
    git add config/sync/system.site.yml
    git commit -m "chore: update site name"
    ```
 
+7. **Testez le cycle complet**
+   ```bash
+   # Modifier à nouveau le nom via l'interface
+   # Puis annuler en réimportant
+   drush cim -y
+   drush cr
+   # Le nom doit revenir à "TailStore - E-Commerce"
+   ```
+
+</Steps>
+
 ## 🚀 Étape suivante
+
+Vous maîtrisez maintenant la gestion de configuration de Drupal ! 
 
 Passez à l'[Interface d'administration](/etape-1-installation/interface-admin/) pour découvrir les principales sections de l'admin Drupal.
