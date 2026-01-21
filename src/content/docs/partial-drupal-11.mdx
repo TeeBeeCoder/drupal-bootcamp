@@ -37,129 +37,260 @@ Reproduire une partie spécifique d'un site web existant de votre choix (exemple
 
 ### 1. Thème personnalisé
 
-a. Création et activation d'un thème ou thème enfant personnalisé.
+**a. Créer et activer un thème personnalisé**
+   - Vous devez créer un thème Drupal personnalisé ou un thème enfant (child theme) basé sur un thème existant.
 
-b. Ce thème devra être inspiré du design du site que vous reproduisez, avec une intégration CSS et JS personnalisée (la plus fidèle possible sans tomber dans l'excès).
+**b. Intégrer le design du site choisi**
+   - Votre thème doit reprendre les éléments visuels principaux du site web que vous reproduisez (couleurs, typographie, mise en page).
+   - Intégrez vos fichiers CSS et JavaScript personnalisés dans le thème.
+   - L'objectif est d'obtenir une reproduction la plus fidèle possible sans nécessairement copier tous les détails (restez raisonnable).
 
 ---
 
-### 2. Type de contenu
+### 2. Type de contenu personnalisé
 
-a. Création d'un type de contenu personnalisé (par exemple, un article).
+**a. Créer un type de contenu**
+   - Création d’un type de contenu personnalisé (par exemple : un article, une page, un dossier, etc.).
 
-b. Ce type de contenu doit inclure au moins 5 champs (exemples : texte long, image, lien, date, booléen).
+**b. Ajouter au minimum 5 champs**
+    - Ajouter au moins 5 champs variés à votre type de contenu.
+   - Exemples de types de champs : Texte long (textarea), Image, Lien (URL), Date, Booléen (case à cocher), Liste de sélection, etc.
 
-c. Parmi ces champs, inclure au moins un champ de type référence :
-   - Référence à un autre contenu (exemple : un article peut être relié à une page).
-   - Référence à une taxonomie (exemple : un champ permettant d'associer des tags ou une catégorie).
+**c. Inclure au moins un champ de type référence**
+   - **Référence à un contenu** : Créez un champ qui permet de lier votre contenu à un autre contenu existant (par exemple : un article peut référencer une page "Auteur").
+   - **OU Référence à une taxonomie** : Créez un champ qui permet d'associer des termes de taxonomie (tags, catégories) à votre contenu.
 
-d. Ce type de contenu devra être présenté sous deux formats différents :
-   - Format complet (full).
-   - Format accroche (teaser pour le listing par exemple).
+**d. Configurer deux modes d'affichage**
+    - Configurer le mode d'affichage **Complet (Full)** : affichage détaillé avec tous les champs.
+    - Configurer le mode d'affichage **Accroche (Teaser)** : affichage résumé pour les listings (titre, image réduite, extrait de texte).
 
-e. Une page devra inclure un exemple concret de ce type de contenu (au format complet ou teaser).
+**e. Créer au moins un contenu exemple**
+   - Créez une ou plusieurs instances de ce type de contenu avec des données réelles pour tester l'affichage.
 
 ---
 
 ### 3. Vue (Views)
 
-a. Création d'une vue qui liste les contenus au format accroche (par exemple, une page catégorie/tags/listing).
+**a. Créer une vue pour lister les contenus**
+   - Créez une vue qui affiche une liste de contenus en utilisant le mode d'affichage "Accroche (Teaser)".
+   - Cette vue peut prendre la forme d'une page (par exemple : `/actualites`, `/articles`) ou d'un listing par catégorie.
 
-b. Cette vue devra inclure une taille d'image personnalisée (thumbnail) pour les miniatures associées à l'accroche.
+**b. Configurer une taille d'image personnalisée**
+   - Créez un style d'image (thumbnail) pour les miniatures affichées dans la vue.
+   - Exemple : 300x200 pixels avec recadrage automatique.
+    - Appliquer ce style d'image dans la configuration de votre champ image dans la vue.
 
-c. Cette vue pourra être configurée pour inclure des filtres ou tris dynamiques ainsi qu'une pagination (par exemple, filtrer par catégorie ou trier par date). *(Facultatif)*
+**c. (Facultatif si absent du listing reproduit) Ajouter des filtres et une pagination**
+    - Ajouter des filtres exposés permettant aux utilisateurs de filtrer par catégorie, date, etc.
+    - Configurer une pagination (par exemple : 10 éléments par page).
+   - Ces éléments sont optionnels mais valorisés.
 
 ---
 
 ### 4. Blocs sur la page d'accueil
 
-a. Sur la page d'accueil, intégrer 3 blocs :
-   - 1 bloc Views (liste de contenus au format accroche).
-   - 1 bloc custom programmatique avec injection de dépendances (créé dans un module personnalisé).
-   - 1 bloc au choix (bloc de contenu ou autre).
+**a. Intégrer 3 blocs sur la page d'accueil**
+   
+   Vous devez placer 3 blocs distincts sur votre page d'accueil :
 
-b. Organisez ces blocs dans une mise en page cohérente.
+    1. **Bloc Views** : Utiliser un bloc généré par une vue pour afficher une liste de contenus récents au format accroche.
+   
+   2. **Bloc custom programmatique avec injection de dépendances** : 
+      - Créez un module custom.
+      - Dans ce module, créez un bloc programmatique qui utilise l'injection de dépendances pour récupérer des services Drupal.
+      - Ce bloc doit afficher du contenu dynamique (exemples : nombre de contenus publiés, date actuelle, informations utilisateur, etc.).
+   
+   3. **Bloc au choix** : 
+      - Vous êtes libre de choisir le type : bloc de contenu statique, bloc menu, bloc de recherche, autre bloc programmatique, etc.
+
+**b. Organiser la mise en page**
+    - Utiliser le système de mise en page de Drupal (*Structure > Mise en page des blocs*) pour positionner ces blocs de manière cohérente.
+    - Veiller à ce que la disposition soit claire et professionnelle.
+
+** Remarque ** : Si le site que vous reproduisez ne comporte pas de page d'accueil spécifique, vous pouvez choisir une autre page pertinente pour y placer ces blocs.
 
 ---
 
-### 5. Bloc informations de connexion
+### 5. Bloc d'informations de connexion
 
-a. Module custom avec bloc dans le footer.
+**a. Créer un module custom avec un bloc**
+   - Créez un module personnalisé (si ce n'est pas déjà fait pour la tâche 4).
+   - Dans ce module, créez un nouveau bloc programmatique qui sera placé dans le footer du site.
 
-b. Affichage dynamiques des informations de connexion admin.
+**b. Afficher les informations de connexion admin**
+   - Ce bloc doit afficher dynamiquement les informations de connexion au back-office :
+     - Nom d'utilisateur administrateur
+     - Mot de passe administrateur
+    - Utiliser un template Twig personnalisé (`.html.twig`) pour structurer l'affichage de ces informations.
+   - **Note** : Ces informations doivent être affichées uniquement à des fins pédagogiques pour faciliter la correction. Dans un contexte réel, cette pratique serait une faille de sécurité majeure.
 
 ---
 
 ### 6. Route et contrôleur personnalisés
 
-a. Créer une page avec une route et un contrôleur personnalisés, inspirée d'une page présente sur la plupart des sites web (exemples : à propos, mentions légales, FAQ, etc.).
+**a. Créer une page avec route et contrôleur custom**
+   - Dans votre module personnalisé, créez une nouvelle route personnalisée.
+   - Créez le contrôleur associé qui gérera la logique de cette page.
+    - S'inspirer d'une page courante sur les sites web : "À propos", "Mentions légales", "FAQ", "Contact", etc.
 
-b. Cette page doit afficher un contenu statique ou dynamique en fonction de vos choix.
+**b. Afficher du contenu**
+   - Le contrôleur doit retourner un rendu (render array) qui affichera du contenu sur la page.
+   - Ce contenu peut être :
+     - **Statique** : texte fixe défini dans le contrôleur ou un template.
+     - **Dynamique** : informations récupérées depuis la base de données, des services Drupal, ou des API externes.
+   - Exemple : une page "À propos" qui affiche des statistiques du site (nombre de contenus, date de création, etc.).
 
 ---
 
 ### 7. Exportation de configuration
 
-a. Toutes les configurations créées (types de contenu, taxonomie, vues, blocs, etc.) doivent être exportées en utilisant le module Configuration Management.
+**a. Exporter toutes vos configurations**
+    - Utiliser le module **Configuration Management** intégré à Drupal pour exporter toutes vos configurations.
+   - Cela inclut : types de contenu, champs, taxonomies, vues, blocs, menus, styles d'image, etc.
 
-b. Fournir les fichiers de configuration exportés (.yml).
+**b. Fournir les fichiers de configuration**
+   - Les fichiers exportés (format `.yml`) se trouvent dans le répertoire `/config/sync/` de votre installation.
+    - Inclure tous ces fichiers dans votre livrable final.
+   - Ces fichiers permettront de recréer automatiquement votre configuration sur une autre installation Drupal.
+
+** Attention ** : Bien régler la configuration avant l'export pour la sortir du docroot pour éviter d'inclure des données sensibles ou spécifiques à votre environnement (sécurité).
 
 ---
 
 ### 8. Scripts CSS et JS
 
-a. Fichier CSS personnalisé contenant le code CSS inspiré du site que vous reproduisez.
+**a. Créer et charger un fichier CSS personnalisé**
+    - Créer un fichier CSS contenant les styles inspirés du site que vous reproduisez.
+    - Déclarer ce fichier dans le fichier `.libraries.yml` de votre thème.
+    - Charger cette bibliothèque dans votre thème pour appliquer les styles à votre site.
 
-b. Fichier JS avec :
-   - Une librairie externe (DataTables, Lightbox, carrousel, etc.) OU
-   - Alpine.js pour l'interactivité
-   - Script inspiré du site reproduit
+**b. Créer et charger un fichier JavaScript**
+    
+    Vous avez deux options (choisir au moins une) :
+
+    1. **Intégrer une librairie externe** : 
+       - Exemple : DataTables pour des tableaux interactifs, Lightbox pour des galeries d'images, carrousel/slider, etc.
+       - Déclarer la librairie dans votre fichier `.libraries.yml` avec les CDN ou fichiers locaux.
+    
+    2. **Utiliser Alpine.js pour l'interactivité** : 
+       - Ajouter Alpine.js à votre projet pour créer des interactions simples (accordéons, onglets, modales, etc.).
+    
+    3. **Écrire un script personnalisé** : 
+       - Créer un fichier `.js` contenant du code inspiré du site reproduit (animations, interactions, etc.).
+       - Le déclarer et le charger dans votre thème.
 
 ---
 
 ### 9. Modules contrib
 
-a. Installer et activer 5 modules contrib de votre choix. Ces modules doivent être utiles à votre projet (Pathauto, Metatag, Webform, etc.).
+**a. Installer et activer 5 modules contrib**
+    - Choisir 5 modules communautaires (contrib) qui apportent des fonctionnalités utiles à votre projet.
+
+**Exemples de modules recommandés :**
+   - **Pathauto** : Génération automatique d'URLs lisibles
+   - **Metatag** : Gestion des balises meta pour le SEO
+   - **Webform** : Création de formulaires complexes
+   - **Admin Toolbar** : Amélioration de la barre d'administration
+   - **Token** : Système de jetons pour du contenu dynamique
+   - **Entity Reference Revisions** : Pour les références à des paragraphes
+   - Etc.
+
+**Documenter votre choix** : Dans votre README, lister les 5 modules choisis et expliquer brièvement leur utilité dans votre projet.
 
 ---
 
 ### 10. Menu principal
 
-a. Mettre en place le menu principal du site, avec ses sous-menus.
+**a. Créer et structurer le menu principal**
+    - Configurer le menu principal de votre site avec plusieurs entrées de menu.
+    - Ajouter des sous-menus (menu déroulant) pour organiser la navigation de manière hiérarchique.
+   - Exemple de structure :
+     ```
+     Accueil
+     Actualités
+       ├─ Catégorie 1
+       └─ Catégorie 2
+     À propos
+     Contact
+     ```
 
-b. Afficher ce menu via un bloc dans la mise en page.
+**b. Afficher le menu via un bloc**
+    - Placer le menu principal dans une région de votre thème (généralement "Header" ou "Navigation principale").
+    - S'assurer que le menu est visible et fonctionnel sur toutes les pages.
+    - S'assurer que le style du menu correspond au design global de votre thème.
 
 ---
 
 ### 11. Taxonomie
 
-a. Créer une taxonomie pour classer les contenus.
+**a. Créer un vocabulaire de taxonomie**
+    - Créer un nouveau vocabulaire de taxonomie pour classifier vos contenus.
+   - Exemple : "Catégories", "Tags", "Thématiques", "Types de produits", etc.
 
-b. Ajouter au moins un vocabulaire avec plusieurs termes (exemple : classification des articles par sujet).
+**b. Ajouter des termes au vocabulaire**
+    - Créer au moins 3 à 5 termes dans votre vocabulaire.
+   - Exemple pour un vocabulaire "Catégories d'articles" : Politique, Sport, Culture, Économie, Technologies.
 
-c. Associer cette taxonomie au type de contenu via un champ de référence.
-
----
-
-### 12. Formulaire programmatiques
-
-a. **(Obligatoire)** Formulaire Symfony dans une page ou un bloc.
-
-b. Exemple : formulaire de contact, formulaire d'inscription à une newsletter, ou formulaire permettant de saisir une donnée affichée en front-office.
-
-c. Soumission AJAX sans rechargement (Alpine.js, htmx, JS).
+**c. Associer la taxonomie à votre type de contenu**
+    - Ajouter un champ de type "Référence à un terme de taxonomie" à votre type de contenu créé dans la tâche 2.
+    - Configurer ce champ pour qu'il référence votre vocabulaire de taxonomie.
+   - Les éditeurs pourront ainsi associer un ou plusieurs termes à chaque contenu créé.
 
 ---
 
-### 13. Service avec Injection de Dépendances
+### 12. Formulaire programmatique
 
-a. **(Optionnel - Bonus 10pts)** Service PHP avec interface.
+**a. Créer un formulaire avec l'API Form de Symfony**
+    - Dans votre module custom, créer un formulaire programmatique en utilisant l'API Form de Drupal (basée sur Symfony).
+    - Le formulaire peut être intégré dans une page (via un contrôleur) ou dans un bloc.
+    - Créer une classe de formulaire qui étend `FormBase`.
 
-b. Déclaration dans .services.yml.
+**b. Choisir le type de formulaire**
+   
+   Exemples de formulaires à implémenter :
+   - **Formulaire de contact** : Nom, email, message
+   - **Inscription à une newsletter** : Email, prénom, consentement
+   - **Formulaire de recherche avancée** : Mots-clés, catégories, dates
+   - **Formulaire de saisie** : Permettre de saisir une donnée qui sera affichée en front-office
 
-c. Injection dans un contrôleur ou bloc.
+**c. Implémenter la soumission AJAX**
+    - Configurer votre formulaire pour qu'il se soumette en AJAX sans rechargement de page.
+    - Utiliser :
+      - **Alpine.js** : Pour intercepter et gérer la soumission
+      - **htmx** : Pour simplifier les interactions AJAX
+      - **JavaScript vanilla** : Pour un contrôle total
+    - Afficher un message de confirmation ou d'erreur après soumission.
+    - Valider les données côté serveur dans la méthode `validateForm()` de votre classe de formulaire.
 
-d. Utilisation pour la logique métier.
+---
+
+### 13. Service avec Injection de Dépendances (Bonus)
+
+**a. (Optionnel - Bonus 10 points) Créer un service PHP avec interface**
+    - Créer une interface PHP définissant les méthodes de votre service.
+    - Créer une classe qui implémente cette interface et contient votre logique métier.
+    - Placer ces fichiers dans le répertoire `src/` de votre module custom.
+
+**b. Déclarer le service**
+    - Créer ou modifier le fichier `[votre_module].services.yml` à la racine de votre module.
+    - Déclarer votre service avec son ID, sa classe et ses dépendances éventuelles.
+   - Exemple de structure :
+     ```yaml
+     services:
+       mon_module.mon_service:
+         class: Drupal\mon_module\Service\MonService
+         arguments: ['@entity_type.manager', '@current_user']
+     ```
+
+**c. Injecter le service**
+    - Utiliser l'injection de dépendances pour injecter votre service dans un contrôleur ou un bloc.
+    - Pour un bloc : utiliser les méthodes `create()` et `__construct()`.
+    - Pour un contrôleur : utiliser également `create()` et `__construct()`.
+
+**d. Utiliser le service**
+    - Appeler les méthodes de votre service pour exécuter votre logique métier.
+   - Exemple : récupérer des statistiques, formatter des données, effectuer des calculs, interroger l'API, etc.
+   - Le service doit avoir un rôle clair et réutilisable dans votre application.
 
 ---
 
@@ -167,13 +298,13 @@ d. Utilisation pour la logique métier.
 
 <CardGrid>
   <Card title="Code source" icon="code">
-    Projet complet avec modules, thèmes, CSS, JS.
+    Projet Drupal complet avec modules custom, thème personnalisé, fichiers CSS et JS.
   </Card>
   <Card title="Base de données" icon="database">
-    Export SQL et fichiers .yml.
+    Export SQL de la base de données et fichiers .yml de configuration.
   </Card>
   <Card title="Documentation" icon="document">
-    README.md avec étapes d'installation, modules contrib, login admin.
+    Fichier README.md détaillant l'installation, les modules contrib utilisés et les identifiants admin.
   </Card>
 </CardGrid>
 
@@ -183,11 +314,12 @@ d. Utilisation pour la logique métier.
 
 | Critère | Description |
 |---------|-------------|
-| Respect des consignes | Toutes les exigences techniques respectées |
-| Qualité technique | Organisation du code, bonnes pratiques Drupal |
-| Fonctionnalités | Intégration correcte des éléments |
-| Formulaire AJAX | Validation et soumission sans rechargement |
-| Documentation | Claire et facile à suivre |
+| Respect des consignes | Toutes les exigences techniques ont été respectées et implémentées correctement |
+| Qualité technique | Code bien organisé, respect des standards et bonnes pratiques Drupal (nommage, structure, sécurité) |
+| Fonctionnalités | Tous les éléments fonctionnent correctement (type de contenu, vues, blocs, formulaire, etc.) |
+| Qualité CSS/JS | Scripts bien intégrés, fonctionnels et adaptés au projet |
+| Formulaire AJAX | Le formulaire se soumet sans rechargement avec validation et retour utilisateur approprié |
+| Documentation | README.md clair, complet et facile à suivre pour installer et tester le projet |
 
 ---
 
@@ -221,3 +353,5 @@ d. Utilisation pour la logique métier.
 - [Configuration Sync](/etape-1-installation/configuration-sync/)
 - [TD 1](/etape-8-developpement/td-blocs-programmatiques-1/)
 - [TD 2](/etape-8-developpement/td-blocs-programmatiques-2/)
+- [Code module Hero manager exemple](https://go.teebeecoder.fr/VPvBnV)
+- [Code module Cart manager exemple](https://go.teebeecoder.fr/DKEszs)
