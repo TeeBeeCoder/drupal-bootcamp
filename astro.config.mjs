@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightThemeGalaxy from 'starlight-theme-galaxy';
 import icon from 'astro-icon';
+import mermaid from 'astro-mermaid';
 
 import tailwindcss from '@tailwindcss/vite';
 
@@ -12,6 +13,10 @@ export default defineConfig({
 
   integrations: [
       icon(),
+      mermaid({
+        theme: 'forest',
+        autoTheme: true
+     }),
       starlight({
           plugins: [starlightThemeGalaxy()],
           title: 'Drupal Bootcamp',
