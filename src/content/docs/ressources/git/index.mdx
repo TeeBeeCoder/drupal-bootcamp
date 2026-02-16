@@ -1,6 +1,6 @@
 ---
 title: Cours Git - 11h (TD)
-description: Cours complet Git niveau junior, format TD, avec TP et QCM final.
+description: Cours complet Git niveau junior, format TD, avec TP et QCM final
 sidebar:
   order: 1
 ---
@@ -9,18 +9,18 @@ sidebar:
 
 ## Sommaire
 
-- [Introduction (1h30)](#introduction-1h30)
+- [Introduction (1h)](#introduction-1h)
 - [Bases fondamentales (3h)](#bases-fondamentales-3h)
 - [Branches et workflow (3h)](#branches-et-workflow-3h)
 - [Travail en équipe et remotes (1h30)](#travail-en-équipe-et-remotes-1h30)
-- [TP avancé (1h)](#tp-avancé-1h)
+- [TP avancé (1h30)](#tp-avancé-1h30)
 - [QCM final (1h)](#qcm-final-1h)
 
 ---
 
-## Introduction (1h30)
+## Introduction (1h)
 
-### 🎯 Objectifs pédagogiques
+### Objectifs pédagogiques
 
 - Comprendre le versioning et ses enjeux.
 - Identifier la différence entre systèmes centralisés et décentralisés.
@@ -29,21 +29,21 @@ sidebar:
 
 ### Qu'est-ce que le versioning ?
 
-Le versioning (gestion de versions) permet de suivre l'évolution d'un projet dans le temps, de revenir en arrière, et de travailler à plusieurs sans écraser le travail des autres.
+Le **versioning** (ou gestion de versions) permet de suivre l'évolution d'un projet dans le temps, de revenir en arrière si nécessaire, et de collaborer à plusieurs sans risquer d'écraser le travail des autres.
 
-:::danger
-**Concrètement** : imaginez que vous travaillez à 5 sur un site web. Sans versioning :
-- Vous vous envoyez des fichiers par email → qui a la dernière version ?
+:::tip[Cas concret]
+Imaginez que vous travaillez à 5 sur un site web. Sans versioning :
+- Vous vous envoyez des fichiers par email → qui détient la dernière version ?
 - Vous écrasez le travail des autres → comment récupérer ce qui a été perdu ?
-- Pas de retour en arrière → une erreur et c'est la catastrophe.
+- Pas de retour en arrière → une erreur devient une catastrophe.
 :::
 
 ### Pourquoi Git ?
 
-- **Distribué** : chaque développeur possède l'historique complet.
-- **Rapide** : opérations locales instantanées (log, diff, commit).
-- **Robuste** : historique vérifiable, branchements efficaces.
-- **Standard industriel** : GitHub, GitLab, Bitbucket.
+- **Distribué** : chaque développeur possède l'historique complet du projet
+- **Rapide** : opérations locales instantanées (log, diff, commit)
+- **Robuste** : historique vérifiable par hash cryptographique, branchements efficaces
+- **Standard industriel** : GitHub, GitLab, Bitbucket, Azure DevOps
 
 ### Systèmes centralisés vs décentralisés
 
@@ -64,22 +64,32 @@ graph LR
 
 | Type | Exemple | Avantage principal | Limite principale |
 |------|---------|-------------------|-------------------|
-| Centralisé | SVN, CVS | Simple à administrer | Dépend d'un serveur unique, pas de travail offline |
-| Décentralisé | Git, Mercurial | Autonome, copie complète locale, travail offline | Gestion des binaires moins optimale |
+| Centralisé | SVN, CVS | Simple à administrer | Dépend d'un serveur unique, pas de travail hors ligne |
+| Décentralisé | Git, Mercurial | Autonome, copie complète locale, travail hors ligne | Gestion des binaires lourds moins optimale |
 
-**Avantages du décentralisé (pro)** :
-- Ne dépend pas d'un serveur
-- Travail sans connexion
-- Chaque machine contient l'historique complet
-- Possibilité de définir un dépôt de référence (GitHub, GitLab)
+:::note[Avantages du décentralisé en environnement professionnel]
+- **Autonomie complète** : ne dépend pas d'un serveur central
+- **Travail hors ligne** : commit, branche, merge sans connexion
+- **Historique complet** : chaque développeur a toute l'histoire du projet
+- **Dépôt de référence** : possibilité de désigner un dépôt principal (GitHub, GitLab)
+:::
 
 ### À propos de Git
 
-- Première version : 7 avril 2005
-- Créé par **Linus Torvalds** (auteur du noyau Linux)
-- Licence : GNU GPL v2
-- Écrit en C, Shell, Perl, Tcl, Python, C++
-- Dernière version stable : 2.53.0 (février 2026)
+**Informations clés** :
+
+- **Première version** : 7 avril 2005
+- **Créateur** : Linus Torvalds (créateur du noyau Linux)
+- **Licence** : GNU GPL v2 (logiciel libre)
+- **Technologies** : C, Shell, Perl, Tcl, Python, C++
+- **Dernière version stable** : 2.53.0 (février 2026)
+
+:::note[Pourquoi Git a été créé ?]
+Linus Torvalds a créé Git en 2005 pour gérer le développement du noyau Linux après que l'outil précédent (BitKeeper) soit devenu payant. Git a été conçu pour être :
+- **Rapide** : opérations en millisecondes
+- **Distribué** : pas de point de défaillance unique
+- **Fiable** : intégrité cryptographique (SHA-1)
+:::
 
 ### Installation et configuration
 
@@ -91,8 +101,10 @@ graph LR
 
 #### Configuration de base
 
-:::important
-La configuration de `user.name` et `user.email` est **obligatoire** pour être identifié dans vos commits. Sans cela, Git refusera de créer des commits.
+:::important[Configuration obligatoire]
+La configuration de `user.name` et `user.email` est **obligatoire** pour être identifié dans vos commits. Sans ces informations, Git refusera de créer des commits.
+
+Ces données apparaissent dans chaque commit et identifient l'auteur des modifications.
 :::
 
 ```bash
@@ -110,17 +122,20 @@ git config --global --list
 **Configuration recommandée** :
 
 ```bash
-# Nom de branche principale par défaut
+# Définir le nom de la branche principale par défaut 
+# (main est la convention moderne, plus master)
 git config --global init.defaultBranch main
 ```
 
 ### Configuration avancée
 
-:::note
+:::note[Niveaux de configuration Git]
 Git propose 3 niveaux de configuration (du plus large au plus spécifique) :
-- `--system` : pour tous les utilisateurs du système
-- `--global` : pour votre utilisateur sur toutes les machines
-- `--local` : pour le dépôt courant uniquement
+- `--system` : pour tous les utilisateurs du système (rarement utilisé)
+- `--global` : pour votre compte utilisateur sur tous vos projets
+- `--local` : pour le dépôt courant uniquement (prioritaire)
+
+La configuration locale écrase la globale, qui écrase la système.
 :::
 
 #### Globale vs Locale
@@ -138,15 +153,16 @@ git config --local user.email "email@projet.com"
 git config --list --show-origin
 ```
 
-:::tip
+:::tip[Quand utiliser la configuration locale ?]
 Utilisez `--local` pour :
-- Un projet professionnel avec un email différent
+- Un projet professionnel avec une adresse email d'entreprise différente
 - Tester des configurations sans impacter vos autres projets
+- Utiliser des identifiants spécifiques à un client ou projet
 :::
 
 #### Créer des alias
 
-Les alias permettent de créer des raccourcis pour les commandes fréquentes.
+Les alias permettent de créer des raccourcis pour les commandes fréquentes et gagner un temps précieux.
 
 ```bash
 # Raccourcis pratiques
@@ -184,7 +200,7 @@ git config --global color.status.changed "yellow"
 git config --global color.status.untracked "red"
 ```
 
-#### Mode de commit (editor)
+#### Mode de commit (éditeur)
 
 ```bash
 # Changer l'éditeur par défaut
@@ -241,14 +257,14 @@ flowchart LR
 
 | Concept | Définition |
 |---------|------------|
-| **Repository** | Espace contenant l'historique complet du projet (.git/) |
+| **Repository** (dépôt) | Espace contenant l'historique complet du projet (dossier `.git/`) |
 | **Working Directory** | Dossier visible où vous modifiez les fichiers |
-| **Staging Area (Index)** | Zone tampon pour sélectionner ce qui sera commité |
+| **Staging Area** (Index) | Zone tampon pour sélectionner ce qui sera commité |
 | **Commit** | Instantané versionné avec message descriptif |
-| **HEAD** | Pointeur vers le commit/branche courante |
+| **HEAD** | Pointeur vers le commit/branche actuel(le) |
 | **Remote** | Dépôt distant (GitHub, GitLab, Bitbucket) |
 | **Branch** | Ligne de développement parallèle |
-| **Tag** | Marqueurs immuables sur un commit (versions) |
+| **Tag** | Marqueur immuable sur un commit (pour versions/releases) |
 
 ### États d'un fichier
 
@@ -262,13 +278,13 @@ flowchart TD
     B -->|git restore --staged| C
 ```
 
-- **Untracked** : nouveau fichier, non suivi par Git
-- **Modified** : fichier suivi, modifié mais pas en staging
-- **Staged** : modification ajoutée à l'index, prête pour le commit
-- **Committed** : enregistré dans l'historique
+- **Untracked** (non suivi) : nouveau fichier, pas encore ajouté à Git
+- **Modified** (modifié) : fichier suivi, modifié mais pas encore ajouté au staging
+- **Staged** (indexé) : modification ajoutée à l'index, prête pour le commit
+- **Committed** (commité) : enregistré dans l'historique Git
 
-:::tip
-Utilisez fréquemment `git status` pour voir dans quel état se trouvent vos fichiers !
+:::tip[Bonne pratique]
+Utilisez fréquemment `git status` pour visualiser dans quel état se trouvent vos fichiers. C'est la commande la plus utile au quotidien !
 :::
 
 ### Mini TD 0 : vérification d'installation (20 min)
@@ -288,7 +304,7 @@ Utilisez fréquemment `git status` pour voir dans quel état se trouvent vos fic
 5. Citer un avantage et un inconvénients des systèmes centralisés.
 6. Pourquoi dit-on que Git est un système décentralisé ?
 
-### ✅ Ce que l'étudiant doit savoir faire
+### Ce que l'étudiant doit savoir faire
 
 - Expliquer le rôle du versioning.
 - Distinguer centralisé et décentralisé.
@@ -302,21 +318,21 @@ Utilisez fréquemment `git status` pour voir dans quel état se trouvent vos fic
 
 ## Bases fondamentales (3h)
 
-### 🎯 Objectifs pédagogiques
+### Objectifs pédagogiques
 
 - Créer un dépôt local et enregistrer des changements.
 - Comprendre l'état des fichiers et l'historique.
 - Utiliser les commandes de base en autonomie.
 
-### Commandes essentielles
+### ⌨️ Commandes essentielles
 
 ```bash
-git init      # Crée un dépôt
-git add       # Ajoute au staging
-git commit    # Enregistre les changements
-git status    # Affiche l'état
-git log       # Affiche l'historique
-git diff      # Affiche les différences
+git init      # Crée un dépôt Git
+git add       # Ajoute des fichiers au staging
+git commit    # Enregistre les changements dans l'historique
+git status    # Affiche l'état des fichiers
+git log       # Affiche l'historique des commits
+git diff      # Affiche les différences entre versions
 ```
 
 ### Anatomie d'un commit
@@ -340,15 +356,15 @@ flowchart TD
 ```
 
 Chaque commit contient :
-- **SHA-1** : identifiant unique (40 caractères, 7 suffisent souvent)
-- **Auteur** : nom et email
-- **Date** : horodatage
-- **Message** : description du changement
-- **Tree** : instantané des fichiers
+- **SHA-1** : identifiant unique (40 caractères hexadécimaux, 7 suffisent souvent pour identifier)
+- **Auteur** : nom et email du créateur du commit
+- **Date** : horodatage précis de la création
+- **Message** : description claire du changement apporté
+- **Tree** : instantané de l'état des fichiers à ce moment
 
 ### Mini TD 1 : créer son premier dépôt (20 min)
 
-Objectif : initialiser un dépôt et faire un commit propre.
+Objectif : initialiser un dépôt et comprendre la structure Git.
 
 ```bash
 mkdir demo-git
@@ -393,12 +409,12 @@ Questions :
 
 ### Comprendre HEAD
 
-HEAD pointe vers le dernier commit de la branche courante. C'est votre position actuelle dans l'historique.
+HEAD est un pointeur qui indique votre position actuelle dans l'historique Git. C'est une référence vers le dernier commit de la branche sur laquelle vous travaillez.
 
-:::note
+:::note[Les deux états de HEAD]
 HEAD peut pointer vers :
-- Un commit spécifique (detached HEAD)
-- Une branche (la norme)
+- **Une branche** (cas normal) : HEAD → `main` → dernier commit de main
+- **Un commit spécifique** (detached HEAD) : situation temporaire lors de navigation dans l'historique
 :::
 
 ```mermaid
@@ -422,15 +438,15 @@ git commit -m "docs: add second line"
 ```
 
 **git diff** compare :
-- `git diff` : working directory vs staging
-- `git diff --staged` : staging vs dernier commit
-- `git diff HEAD` : working directory vs dernier commit
+- `git diff` : working directory vs staging (changements non indexés)
+- `git diff --staged` : staging vs dernier commit (changements prêts à commit)
+- `git diff HEAD` : working directory vs dernier commit (tous les changements)
 
 Questions :
 1. Quelle différence entre `git diff` et `git diff --staged` ?
 2. Que se passe-t-il si on lance `git commit` sans `-m` ?
 
-### Mini TD 4 : restaurer et destager (20 min)
+### Mini TD 4 : restaurer et déstager (20 min)
 
 ```bash
 echo "Brouillon" >> README.md
@@ -478,11 +494,13 @@ git reset --hard HEAD~1
 git revert HEAD
 ```
 
-:::danger
-Attention : `--hard` est **destructif** ! Les modifications sont perdues définitivement. Utilisez `--soft` pour conserver les changements en staging.
+:::danger[Attention avec --hard]
+`git reset --hard` est **destructif** ! Les modifications sont perdues définitivement et irrécupérables.
+
+Préférez `git reset --soft` pour conserver les changements dans le staging, ou `git reset` (mixed, par défaut) pour les conserver dans le working directory.
 :::
 
-### ✅ Ce que l'étudiant doit savoir faire
+### Ce que l'étudiant doit savoir faire
 
 - Initialiser un dépôt et faire un commit.
 - Lire `git status`, `git log` et `git diff`.
@@ -528,12 +546,13 @@ Attention : `--hard` est **destructif** ! Les modifications sont perdues défini
 
 ### Convention de commits (Conventional Commits)
 
-Un bon message de commit est essentiel pour maintenir un projet professionnel. Il permet de :
-- Comprendre l'historique du projet
-- Générer automatiquement des changelogs
-- Faciliter la recherche dans l'historique
+Un bon message de commit est essentiel pour maintenir un projet professionnel de qualité. Il permet de :
+- Comprendre l'historique du projet d'un coup d'œil
+- Générer automatiquement des changelogs et notes de version
+- Faciliter la recherche dans l'historique avec des filtres
+- Améliorer la collaboration en équipe
 
-#### Format Conventional Commits
+#### 📐 Format Conventional Commits
 
 ```
 <type>(<scope>): <description>
@@ -545,17 +564,17 @@ Un bon message de commit est essentiel pour maintenir un projet professionnel. I
 
 **Types courants** :
 
-| Type | Description |
-|------|-------------|
-| `feat` | Nouvelle fonctionnalité |
-| `fix` | Correction de bug |
-| `docs` | Documentation uniquement |
-| `style` | Formatage, sans changement de code |
-| `refactor` | Restructuration du code |
-| `test` | Ajout/modification de tests |
-| `chore` | Tâches de maintenance |
-| `perf` | Amélioration performance |
-| `ci` | Configuration CI/CD |
+| Type | Description | Exemple |
+|------|-------------|----------|
+| `feat` | Nouvelle fonctionnalité | Ajout d'un système de login |
+| `fix` | Correction de bug | Réparation d'un crash |
+| `docs` | Documentation uniquement | Mise à jour du README |
+| `style` | Formatage, sans changement de code | Indentation, espaces |
+| `refactor` | Restructuration du code | Amélioration de la structure |
+| `test` | Ajout/modification de tests | Tests unitaires |
+| `chore` | Tâches de maintenance | Mise à jour dépendances |
+| `perf` | Amélioration performance | Optimisation algorithme |
+| `ci` | Configuration CI/CD | Pipeline GitHub Actions |
 
 **Exemples** :
 
@@ -570,32 +589,34 @@ git commit -m "test: add unit tests for cart"
 # Mauvais ✗
 git commit -m "update"
 git commit -m "fixed stuff"
-```
-
-:::tip
-Utilisez l'impératif : "add" pas "added", "fix" pas "fixed". Imaginez que vous terminez une phrase comme "This commit will..."
-:::
 git commit -m "asdf"
 git commit -m "WIP"
 ```
 
-**Règles d'or** :
-1. Première ligne < 50 caractères
-2. Utiliser l'impératif : "add" pas "added"
-3. Minuscules pour le type
-4. Pas de point à la fin
-5. Le scope est optionnel mais recommandé
+:::tip[Règle d'or de la rédaction]
+Utilisez l'**impératif présent** : "add" et non "added", "fix" et non "fixed".
 
-**En pratique (pro)** :
-- Commit fréquent et atomique
-- Un commit = une idée/changement
-- Vérifier avant de pusher avec `git log --oneline`
+Imaginez que vous terminez la phrase : *"This commit will..."* → *"This commit will **add** login feature"*
+:::
+
+**🎯 Règles d'or** :
+1. Première ligne < 50 caractères (résumé)
+2. Utiliser l'impératif présent : "add" et non "added"
+3. Minuscules pour le type et la description
+4. Pas de point à la fin de la première ligne
+5. Le scope est optionnel mais recommandé en équipe
+
+**📈 En pratique (environnement professionnel)** :
+- **Commit fréquent et atomique** : un commit = une idée/changement
+- **Vérifier avant de pusher** : relire avec `git log --oneline`
+- **Squash si nécessaire** : regrouper les commits WIP avant merge
+- **Revue par les pairs** : faire valider ses commits en Pull Request
 
 ---
 
 ## Branches et workflow (3h)
 
-### 🎯 Objectifs pédagogiques
+### Objectifs pédagogiques
 
 - Comprendre pourquoi les branches existent.
 - Créer, basculer et fusionner des branches.
@@ -604,7 +625,9 @@ git commit -m "WIP"
 
 ### Pourquoi les branches ?
 
-Une branche permet d'isoler une fonctionnalité sans casser la branche principale.
+Une branche permet d'isoler le développement d'une fonctionnalité sans impacter la branche principale (production).
+
+C'est comme créer une version parallèle du projet pour expérimenter en toute sécurité.
 
 ```mermaid
 flowchart LR
@@ -616,10 +639,10 @@ flowchart LR
 ```
 
 **Avantages** :
-- Développement parallèle
-- Isolation des expériences
-- Revue de code facilitée
-- Déploiement indépendant
+- Développement parallèle de plusieurs fonctionnalités
+- Isolation complète des expérimentations
+- Revue de code facilitée (Pull Request par branche)
+- Déploiement indépendant de chaque fonctionnalité
 
 ### Commandes essentielles
 
@@ -635,52 +658,54 @@ git rebase branche      # Rebaser sur une branche
 ### Schéma : création de branche
 
 ```mermaid
-flowchart LR
-    A[main: A] --> B[main: C]
-    A --> F[feature: B]
+gitGraph
+   commit id: "A"
+   commit id: "C"
+   branch feature
+   checkout feature
+   commit id: "B"
 ```
 
 ### Schéma : merge
 
 ```mermaid
-flowchart LR
-    A[main: A] --> C[main: C]
-    A --> F[feature: B]
-    F --> M[main: merge]
-    C --> M
+gitGraph
+   commit id: "A"
+   branch feature
+   checkout feature
+   commit id: "B"
+   checkout main
+   commit id: "C"
+   merge feature
 ```
 
 ### Schéma : rebase
 
-```mermaid
-flowchart LR
-    A[main: A] --> C[main: C]
-    A --> F[feature: B]
-    C --> F2[feature: B']
-```
-
-### Schéma : merge
+Avant le rebase :
 
 ```mermaid
-flowchart LR
-    A[main: A] --> C[main: C]
-    A --> F[feature: B]
-    F --> M[main: merge M]
-    C --> M
+gitGraph
+   commit id: "A"
+   branch feature
+   checkout feature
+   commit id: "B"
+   checkout main
+   commit id: "C"
 ```
 
-### Schéma : rebase
+Après le rebase :
 
 ```mermaid
-flowchart LR
-    A[main: A] --> C[main: C]
-    A --> F1[feature: B]
-    C --> F2[feature: B']
+gitGraph
+   commit id: "A"
+   commit id: "C"
+   commit id: "B'"
 ```
 
-**Différence merge vs rebase** :
-- **Merge** : conserve l'historique, crée un commit de merge
-- **Rebase** :线性ise l'historique, réécrit les commits
+:::note[Différence clé : Merge vs Rebase]
+- **Merge** : conserve l'historique complet, crée un commit de fusion visible
+- **Rebase** : linéarise l'historique en rejouant les commits, historique plus propre
+:::
 
 ### Mini TD : branches et merge (45 min)
 
@@ -736,13 +761,13 @@ flowchart LR
 
 GitFlow est un modèle de branches très utilisé en entreprise pour gérer les versions et les publications.
 
-:::note
+:::note[Quand utiliser GitFlow ?]
 GitFlow est idéal pour :
-- Projets avec cycles de release définis
-- Équipes nombreuses
-- Nécessité de maintenir plusieurs versions
+- Projets avec cycles de release bien définis
+- Équipes nombreuses (> 5 développeurs)
+- Nécessité de maintenir plusieurs versions en production
 
-Pour les petits projets ou CD/CI moderne, **GitHub Flow** (main + features) suffit souvent.
+Pour les petits projets ou avec déploiement continu moderne, **GitHub Flow** (main + features) est souvent plus simple et suffisant.
 :::
 
 ```mermaid
@@ -801,29 +826,34 @@ git merge hotfix/correction-urgente
 ```
 
 **Quand utiliser GitFlow ?**
-- Projets avec cycles de release définis
-- Équipes nombreuses
-- Nécessité de maintenir plusieurs versions
+- Projets avec cycles de release bien définis
+- Équipes nombreuses (> 5 personnes)
+- Nécessité de maintenir plusieurs versions simultanément
 
 **Alternatives modernes** :
-- GitHub Flow : `main` + `feature/*` (plus simple)
-- Trunk-Based Development : commits directs sur main
+- **GitHub Flow** : `main` + `feature/*` (plus simple, déploiement continu)
+- **Trunk-Based Development** : commits directs ou très courtes branches sur main
 
-### Merge vs rebase : quand utiliser lequel
+### Merge vs rebase : quand utiliser lequel ?
 
-| Contexte | Recommandation |
-|----------|----------------|
-| Branche partagée | **Merge** |
-| Branche locale personnelle | **Rebase** possible |
-| Historique à garder | **Merge** |
-| Historique linéaire souhaité | **Rebase** |
-| Branche déjà poussée | **Jamais rebase** |
+| Contexte | Recommandation | Raison |
+|----------|----------------|--------|
+| Branche partagée avec d'autres | **Merge** | Ne réécrit pas l'historique |
+| Branche locale personnelle | **Rebase** possible | Historique plus propre |
+| Historique à préserver | **Merge** | Trace complète des fusions |
+| Historique linéaire souhaité | **Rebase** | Lecture simplifiée |
+| Branche déjà poussée (push) | **Jamais rebase** | Casse le travail des autres |
 
-:::danger
-**Jamais de rebase sur une branche partagée !** Cela réécrit l'historique et peut casser le travail des autres développeurs.
+:::danger[Règle d'or du rebase]
+**Jamais de rebase sur une branche partagée ou publique !**
+
+Le rebase réécrit l'historique en modifiant les SHA des commits. Si d'autres développeurs ont basé leur travail sur ces commits, leur historique sera cassé.
+
+**Rebase OK** : branche locale, pas encore poussée  
+**Rebase INTERDIT** : branche `main`, `develop`, ou toute branche partagée
 :::
 
-### ✅ Ce que l'étudiant doit savoir faire
+### Ce que l'étudiant doit savoir faire
 
 - Créer et changer de branche avec `git switch`.
 - Fusionner une branche avec `git merge`.
@@ -851,7 +881,7 @@ git merge hotfix/correction-urgente
 
 ## Travail en équipe et remotes (1h30)
 
-### 🎯 Objectifs pédagogiques
+### Objectifs pédagogiques
 
 - Comprendre les dépôts distants.
 - Synchroniser avec GitHub/GitLab.
@@ -886,8 +916,10 @@ flowchart LR
 
 ### Configuration d'un remote
 
-:::tip
-Le remote par défaut s'appelle conventionnellement `origin`. C'est un simple alias qui pointe vers l'URL du dépôt.
+:::tip[Qu'est-ce qu'un remote ?]
+Le remote par défaut s'appelle conventionnellement `origin`. C'est un simple **alias** qui pointe vers l'URL du dépôt distant.
+
+Vous pouvez avoir plusieurs remotes (origin, upstream, etc.) pour collaborer avec différentes sources.
 :::
 
 ```bash
@@ -901,7 +933,7 @@ git remote add origin https://github.com/user/repo.git
 git push -u origin main
 ```
 
-### Pull Request (MR)
+### Pull Request (Merge Request sur GitLab)
 
 **En local** :
 ```bash
@@ -911,42 +943,50 @@ git push -u origin feature/login
 ```
 
 **Sur GitHub/GitLab** :
-1. Créer une Pull Request
-2. Décrire les changements
-3. Revue de code
-4. Discussions
-5. Merge ou close
+1. **Créer une Pull Request** depuis l'interface web
+2. **Décrire les changements** : contexte, captures d'écran si nécessaire
+3. **Revue de code** : les collègues commentent et suggèrent améliorations
+4. **Discussions** : répondre aux commentaires, apporter corrections
+5. **Merge ou close** : fusion dans la branche cible une fois validée
 
-:::tip
-Une Pull Request n'est pas seulement une demande de merge - c'est aussi un espace de discussion et de revue de code. Profitez-en !
+:::tip[La Pull Request : bien plus qu'un merge]
+Une Pull Request n'est pas seulement une demande de fusion - c'est un **espace de collaboration** :
+- Revue de code ligne par ligne
+- Discussions contextualisées
+- Validation par les pairs
+- Exécution automatique des tests (CI/CD)
+- Documentation des décisions
 :::
 
-### gitignore
+### gitignore : ignorer des fichiers
 
-Fichiers à ignorer :
-- `node_modules/`
-- `.env`, `*.env`
-- `vendor/`
-- `*.log`
-- Dossiers caches
+**Fichiers à ignorer systématiquement** :
+- `node_modules/` : dépendances Node.js
+- `.env`, `*.env` : fichiers de configuration sensibles
+- `vendor/` : dépendances PHP
+- `*.log` : fichiers de logs
+- Dossiers caches (`.DS_Store`, `Thumbs.db`)
+- Fichiers de build (`dist/`, `build/`)
 
 ```bash
 # Créer un .gitignore
 echo "node_modules/" >> .gitignore
 echo ".env" >> .gitignore
+echo "*.log" >> .gitignore
 git add .gitignore
 git commit -m "chore: add gitignore"
 ```
 
-Outil : https://www.toptal.com/developers/gitignore
+**Outil recommandé** : https://www.toptal.com/developers/gitignore (générateur de .gitignore)
 
-### Stash : ranger temporairement
+### Stash : ranger temporairement vos modifications
 
-:::note
+:::note[Quand utiliser le stash ?]
 Le stash est parfait pour :
-- Basculer de branche sans commiter un travail en cours
+- Basculer entre branches sans commiter un travail en cours
 - Récupérer rapidement des modifications d'une autre branche
-- Tester quelque chose temporairement
+- Tester quelque chose temporairement puis revenir à l'état précédent
+- Nettoyer le working directory sans perdre les changements
 :::
 
 ```bash
@@ -963,9 +1003,9 @@ git stash pop
 git stash apply
 ```
 
-**Cas d'usage** : changer de branche sans commiter.
+**🎯 Cas d'usage classique** : changer de branche sans commiter les modifications en cours.
 
-### ✅ Ce que l'étudiant doit savoir faire
+### Ce que l'étudiant doit savoir faire
 
 - Configurer un remote.
 - Pousser et tirer avec `git push` et `git pull`.
@@ -990,33 +1030,40 @@ git stash apply
 
 ---
 
-## TP avancé (1h)
+## TP avancé (1h30)
 
-### 🎯 Objectifs pédagogiques
+### Objectifs pédagogiques
 
 - Appliquer un workflow complet.
 - Résoudre un conflit.
 - Pratiquer un rebase simple.
 
-### Énoncé
+### Énoncé du projet
+
+Vous allez créer un mini-site web avec plusieurs fonctionnalités développées en parallèle.
+
+**📝 Étapes à réaliser** :
 
 1. Initialiser un dépôt `mini-site`
-2. Créer `index.html` et commiter
-3. Créer une branche `feature/about`
-4. Ajouter `about.html` et un lien
-5. Revenir sur `main`, modifier le titre
-6. Merger `feature/about`
-7. Résoudre le conflit si nécessaire
-8. Créer une branche `feature/style`
-9. Ajouter `styles.css`
-10. Rebaser sur `main`
-11. Merger et pousser
+2. Créer `index.html` de base et commiter
+3. 🌿 Créer une branche `feature/about`
+4. ➕ Ajouter `about.html` et un lien depuis l'accueil
+5. 🔙 Revenir sur `main`, modifier le titre de la page
+6. 🔄 Merger `feature/about` dans `main`
+7. ⚠️ Résoudre le conflit si nécessaire
+8. 🌿 Créer une branche `feature/style`
+9. 🎨 Ajouter `styles.css` et l'intégrer
+10. ➡️ Rebaser `feature/style` sur `main`
+11. 🔄 Merger et pousser vers le remote
 
-### Corrigé
+### 📚 Corrigé détaillé
 
 ```bash
+# Étape 1 : Initialisation
 mkdir mini-site && cd mini-site
 git init
+
+# Étape 2 : Créer la page d'accueil
 
 cat > index.html <<'EOF'
 <!doctype html>
@@ -1060,7 +1107,7 @@ git remote add origin https://github.com/user/mini-site.git
 git push -u origin main
 ```
 
-### ✅ Ce que l'étudiant doit savoir faire
+### Ce que l'étudiant doit savoir faire
 
 - Appliquer un workflow complet.
 - Résoudre un conflit.
@@ -1069,7 +1116,7 @@ git push -u origin main
 
 ---
 
-## TP bonus : Héberger son CV sur GitHub Pages (optionnel)
+### 🎯 TP bonus : Héberger son CV sur GitHub Pages (optionnel, 30 min)
 
 ### 🎯 Objectifs
 
@@ -1137,29 +1184,37 @@ git push origin main
 
 **Votre CV sera automatiquement mis à jour en quelques minutes !**
 
-### Ressources
+### 🔗 Ressources utiles
 
-- [GitHub Pages](https://pages.github.com/)
-- [Jekyll Themes](https://jekyllthemes.io/)
+- 📘 [GitHub Pages Documentation](https://pages.github.com/)
+- 🎨 [Jekyll Themes pour CV](https://jekyllthemes.io/)
+- 🔧 [GitHub Actions pour automatisation](https://docs.github.com/actions)
 
 ---
 
 ## QCM final (1h)
 
-### 🎯 Objectifs pédagogiques
+### Objectifs pédagogiques
 
 - Vérifier la compréhension globale.
 - Identifier les zones à retravailler.
 - Valider la maîtrise des commandes de base.
 
-### QCM (30 questions)
+### 📝 QCM (30 questions)
 
-**Q1.** À quoi sert la zone de staging ?
+:::note[Instructions]
+- Lisez attentivement chaque question
+- Une seule réponse correcte par question
+- Les corrigés détaillés sont disponibles à la fin
+- Durée recommandée : 45 minutes
+:::
 
-A. À supprimer des fichiers  
-B. À préparer un commit  
-C. À créer une branche  
-D. À pousser sur le distant
+**Q1.** À quoi sert la zone de staging (index) ?
+
+A. 🗑️ À supprimer des fichiers  
+B. À préparer un commit en sélectionnant les changements  
+C. 🌿 À créer une branche  
+D. 🚀 À pousser vers le dépôt distant
 
 **Q2.** Quelle commande crée un dépôt Git ?
 
@@ -1205,8 +1260,8 @@ D. `git commits`
 
 **Q8.** Commande moderne pour changer de branche :
 
-A. `git checkout`  
-B. `git switch`  
+A. `git checkout` (ancienne syntaxe)  
+B. `git switch` ✅  
 C. `git change`  
 D. `git move`
 
@@ -1364,220 +1419,296 @@ B. Cohérent et décrit clairement
 C. Sans message  
 D. Fait une fois par jour
 
-### Corrigés détaillés
+### 📚 Corrigés détaillés
 
 <details>
-<summary>**Q1.** À quoi sert la zone de staging ?</summary>
+<summary>**Q1.** À quoi sert la zone de staging (index) ?</summary>
 
 **Réponse : B**  
-Le staging prépare un commit en sélectionnant les changements.
+
+Le staging (ou index) est une zone intermédiaire qui prépare un commit en sélectionnant précisément les changements à inclure. Cela permet de créer des commits atomiques et cohérents.
 </details>
 
 <details>
 <summary>**Q2.** Quelle commande crée un dépôt Git ?</summary>
 
-**Réponse : B**  
-`git init` crée un dépôt.
+**Réponse : B**
+
+`git init` initialise un nouveau dépôt Git dans le répertoire courant en créant le dossier caché `.git/` qui contiendra tout l'historique.
 </details>
 
 <details>
 <summary>**Q3.** Quel est le rôle de HEAD ?</summary>
 
-**Réponses : B**  
-HEAD pointe vers le commit ou la branche courante.
+**Réponse : B**
+
+HEAD est un pointeur qui indique où vous vous trouvez dans l'historique Git. Il pointe généralement vers la branche courante, qui elle-même pointe vers le dernier commit de cette branche.
 </details>
 
 <details>
 <summary>**Q4.** Quelle commande affiche les fichiers modifiés non stagés ?</summary>
 
-**Réponse : A**  
-`git status` montre l'état complet.
+**Réponse : A**
+
+`git status` affiche l'état complet du dépôt : fichiers modifiés, stagés, non suivis, branche courante, etc. C'est la commande la plus utile au quotidien.
 </details>
 
 <details>
 <summary>**Q5.** Quelle commande ajoute un fichier au staging ?</summary>
 
-**Réponse : B**  
-`git add` ajoute au staging.
+**Réponse : B**
+
+`git add` ajoute des fichiers à la zone de staging (index). Vous pouvez ajouter un fichier spécifique (`git add fichier.txt`) ou tous les fichiers modifiés (`git add .`).
 </details>
 
 <details>
 <summary>**Q6.** `git diff` sans option compare :</summary>
 
-**Réponse : B**  
-`git diff` compare working directory vs staging.
+**Réponse : B**
+
+`git diff` (sans option) compare le working directory (vos fichiers actuels) avec le staging area (ce qui est prêt à être commité). Pour voir les changements stagés, utilisez `git diff --staged`.
 </details>
 
 <details>
 <summary>**Q7.** Quelle commande affiche l'historique ?</summary>
 
-**Réponse : A**  
-`git log` affiche l'historique.
+**Réponse : A**
+
+`git log` affiche l'historique des commits. Options utiles : `--oneline` (vue compacte), `--graph` (visualisation graphique), `--all` (toutes les branches).
 </details>
 
 <details>
 <summary>**Q8.** Commande moderne pour changer de branche :</summary>
 
-**Réponse : B**  
-`git switch` est la commande moderne.
+**Réponse : B**
+
+`git switch` est la commande moderne introduite dans Git 2.23 (2019) pour changer de branche. Elle remplace `git checkout` qui était ambiguë (servait à trop de choses).
 </details>
 
 <details>
 <summary>**Q9.** Commande moderne pour restaurer un fichier :</summary>
 
-**Réponse : A**  
-`git restore` restaure un fichier.
+**Réponse : A**
+
+`git restore` est la commande moderne pour restaurer des fichiers. Elle sépare clairement la restauration du changement de branche (anciennement tous deux faits par `checkout`).
 </details>
 
 <details>
 <summary>**Q10.** Un commit contient :</summary>
 
-**Réponse : B**  
-Un commit = instantané (tree) + message + métadonnées.
+**Réponse : B**
+
+Un commit contient un instantané complet des fichiers (tree), un message descriptif, l'auteur, la date, et une référence au(x) commit(s) parent(s). Tout cela est identifié par un hash SHA-1 unique.
 </details>
 
 <details>
 <summary>**Q11.** Quel choix est le plus adapté pour une branche partagée ?</summary>
 
-**Réponse : B**  
-Merge sur branche partagée conserve l'historique.
+**Réponse : B**
+
+Sur une branche partagée (main, develop), toujours utiliser **merge**. Le rebase réécrit l'historique et casserait le travail des autres développeurs.
 </details>
 
 <details>
 <summary>**Q12.** Que fait `git merge` ?</summary>
 
-**Réponse : B**  
-`git merge` fusionne des branches.
+**Réponse : B**
+
+`git merge` fusionne une branche dans la branche courante. Il crée un nouveau commit de fusion (merge commit) qui a deux parents, préservant ainsi tout l'historique.
 </details>
 
 <details>
 <summary>**Q13.** Quand un conflit apparaît-il ?</summary>
 
-**Réponse : A**  
-Conflit sur la même zone modifiée dans deux branches.
+**Réponse : A**
+
+Un conflit survient quand deux branches ont modifié la même zone d'un fichier de façon différente. Git ne peut pas choisir automatiquement quelle version garder, c'est à vous de décider.
 </details>
 
 <details>
 <summary>**Q14.** Une Pull Request sert à :</summary>
 
-**Réponse : B**  
-PR = revue avant merge.
+**Réponse : B**
+
+Une Pull Request (ou Merge Request sur GitLab) est une demande de revue de code avant de fusionner une branche. C'est un espace de collaboration avec discussions, commentaires et validation par les pairs.
 </details>
 
 <details>
 <summary>**Q15.** Quel message respecte Conventional Commits ?</summary>
 
-**Réponse : B**  
-Conventional Commits : type(scope): description.
+**Réponse : B**
+
+Conventional Commits suit le format : `type(scope): description`. Exemple : `feat(auth): add login`. Cela permet de générer des changelogs automatiquement et de comprendre l'historique rapidement.
 </details>
 
 <details>
 <summary>**Q16.** `git restore --staged` sert à :</summary>
 
-**Réponse : B**  
-Retire du staging sans perdre les modifications.
+**Réponse : B**
+
+`git restore --staged fichier` retire un fichier du staging sans perdre les modifications locales. Le fichier reste modifié mais n'est plus prêt à être commité.
 </details>
 
 <details>
 <summary>**Q17.** Commande pour créer et basculer sur une branche :</summary>
 
-**Réponse : B**  
-`git switch -c` crée et bascule.
+**Réponse : B**
+
+`git switch -c nom-branche` crée une nouvelle branche ET bascule dessus en une seule commande. Équivalent moderne de `git checkout -b`.
 </details>
 
 <details>
 <summary>**Q18.** `git log --oneline --graph` affiche :</summary>
 
-**Réponse : A**  
-Historique simplifié avec visualisation des branches.
+**Réponse : A**
+
+Cette commande affiche un historique compact et visuel avec une représentation graphique des branches et fusions. Très utile pour comprendre la structure du projet.
 </details>
 
 <details>
 <summary>**Q19.** `git add .` ajoute :</summary>
 
-**Réponse : B**  
-Tous les fichiers non ignorés.
+**Réponse : B**
+
+`git add .` ajoute tous les fichiers modifiés et nouveaux du répertoire courant, SAUF ceux listés dans `.gitignore`. Les fichiers ignorés ne sont jamais ajoutés.
 </details>
 
 <details>
 <summary>**Q20.** Quelle commande permet de voir les différences stagées ?</summary>
 
-**Réponse : A**  
-Diff des changements stagés.
+**Réponse : A**
+
+`git diff --staged` (ou `--cached`) montre les différences entre le staging et le dernier commit. C'est ce qui sera inclus dans le prochain commit.
 </details>
 
 <details>
 <summary>**Q21.** `git switch main` échoue si :</summary>
 
-**Réponse : B**  
-Échec si branche inexistante.
+**Réponse : B**
+
+La commande échoue si la branche `main` n'existe pas. Pour créer ET basculer sur une nouvelle branche, utilisez `git switch -c main`.
 </details>
 
 <details>
 <summary>**Q22.** Pour annuler une modification locale d'un fichier, on utilise :</summary>
 
-**Réponse : A**  
-`git restore` annule localement.
+**Réponse : A**
+
+`git restore fichier` annule les modifications locales d'un fichier et le restaure à l'état du dernier commit. Attention : les modifications sont perdues définitivement !
 </details>
 
 <details>
 <summary>**Q23.** Le staging permet de :</summary>
 
-**Réponse : A**  
-Sélection fine des changements pour le commit.
+**Réponse : A**
+
+Le staging permet de sélectionner finement les modifications à inclure dans un commit. Vous pouvez commiter une partie seulement de vos changements, créant ainsi des commits atomiques et cohérents.
 </details>
 
 <details>
 <summary>**Q24.** Dans un workflow simple, la branche stable est :</summary>
 
-**Réponse : B**  
-`main` est la branche stable/production.
+**Réponse : B**
+
+`main` (anciennement `master`) est la branche stable par convention. Elle représente le code en production ou prêt à être déployé. Les features se développent sur des branches séparées.
 </details>
 
 <details>
 <summary>**Q25.** `git rebase` sert principalement à :</summary>
 
-**Réponse : B**  
-Rejouer pour linéariser l'historique.
+**Réponse : B**
+
+`git rebase` rejoue vos commits au-dessus d'une autre branche, linéarisant ainsi l'historique. Utile sur des branches locales, mais JAMAIS sur des branches partagées car il réécrit l'historique.
 </details>
 
 <details>
 <summary>**Q26.** `git status` indique :</summary>
 
-**Réponse : A**  
-État working directory + staging.
+**Réponse : A**
+
+`git status` est LA commande essentielle qui montre l'état complet : branche courante, fichiers modifiés, stagés, non suivis, conflits éventuels. À utiliser constamment !
 </details>
 
 <details>
 <summary>**Q27.** Quelle commande enregistre un commit avec message ?</summary>
 
-**Réponse : A**  
-Commit avec message en ligne.
+**Réponse : A**
+
+`git commit -m "message"` crée un commit avec le message en ligne de commande. Sans `-m`, Git ouvre un éditeur pour rédiger un message plus détaillé.
 </details>
 
 <details>
 <summary>**Q28.** Un fichier untracked est :</summary>
 
-**Réponse : C**  
-Présent mais non suivi par Git.
+**Réponse : C**
+
+Un fichier **untracked** (non suivi) est présent dans votre dossier mais Git ne le surveille pas encore. Utilisez `git add` pour commencer à le suivre.
 </details>
 
 <details>
 <summary>**Q29.** Pour changer de branche, on peut utiliser :</summary>
 
-**Réponse : A**  
-`git switch` pour changer de branche.
+**Réponse : A**
+
+`git switch` est la commande moderne et explicite pour changer de branche. Elle remplace avantageusement `git checkout` qui était trop polyvalent et prêtait à confusion.
 </details>
 
 <details>
 <summary>**Q30.** Un bon commit doit être :</summary>
 
-**Réponse : B**  
-Commit cohérent et clair (atomic).
+**Réponse : B**
+
+Un bon commit est **atomique** (une seule idée/changement), possède un message clair et descriptif, et peut être compris sans contexte supplémentaire. Qualité > quantité !
 </details>
 
-### ✅ Ce que l'étudiant doit savoir faire
+### Ce que l'étudiant doit savoir faire
 
-- Répondre à un QCM de validation niveau junior.
-- Justifier ses réponses avec les notions vues.
-- Identifier ses lacunes à retravailler.
+- Répondre à un QCM de validation niveau junior
+- Justifier ses réponses avec les notions vues dans le cours
+- Identifier ses lacunes et axes d'amélioration
+- Progresser vers l'autonomie sur Git
+
+---
+
+## Conclusion du cours
+
+Félicitations ! Vous avez maintenant toutes les bases pour travailler efficacement avec Git au quotidien.
+
+### Ce que vous maîtrisez désormais
+
+- **Fondamentaux** : init, add, commit, status, log, diff
+- **Branches** : création, fusion, résolution de conflits
+- **Collaboration** : remotes, push, pull, Pull Requests
+- **Bonnes pratiques** : Conventional Commits, GitFlow, revue de code
+- **Outils modernes** : git switch, git restore
+
+### Pour aller plus loin
+
+#### Ressources officielles
+- [Documentation Git officielle](https://git-scm.com/doc)
+- [Pro Git Book (gratuit)](https://git-scm.com/book/fr/v2)
+- [Git Cheat Sheet](https://education.github.com/git-cheat-sheet-education.pdf)
+
+#### Pratique interactive
+- [Learn Git Branching](https://learngitbranching.js.org/?locale=fr_FR) - Exercices interactifs
+- [Git Katas](https://github.com/eficode-academy/git-katas) - Exercices pratiques
+- [Oh My Git!](https://ohmygit.org/) - Jeu pour apprendre Git
+
+#### Sujets avancés
+- Git hooks (automatisation)
+- Git bisect (recherche de bugs)
+- Git reflog (récupération d'urgence)
+- Git submodules (dépendances)
+- Git worktree (espaces de travail multiples)
+
+### Conseils finaux
+
+:::tip[La clé du succès : la pratique !]
+- **Pratiquez quotidiennement** : utilisez Git sur tous vos projets
+- **Lisez les messages d'erreur** : Git est explicite, apprenez à déchiffrer ses messages
+- **Collaborez** : contribuez à des projets open source pour gagner en expérience
+- **Expérimentez** : créez des dépôts de test pour essayer de nouvelles commandes
+- **Partagez** : enseignez Git à d'autres, c'est le meilleur moyen de consolider vos connaissances
+:::
+
+Bon courage dans votre apprentissage de Git !
