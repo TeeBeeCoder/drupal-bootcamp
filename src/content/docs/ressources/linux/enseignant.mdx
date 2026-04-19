@@ -1,0 +1,1472 @@
+---
+title: INF12 - Version enseignant
+description: Réponses attendues, repères d'animation et points de vigilance pour la journée INF12
+sidebar:
+  order: 1
+  hidden: true
+pagefind: false
+
+# status: draft
+# last-reviewed: 2026-04-18
+---
+
+Cette page accompagne le support étudiant [INF12 - Administration Linux et services réseau](/ressources/linux/). Elle sert de **guide enseignant** :
+
+- réponses attendues aux questions du support ;
+- éléments acceptables à l'oral ;
+- pièges fréquents ;
+- repères pour tenir une vraie séance de 7h.
+
+## Correspondance avec la grille d'évaluation
+
+| Attendu évalué | Points | Où le support le couvre |
+|---|---:|---|
+| Adresse IP + client DNS | 2 | Missions 5 et 6 |
+| Mot de passe `root` | 1 | Mission 2 |
+| Installation d'un package | 2 | Mission 1 |
+| Création d'utilisateur | 1 | Mission 2 |
+| Création de groupe | 1 | Mission 2 |
+| Répertoire + droits | 2 | Mission 3 |
+| Changement de propriétaire | 1 | Mission 3 |
+| Redémarrage de service | 2 | Missions 4, 5, 6, 7 |
+| Zone DNS principale | 1 | Mission 6 |
+| Enregistrements `A` / `CNAME` | 1 | Mission 6 |
+| Accès SSH depuis un client | 2 | Mission 5 |
+| Étendue DHCP | 2 | Mission 6 |
+| Partage NFS ou Samba | 2 | Mission 7 en version Samba |
+
+Point de cohérence :
+
+- le support choisit **Samba** plutôt que NFS pour rester aligné avec l'interfaçage Linux / Windows ;
+- il met en avant les manipulations réellement notées, afin que l'autonomie pratique soit prioritaire sur le discours théorique.
+
+## Positionnement pédagogique
+
+### Cadre de temps réel
+
+Vous avez **7h réelles**, donc le support doit être lu comme suit :
+
+- les **TP guidés** correspondent au parcours obligatoire ;
+- les **exercices d'appropriation** sont là pour occuper les groupes rapides, mais peuvent être écourtés ;
+- la séquence **dépôt tiers** doit rester une démonstration de démarche ;
+- la section **Approfondir** ne fait pas partie du temps de face-à-face.
+
+### Ce qui a déjà été traité avant cette journée
+
+D'après le contexte du module, ont déjà été abordés :
+
+- histoire de l'informatique, des OS, d'Unix et de Linux ;
+- définition du système d'exploitation ;
+- installation ;
+- bases de LVM2 ;
+- commandes usuelles du shell ;
+- FHS ;
+- redirections, pipes, I/O ;
+- scripts.
+
+### Ce que cette journée consolide prioritairement
+
+Cette séance doit surtout consolider :
+
+- les **droits** ;
+- les **services** ;
+- les **journaux** ;
+- le **réseau** ;
+- les **services TCP/IP** concrets ;
+- la capacité à **configurer puis vérifier**.
+
+### Ce qui peut être évoqué sans devenir le coeur de la séance
+
+- pare-feu ;
+- NFS ;
+- LDAP ;
+- FTP ;
+- impression ;
+- Squid ;
+- RAID, BTRFS.
+
+Ces thèmes relèvent bien du programme global, mais pas forcément du coeur opératoire du **jour 6**.
+
+## Positionnement dans le programme INF12
+
+Le programme complet d'INF12 est plus large que cette seule journée. Ce support se concentre surtout sur ce qui est cohérent avec le **jour 6 — service internet / intranet**, tout en consolidant quelques bases d'administration qui servent immédiatement.
+
+| Thème du programme | Statut dans le module | Place dans ce support |
+|---|---|---|
+| Présentation de Linux, logiciel libre, distributions | déjà traité en amont | rappel rapide seulement |
+| Installation et démarrage de Linux | déjà traité en amont | non détaillé ici |
+| Support d'installation | déjà traité en amont | non détaillé ici |
+| Gestion des dépôts et mise à jour | à maîtriser | **Mission 1** |
+| Processus de démarrage | vu partiellement auparavant | rappel indirect via `systemd` et services |
+| Disques et systèmes de fichiers | déjà travaillé | réinvesti dans **Mission 3** |
+| Partitionnement, RAID, LVM, BTRFS | déjà vu ou hors jour 6 | renvoi en approfondissement |
+| Permissions, propriétaires, quotas | à consolider | **Mission 3** |
+| Gestion du réseau | à consolider | **Missions 5 et 6** |
+| Sécurisation et pare-feu | plutôt jours 2-3 | renvoi en approfondissement |
+| SSH | à revoir en pratique | **Mission 5** |
+| Partage réseau, Samba, NFS | à consolider | **Mission 7** pour Samba, NFS en approfondissement |
+| LDAP | hors coeur de cette journée | ressources d'approfondissement |
+| Services TCP/IP | coeur du module | **Missions 4, 5, 6, 7** |
+| DNS (Bind) | coeur du module | **Mission 6** |
+| DHCP | coeur du module | **Mission 6** |
+| Service internet / intranet | coeur du jour 6 | **Mission 4** + challenge final |
+| FTP, impression, Squid, LDAP filtrant | hors coeur de la séance | ressources d'approfondissement |
+
+## Grille d'évaluation détaillée
+
+La grille ci-dessous détaille ce qui sera évalué, avec les preuves attendues pour chaque compétence.
+
+| Compétence évaluée | Points | Où on la travaille | Preuve attendue |
+|---|---:|---|---|
+| Configurer l'adresse IP et le client DNS sur Linux | 2 | **Missions 5 et 6** | `ip -br a`, `getent hosts`, test réseau fonctionnel |
+| Changer le mot de passe `root` | 1 | **Mission 2** | connaissance de `sudo passwd root` et de sa portée |
+| Installer un package sous Linux | 2 | **Mission 1** | `apt install`, vérification via `apt policy` ou `dpkg -l` |
+| Créer un utilisateur | 1 | **Mission 2** | `adduser stagiaire` |
+| Créer un groupe | 1 | **Mission 2** | `addgroup projetweb` |
+| Créer un répertoire et lui affecter des droits | 2 | **Mission 3** | `mkdir` ou `install -d`, `chmod`, contrôle avec `ls -ld` |
+| Changer le propriétaire d'un répertoire | 1 | **Mission 3** | `chown` ou `chgrp` selon le besoin |
+| Redémarrer un service | 2 | **Missions 4, 5, 6, 7** | `systemctl restart ...` ou `reload` si justifié |
+| Créer une zone DNS principale | 1 | **Mission 6** | déclaration de zone + redémarrage BIND |
+| Créer des enregistrements DNS (`A`, `CNAME`) | 1 | **Mission 6** | fichier de zone + test `dig` |
+| Accéder au serveur depuis un client en SSH | 2 | **Mission 5** | `ssh stagiaire@...` |
+| Sécuriser SSH (clé + port + config) | 2 | **Mission 5** | `ssh-keygen`, `sshd_config.d/`, `sshd -t` |
+| Créer une étendue DHCP | 2 | **Mission 6** | `subnet`, `range`, test client |
+| Partager un dossier par NFS ou Samba | 2 | **Mission 7** | partage accessible depuis un client |
+
+Si les étudiants manquent de temps, ils doivent au minimum être capables de **faire seuls** les manipulations ci-dessus et de **les recontrôler** avec une ou deux commandes de validation.
+
+## Gestion du temps et priorités
+
+### Pourquoi la journée tient réellement sur 7h
+
+La séance n'est pas composée de 7h de cours magistral. Elle alterne en permanence :
+
+| Type d'activité | Volume indicatif |
+|---|---:|
+| Apports de cours ciblés | 1h30 à 2h |
+| TP guidés et manipulations | 3h30 à 4h |
+| Exercices d'appropriation et mini-défis | 45 min à 1h |
+| Mise en commun, dépannage, challenge final | 30 min à 45 min |
+
+### En 7h strictes
+
+Le coeur obligatoire de la séance tient sur 7h si vous respectez ce principe :
+
+- les **TP guidés** sont prioritaires ;
+- les **exercices d'appropriation** sont modulables ;
+- la séquence sur le **dépôt tiers** (Docker CE) se traite comme une **démonstration de méthode** en 10 minutes, pas comme un gros TP ;
+- la section **Aller plus loin** est hors temps de séance.
+
+### Priorités si le temps se tend
+
+Gardez dans cet ordre :
+
+1. **Mission 1** : installation de paquet, lecture d'APT, dépôt tiers en démonstration rapide ;
+2. **Mission 2** : `root`, utilisateur, groupe ;
+3. **Mission 3** : répertoire, droits, propriétaire ;
+4. **Mission 4** : service, redémarrage, journaux, Nginx ;
+5. **Mission 5** : IP + SSH ;
+6. **Mission 6** : DNS + DHCP ;
+7. **Mission 7** : partage Samba.
+
+Ce qu'on peut comprimer si besoin :
+
+- certains exercices d'appropriation ;
+- une partie des « aller plus loin » ;
+- les variantes Debian/Ubuntu non utilisées dans le groupe ;
+- les prolongements hors grille d'évaluation.
+
+## Notes pédagogiques spécifiques
+
+### Sur le mot de passe `root` (Mission 2)
+
+Sur Ubuntu, le compte `root` est souvent **verrouillé par défaut**. Dans un environnement professionnel, on travaille en général via `sudo` et non en session permanente `root`.
+
+Si le scénario d'évaluation demande explicitement un mot de passe `root` (ce qui est le cas dans la grille), faites-le comme un **acte maîtrisé et expliqué**, pas comme une habitude d'exploitation.
+
+### Sur le choix de Samba vs NFS (Mission 7)
+
+La grille accepte **NFS ou Samba**. Le support propose **Samba** parce qu'il s'intègre naturellement au thème « Linux + réseau hétérogène + interfaçage avec Windows », ce qui colle très bien au cahier des charges INF12.
+
+### Sur ISC DHCP (Mission 6)
+
+Le cahier des charges cite **ISC DHCP**, très courant en lab et dans beaucoup d'environnements existants. Il est néanmoins en fin de vie côté éditeur ; en production moderne, vous croiserez aussi **Kea DHCP**. On reste sur ISC DHCP pour coller aux attendus pédagogiques.
+
+## Réponses attendues - Mission 1
+
+### 1. Quelle distribution utilisez-vous ?
+
+Réponse attendue :
+
+- l'étudiant doit savoir l'identifier avec `/etc/os-release`, `hostnamectl` ou parfois `lsb_release -a` ;
+- la bonne réponse n'est pas juste "Linux" mais **Debian 12**, **Ubuntu Server 24.04**, etc. selon la VM.
+
+À accepter à l'oral :
+
+- "On regarde `/etc/os-release` pour connaître la distribution et sa version."
+
+### 2. Différence entre `apt update` et `apt upgrade`
+
+Réponse attendue :
+
+- `apt update` met à jour **la liste locale des paquets disponibles** ;
+- `apt upgrade` met à jour **les paquets déjà installés** à partir de cette liste.
+
+Formulation simple à accepter :
+
+- "`update` met à jour l'index, `upgrade` met à jour les logiciels installés."
+
+### 3. Comment vérifier qu'un paquet est installé ?
+
+Réponse attendue :
+
+- `dpkg -l | grep <paquet>` ;
+- ou `dpkg -s <paquet>` ;
+- ou vérifier la présence de l'exécutable si pertinent, mais cela seul est moins rigoureux.
+
+### 4. Quelle commande utiliser pour la version candidate ?
+
+Réponse attendue :
+
+- `apt policy <paquet>`.
+
+### Point de cours important
+
+L'ajout d'un dépôt tiers doit être compris comme une **démarche d'administration**, pas comme un automatisme :
+
+- clé dédiée dans `/usr/share/keyrings/` ;
+- source dédiée dans `/etc/apt/sources.list.d/` ;
+- association explicite via `signed-by` ;
+- `apt-key` n'est plus la pratique recommandée.
+
+### Corrigé de l'exercice d'appropriation - Mission 1
+
+**1. Chercher `btop` avec `apt policy btop`**
+
+```bash
+apt policy btop
+```
+
+Sortie typique (si le paquet existe dans les dépôts) :
+
+```text
+btop:
+  Installed: (none)
+  Candidate: 1.3.2-1
+  Version table:
+     1.3.2-1 500
+        500 http://archive.ubuntu.com/ubuntu noble/universe amd64 Packages
+```
+
+- `Installed: (none)` → pas encore installé ;
+- `Candidate: 1.3.2-1` → version qui serait installée ;
+- la ligne `500 http://archive.ubuntu.com/...` indique le **dépôt d'origine** (ici `universe`).
+
+**2. Installer, lancer, identifier l'origine**
+
+```bash
+sudo apt install -y btop
+btop    # Ctrl+C pour quitter
+```
+
+L'origine se lit dans la sortie de `apt policy btop` : la ligne sous la version candidate indique le dépôt (ex. `noble/universe`).
+
+**3. Explorer les sources APT**
+
+```bash
+cat /etc/apt/sources.list
+ls -l /etc/apt/sources.list.d/
+```
+
+Sur Ubuntu récent, `/etc/apt/sources.list` peut être vide ou contenir un commentaire renvoyant vers `/etc/apt/sources.list.d/ubuntu.sources`. L'étudiant doit comprendre que les sources peuvent être réparties dans plusieurs fichiers.
+
+## Réponses attendues - Mission 2
+
+### 1. Différence entre utilisateur et groupe
+
+Réponse attendue :
+
+- un **utilisateur** représente une identité ;
+- un **groupe** sert à regrouper plusieurs identités pour gérer des droits communs.
+
+Version courte acceptable :
+
+- "L'utilisateur agit, le groupe sert à attribuer des droits collectifs."
+
+### 2. À quoi sert `usermod -aG`
+
+Réponse attendue :
+
+- `-G` définit les groupes secondaires ;
+- `-a` évite d'écraser les appartenances existantes.
+
+Piège fréquent :
+
+- oublier `-a`, ce qui remplace les groupes secondaires au lieu de les compléter.
+
+### 3. Où sont stockées les informations de compte
+
+Réponse attendue :
+
+- `/etc/passwd` ;
+- `/etc/shadow` ;
+- `/etc/group` ;
+- `/etc/gshadow`.
+
+### 4. Pourquoi éviter de travailler directement en `root`
+
+Réponse attendue :
+
+- trop de privilèges ;
+- erreurs potentiellement destructrices ;
+- traçabilité plus faible ;
+- on préfère un compte nominatif + `sudo`.
+
+### Corrigé de l'exercice d'appropriation - Mission 2
+
+**1. Créer un utilisateur `auditeur`**
+
+```bash
+sudo adduser auditeur
+```
+
+L'étudiant doit répondre aux questions interactives (mot de passe, nom…).
+
+**2. Comparer groupe principal et groupes secondaires**
+
+```bash
+id auditeur
+# uid=1002(auditeur) gid=1002(auditeur) groups=1002(auditeur)
+```
+
+- **Groupe principal** : `auditeur` (GID 1002) — créé automatiquement avec le même nom que l'utilisateur ;
+- **Groupes secondaires** : aucun à ce stade.
+
+L'étudiant doit comprendre que `adduser` crée un **groupe personnel** éponyme par défaut (convention Debian/Ubuntu).
+
+**3. Ajouter au groupe `projetweb` et vérifier**
+
+```bash
+sudo usermod -aG projetweb auditeur
+id auditeur
+# uid=1002(auditeur) gid=1002(auditeur) groups=1002(auditeur),1003(projetweb)
+```
+
+`projetweb` apparaît maintenant dans les groupes secondaires.
+
+### Corrigé de l'exercice dirigé — `sudo` et ses limites
+
+Cet exercice est **fondamental** pour faire comprendre le moindre privilège. Points de vigilance :
+
+**Étape 1 — Observer qui a `sudo`**
+
+```bash
+getent group sudo
+# sudo:x:27:votre_utilisateur
+```
+
+Explication de `getent` : la commande `getent` (get entries) interroge les bases de données système (passwd, group, hosts, services…) via la **NSS** (Name Service Switch). Elle est plus fiable que `grep /etc/group` car elle interroge **toutes les sources** configurées (fichiers locaux, LDAP, NIS…).
+
+| Commande | Ce qu'elle fait |
+|---|---|
+| `getent passwd stagiaire` | Affiche la ligne passwd de l'utilisateur |
+| `getent group sudo` | Affiche les membres du groupe sudo |
+| `getent hosts intranet.inf12.test` | Résout un nom via toutes les sources (fichiers, DNS…) |
+| `getent services ssh` | Affiche le port associé au service SSH |
+
+**Étape 2 — Constater l'échec**
+
+Le message attendu est :
+
+```text
+stagiaire is not in the sudoers file. This incident will be reported.
+```
+
+Ce message est logué dans `/var/log/auth.log`. C'est un mécanisme de **traçabilité** : toute tentative d'utilisation non autorisée de `sudo` est enregistrée.
+
+**Étape 3 — Donner temporairement `sudo`**
+
+Piège : l'ajout au groupe ne prend effet que dans les **nouvelles sessions**. Si l'étudiant reste dans la même session `su - stagiaire`, il ne verra pas le changement. Il doit faire `exit` puis `su - stagiaire` à nouveau.
+
+**Étape 4 — Retirer `sudo`**
+
+```bash
+sudo deluser stagiaire sudo
+```
+
+Vérification : `id stagiaire` ne doit plus montrer `sudo` dans les groupes. Là encore, il faut une **nouvelle session** pour que le retrait prenne effet.
+
+**Étape 5 — Différences `su` vs `su -`**
+
+Points clés à faire comprendre :
+
+| | `su stagiaire` | `su - stagiaire` |
+|---|---|---|
+| `$HOME` | Reste celui de l'ancien utilisateur | `/home/stagiaire` |
+| `$PATH` | Mélange des deux | PATH propre de stagiaire |
+| Répertoire courant | Ne change pas | `/home/stagiaire` |
+| Fichiers `.bashrc`, `.profile` | Non chargés | Chargés |
+
+La règle : **toujours utiliser `su -`** (avec le tiret) pour obtenir un environnement propre et prévisible.
+
+### Explication de `sudo` et `/etc/sudoers`
+
+La configuration de `sudo` se fait via `/etc/sudoers` et les fichiers dans `/etc/sudoers.d/`. On utilise **toujours** `visudo` pour les modifier car il vérifie la syntaxe.
+
+La ligne `%sudo ALL=(ALL:ALL) ALL` se décompose ainsi :
+
+| Élément | Signification |
+|---|---|
+| `%sudo` | Tous les membres du **groupe** `sudo` |
+| premier `ALL` | Depuis n'importe quel **hôte** |
+| `(ALL:ALL)` | En tant que n'importe quel **utilisateur** et **groupe** |
+| dernier `ALL` | Peut exécuter **toutes** les commandes |
+
+En entreprise, on restreint souvent les droits sudo à des commandes précises :
+
+```text
+stagiaire ALL=(ALL) /usr/bin/systemctl restart nginx, /usr/bin/systemctl reload nginx
+```
+
+Cela donnerait à `stagiaire` le droit de redémarrer ou recharger Nginx, mais **rien d'autre**.
+
+## Réponses attendues - Mission 3
+
+### 1. Qu'est-ce qu'un inode ?
+
+Réponse attendue :
+
+- structure de métadonnées associée à un fichier ;
+- contient type, droits, UID, GID, taille, dates, liens vers les blocs ;
+- le nom n'est pas dans l'inode mais dans l'entrée de répertoire.
+
+### 2. Différence entre lien dur et lien symbolique
+
+Réponse attendue :
+
+- le **lien dur** référence le **même inode** ;
+- le **lien symbolique** est un fichier spécial contenant un chemin.
+
+À faire formuler :
+
+- si on supprime l'original, un lien dur peut encore rester valide ;
+- un lien symbolique peut devenir cassé.
+
+### 3. Pourquoi le groupe hérité dans `/srv/partage` est utile
+
+Réponse attendue :
+
+- tous les fichiers créés dans le répertoire restent dans le groupe du projet ;
+- cela simplifie le travail collaboratif ;
+- cela évite que chacun crée des fichiers avec son groupe personnel.
+
+Nuance utile :
+
+- l'héritage du **groupe** ne garantit pas à lui seul les **bons droits d'écriture** ; l'`umask` compte aussi.
+
+### 4. Différence entre `chown`, `chgrp` et `chmod`
+
+Réponse attendue :
+
+- `chown` change propriétaire et éventuellement groupe ;
+- `chgrp` change seulement le groupe ;
+- `chmod` change les permissions.
+
+### Explication de `install -d`
+
+La commande utilisée dans le TP guidé :
+
+```bash
+sudo install -d -o root -g projetweb -m 2775 /srv/intranet
+```
+
+`install` est une commande qui combine la création et l'attribution de droits en une seule opération. Elle est plus précise que `mkdir` + `chown` + `chmod` séparés :
+
+| Option | Signification |
+|---|---|
+| `-d` | Crée un **répertoire** (au lieu de copier un fichier) |
+| `-o root` | Définit le **propriétaire** à `root` |
+| `-g projetweb` | Définit le **groupe** à `projetweb` |
+| `-m 2775` | Définit les **permissions** (SGID + rwxrwxr-x) |
+
+Équivalent en plusieurs commandes :
+
+```bash
+sudo mkdir -p /srv/intranet
+sudo chown root:projetweb /srv/intranet
+sudo chmod 2775 /srv/intranet
+```
+
+L'avantage de `install -d` : **atomicité** — le répertoire est créé avec les bons droits dès le départ, sans fenêtre temporaire où les permissions seraient incorrectes. C'est une bonne pratique dans les scripts d'administration.
+
+### Explication détaillée du SGID (Set Group ID)
+
+Le **SGID** est un bit spécial de permission. Son comportement diffère selon qu'il s'applique à un fichier ou à un répertoire :
+
+**Sur un fichier exécutable :**
+
+Le programme s'exécute avec les droits du **groupe propriétaire** du fichier, et non avec le groupe de l'utilisateur qui le lance. Exemple classique : la commande `wall` (écrire à tous les terminaux) a le SGID activé pour pouvoir écrire sur les terminaux des autres utilisateurs.
+
+**Sur un répertoire (cas le plus courant en administration) :**
+
+Tous les **nouveaux fichiers et sous-répertoires** créés à l'intérieur héritent automatiquement du **groupe du répertoire**, au lieu du groupe principal de l'utilisateur qui les crée.
+
+Démonstration :
+
+```bash
+# Sans SGID
+mkdir /tmp/sans-sgid
+chmod 770 /tmp/sans-sgid
+chown root:projetweb /tmp/sans-sgid
+
+sudo -u stagiaire touch /tmp/sans-sgid/fichier.txt
+ls -l /tmp/sans-sgid/fichier.txt
+# → stagiaire:stagiaire (groupe personnel, PAS projetweb)
+
+# Avec SGID
+mkdir /tmp/avec-sgid
+chmod 2770 /tmp/avec-sgid
+chown root:projetweb /tmp/avec-sgid
+
+sudo -u stagiaire touch /tmp/avec-sgid/fichier.txt
+ls -l /tmp/avec-sgid/fichier.txt
+# → stagiaire:projetweb (groupe hérité du répertoire !)
+```
+
+**Notation octale :**
+
+| Bit spécial | Valeur | Position | Effet |
+|---|---|---|---|
+| SUID | `4` | `4xxx` | Exécution avec l'UID du propriétaire |
+| SGID | `2` | `2xxx` | Exécution avec le GID du groupe / héritage de groupe sur répertoire |
+| Sticky bit | `1` | `1xxx` | Seul le propriétaire peut supprimer ses fichiers (utilisé sur `/tmp`) |
+
+**Reconnaissance visuelle :**
+
+Dans `ls -l`, le SGID apparaît comme un `s` (ou `S`) à la place du `x` du groupe :
+
+- `drwxrws---` → SGID activé, le groupe a le droit d'exécution (traversée)
+- `drwxrwS---` → SGID activé, mais le groupe n'a **pas** le droit d'exécution (peu utile en pratique)
+
+### Corrigé de l'exercice d'appropriation - Mission 3
+
+**1. Créer `/srv/atelier` avec `chmod 777`**
+
+```bash
+sudo mkdir /srv/atelier
+sudo chmod 777 /srv/atelier
+ls -ld /srv/atelier
+# drwxrwxrwx 2 root root 4096 ...
+```
+
+**2. Constater le problème**
+
+```bash
+sudo -u auditeur touch /srv/atelier/fichier-intrus.txt
+ls -l /srv/atelier/
+# -rw-r--r-- 1 auditeur auditeur ... fichier-intrus.txt
+```
+
+Deux problèmes :
+
+- **n'importe qui** peut créer des fichiers (les « autres » ont `rwx`) ;
+- le fichier appartient au groupe `auditeur` (groupe personnel), **pas** à `projetweb`.
+
+**3-4. Corriger les droits**
+
+```bash
+sudo chown root:projetweb /srv/atelier
+sudo chmod 2770 /srv/atelier
+ls -ld /srv/atelier
+# drwxrws--- 2 root projetweb 4096 ...
+```
+
+**5. Vérifier la correction**
+
+```bash
+# stagiaire (membre de projetweb) peut écrire
+sudo -u stagiaire touch /srv/atelier/ok.txt
+ls -l /srv/atelier/ok.txt
+# -rw-r--r-- 1 stagiaire projetweb ... ok.txt
+# → groupe = projetweb (hérité grâce au SGID ✓)
+
+# auditeur (PAS membre de projetweb) est bloqué
+sudo -u auditeur touch /srv/atelier/interdit.txt
+# touch: cannot touch '/srv/atelier/interdit.txt': Permission denied ✓
+```
+
+**6. Explication bit par bit de `2770`**
+
+| Chiffre | Valeur | Signification |
+|---|---|---|
+| `2` | SGID | Les nouveaux fichiers héritent du groupe du répertoire |
+| `7` | `rwx` | Le propriétaire (root) a tous les droits |
+| `7` | `rwx` | Le groupe (projetweb) a tous les droits |
+| `0` | `---` | Les autres n'ont **aucun** droit |
+
+### Corrigé de l'exercice bonus — Le piège du `x` manquant
+
+```bash
+sudo mkdir /srv/piege
+sudo chmod 660 /srv/piege
+ls /srv/piege/
+# ls: cannot open directory '/srv/piege/': Permission denied
+```
+
+Explication : `660` donne `rw-rw----`. Le droit `r` permet de **lister les noms** des entrées du répertoire, mais le droit `x` (traversée) est nécessaire pour **accéder** au répertoire. Sans `x`, même avec `r`, on ne peut rien faire.
+
+C'est le piège le plus fréquent chez les débutants. Pour les répertoires, `x` est **indispensable** :
+
+| Droits | Effet sur un répertoire |
+|---|---|
+| `---` | Aucun accès |
+| `r--` | Peut lister les noms, mais ne peut ni entrer ni lire les fichiers |
+| `--x` | Peut traverser (entrer), mais ne peut pas lister |
+| `r-x` | Peut lister et entrer (lecture normale) |
+| `rwx` | Peut lister, entrer, créer et supprimer des entrées |
+
+Correction :
+
+```bash
+sudo chmod 770 /srv/piege
+ls /srv/piege/   # fonctionne maintenant
+```
+
+## Réponses attendues - Mission 4
+
+### 1. Différence entre processus et service
+
+Réponse attendue :
+
+- un **processus** est une instance d'un programme en cours d'exécution ;
+- un **service** est une fonction fournie au système, souvent gérée par `systemd`.
+
+### 2. Pourquoi `kill -9` est exceptionnel
+
+Réponse attendue :
+
+- il ne laisse pas le programme nettoyer proprement ses ressources ;
+- il peut provoquer des incohérences, pertes d'état ou écritures incomplètes ;
+- il contourne le comportement normal d'arrêt.
+
+Formulation acceptable :
+
+- "On essaie d'abord `systemctl stop` ou `kill` normal, puis seulement `kill -9` si ça résiste."
+
+### 3. Pourquoi tester la configuration avant redémarrage
+
+Réponse attendue :
+
+- pour éviter de casser un service fonctionnel à cause d'une erreur de syntaxe ;
+- pour réduire le temps d'indisponibilité ;
+- pour adopter une méthode d'administration fiable.
+
+### 4. Afficher la page web locale avec `curl`
+
+Réponse attendue :
+
+- `curl http://127.0.0.1`
+
+À valoriser :
+
+- l'étudiant comprend qu'on peut tester un service **sans navigateur**, directement depuis le serveur.
+
+### Notions approfondies — Processus, services et états
+
+#### Définition d'un processus
+
+Un **processus** est une instance d'un programme en cours d'exécution. Le noyau lui attribue un **PID** (Process ID) unique, une zone mémoire, un état et un lien vers son **parent** (PPID). Tout processus est issu d'un autre via l'appel système `fork()` (sauf PID 1, le premier processus lancé par le noyau).
+
+#### Définition d'un service (daemon)
+
+Un **service** (ou **daemon**, du grec « daimon », esprit gardien) est un processus particulier :
+
+- il tourne **en arrière-plan**, sans terminal attaché ;
+- il est **supervisé** par un gestionnaire (typiquement `systemd`) ;
+- il peut être configuré pour **démarrer automatiquement** au boot ;
+- il peut **redémarrer automatiquement** en cas de crash ;
+- ses sorties sont redirigées vers les **journaux** (`journalctl`).
+
+Par convention, les noms de services se terminent souvent par `d` : `sshd`, `httpd`, `named`, `smbd`…
+
+#### Processus orphelins et processus zombies
+
+**Processus orphelin :**
+
+Quand un processus parent se termine avant son enfant, l'enfant devient **orphelin**. Le noyau le rattache automatiquement au processus PID 1 (`systemd`), qui devient son nouveau parent. PID 1 se charge de « récolter » le code de retour de l'orphelin quand il se termine. C'est le mécanisme de **réadoption**.
+
+**Processus zombie :**
+
+Un processus zombie est un processus qui a **terminé son exécution** mais dont le parent n'a pas encore lu son code de retour (appel système `wait()`). Il ne consomme ni CPU ni mémoire, mais occupe une entrée dans la table des processus. On le reconnaît à l'état `Z` ou à la mention `[defunct]` dans `ps`.
+
+- Un zombie ne peut **pas** être tué avec `kill` (il est déjà mort) ;
+- Pour s'en débarrasser, il faut que le **parent** fasse `wait()`, ou on tue le parent — PID 1 récupère alors l'orphelin-zombie et fait le ménage ;
+- En petit nombre, les zombies sont inoffensifs ; en grand nombre, ils peuvent épuiser la table des processus.
+
+#### Signaux importants
+
+| Signal | Numéro | Comportement |
+|---|---|---|
+| `SIGTERM` | 15 | Demande **polie** d'arrêt — le processus peut nettoyer |
+| `SIGKILL` | 9 | Arrêt **immédiat** — aucun nettoyage, aucun piège possible |
+| `SIGHUP` | 1 | Souvent utilisé pour recharger la configuration |
+| `SIGINT` | 2 | Interruption (équivalent Ctrl+C) |
+| `SIGSTOP` | 19 | Suspend le processus (ne peut pas être intercepté) |
+| `SIGCONT` | 18 | Reprend un processus suspendu |
+
+#### `reload` vs `restart`
+
+| Action | Ce qui se passe | Interruption de service |
+|---|---|---|
+| `systemctl reload nginx` | Nginx relit ses fichiers de config, les connexions en cours restent ouvertes | **Non** |
+| `systemctl restart nginx` | Nginx est arrêté puis redémarré, les connexions en cours sont coupées | **Oui** |
+
+En production, on préfère `reload` quand le service le supporte. Tous les services ne supportent pas `reload` — consultez `systemctl show <service> | grep ExecReload`.
+
+### Corrigé de l'exercice d'appropriation - Mission 4
+
+**1. Créer une seconde page**
+
+```bash
+cat <<'EOF' | sudo tee /srv/intranet/public/status.html
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Status</title>
+</head>
+<body>
+  <h1>Serveur opérationnel</h1>
+  <p>Page de statut du mini intranet INF12.</p>
+</body>
+</html>
+EOF
+sudo chown root:projetweb /srv/intranet/public/status.html
+sudo chmod 664 /srv/intranet/public/status.html
+```
+
+**2. Vérifier l'accessibilité**
+
+```bash
+curl http://127.0.0.1/status.html
+```
+
+Sortie attendue : le HTML de la page status. Si Nginx renvoie `403 Forbidden`, c'est un problème de **permissions** sur le fichier ou le répertoire parent. Si `404 Not Found`, le fichier n'est pas au bon endroit par rapport au `root` configuré dans Nginx.
+
+**3. Consulter le log d'accès**
+
+```bash
+sudo tail -5 /var/log/nginx/access.log
+```
+
+Sortie typique :
+
+```text
+127.0.0.1 - - [18/Apr/2026:14:30:00 +0200] "GET /status.html HTTP/1.1" 200 182 "-" "curl/8.5.0"
+```
+
+L'étudiant doit repérer :
+
+- l'IP source (`127.0.0.1`) ;
+- la méthode et l'URL (`GET /status.html`) ;
+- le code de retour (`200` = succès) ;
+- le user-agent (`curl`).
+
+### Corrigé de la simulation d'erreur Nginx (étape 10 du TP)
+
+L'objectif est de montrer la **boucle de diagnostic** :
+
+1. On introduit une erreur volontaire dans la config ;
+2. `nginx -t` la détecte **avant** tout redémarrage → c'est le **filet de sécurité** ;
+3. Si on force un `reload` malgré tout, le service refuse ;
+4. `journalctl -u nginx -xe` donne le diagnostic exact (fichier, ligne, nature) ;
+5. On corrige, on re-teste, on recharge.
+
+Message d'erreur type dans les journaux :
+
+```text
+avr 18 14:35:12 srv-inf12 nginx[12345]: nginx: [emerg] unknown directive "ceci_est_une_erreur" in /etc/nginx/sites-available/intranet.conf:12
+avr 18 14:35:12 srv-inf12 nginx[12345]: nginx: configuration file /etc/nginx/nginx.conf test failed
+avr 18 14:35:12 srv-inf12 systemd[1]: nginx.service: Main process exited, code=exited, status=1/FAILURE
+```
+
+Points pédagogiques :
+
+- Le message indique **exactement** le fichier et la ligne fautifs ;
+- L'habitude `tester → corriger → re-tester → recharger` doit devenir un **réflexe** ;
+- Chaque service a son outil de test de syntaxe : `nginx -t`, `named-checkconf`, `named-checkzone`, `dhcpd -t`, `testparm`.
+
+## Réponses attendues - Mission 5
+
+### 1. Repérer l'interface du réseau de TP
+
+Réponse attendue :
+
+- `ip -br a` ;
+- éventuellement `ip route` pour contextualiser.
+
+### 2. Rôle de l'IP statique ici
+
+Réponse attendue :
+
+- donner une adresse stable au serveur ;
+- permettre aux clients et aux services de le joindre toujours à la même adresse ;
+- simplifier DNS, SSH, Nginx, DHCP.
+
+### 3. Prouver que le port 2222 est à l'écoute
+
+Réponse attendue :
+
+- `ss -lntp | grep ':2222'`
+
+### 4. Se connecter en SSH par clé uniquement
+
+Réponse attendue :
+
+- `ssh -p 2222 stagiaire@192.168.56.10`
+- ou `ssh srv-inf12` si `~/.ssh/config` est configuré
+
+À accepter :
+
+- si le nom DNS n'est pas encore prêt, l'usage de l'IP est parfaitement correct à ce stade.
+
+### 5. Pourquoi interdire la connexion par mot de passe
+
+Réponse attendue :
+
+- les mots de passe peuvent être devinés par force brute ;
+- les clés SSH sont cryptographiquement beaucoup plus robustes ;
+- combiné au changement de port, cela réduit drastiquement la surface d'attaque.
+
+### Notions approfondies — Réseau et SSH
+
+#### IP statique vs DHCP pour un serveur
+
+Un serveur doit avoir une IP **statique** parce que tous les autres services en dépendent :
+
+- le DNS pointe vers cette IP ;
+- les clients SSH se connectent à cette IP ;
+- la configuration DHCP référence cette IP comme serveur DNS ;
+- Nginx écoute sur cette IP.
+
+Si l'IP changeait (par DHCP), tous ces services deviendraient incohérents. C'est pourquoi les serveurs ont des IP fixes et les clients utilisent DHCP.
+
+#### SSH — Fonctionnement simplifié
+
+SSH (Secure Shell) établit un **tunnel chiffré** entre le client et le serveur :
+
+1. Le client se connecte au port 22 (TCP) ;
+2. Le serveur envoie sa **clé publique** (empreinte à vérifier à la première connexion) ;
+3. Un canal chiffré est établi (échange de clés Diffie-Hellman) ;
+4. L'utilisateur s'authentifie (mot de passe ou clé) ;
+5. Un shell est ouvert à distance.
+
+La commande `ss -lntp | grep ':2222'` vérifie que le démon SSH écoute bien (après durcissement) :
+
+```text
+LISTEN  0  128  0.0.0.0:2222  0.0.0.0:*  users:(("sshd",pid=1234,fd=3))
+```
+
+- `LISTEN` : le socket est en attente de connexions ;
+- `0.0.0.0:2222` : écoute sur **toutes les interfaces**, port 2222 ;
+- `sshd` : le programme qui écoute.
+
+### Corrigé de l'exercice d'appropriation - Mission 5
+
+**1. Session SSH avec exécution de commandes à distance**
+
+```bash
+ssh stagiaire@192.168.56.10
+# Une fois connecté :
+hostnamectl
+# → srv-inf12, Ubuntu/Debian...
+id
+# → uid=1001(stagiaire) gid=1001(stagiaire) groups=1001(stagiaire),1002(projetweb)
+exit
+```
+
+L'étudiant doit constater qu'il exécute bien les commandes **sur le serveur** et non sur son client.
+
+**2. Copier un fichier avec `scp`**
+
+```bash
+echo "test SSH" > /tmp/demo.txt
+scp /tmp/demo.txt stagiaire@192.168.56.10:/tmp/
+```
+
+Vérification côté serveur :
+
+```bash
+ssh stagiaire@192.168.56.10 cat /tmp/demo.txt
+# → test SSH
+```
+
+Piège fréquent : si l'étudiant n'a pas encore de clé SSH et que le mot de passe est demandé deux fois (une pour `scp`, une pour la vérification), c'est normal. C'est l'occasion de mentionner `ssh-keygen` et `ssh-copy-id` pour l'authentification par clé.
+
+### Corrigé de l'exercice dirigé — Sécuriser et durcir SSH
+
+#### Points de vigilance pour l'enseignant
+
+- **Ne pas laisser les étudiants désactiver `PasswordAuthentication` avant d'avoir vérifié que la clé fonctionne.** C'est le risque principal d'enfermement.
+- Si un étudiant se bloque, la solution est d'accéder directement à la console de la VM (pas SSH) et de remettre `PasswordAuthentication yes` temporairement.
+- Le port 2222 est un choix pédagogique. En production, tout port non standard fait l'affaire, mais ce n'est pas de la « vraie sécurité » (security through obscurity) — c'est juste un filtre à bruit.
+
+#### Corrigé étape par étape
+
+**1. Génération de la clé (sur le client)**
+
+```bash
+# Sur le client (cli-inf12)
+ssh-keygen -t ed25519 -C "stagiaire@cli-inf12"
+# → Generating public/private ed25519 key pair.
+# → Enter file in which to save the key (/home/stagiaire/.ssh/id_ed25519): [Entrée]
+# → Enter passphrase (empty for no passphrase): [phrase ou Entrée]
+ls -la ~/.ssh/
+# → id_ed25519      (clé privée, 0600)
+# → id_ed25519.pub  (clé publique, 0644)
+```
+
+Vérification : le fichier `.pub` doit commencer par `ssh-ed25519 AAAA...`.
+
+**2. Déploiement de la clé (sur le serveur)**
+
+```bash
+# Sur le client (cli-inf12)
+ssh-copy-id -i ~/.ssh/id_ed25519.pub stagiaire@192.168.56.10
+# → Number of key(s) added: 1
+```
+
+Ce que fait `ssh-copy-id` en coulisses : il ajoute le contenu de la clé publique au fichier `~/.ssh/authorized_keys` sur le serveur. On peut vérifier côté serveur :
+
+```bash
+# Sur le serveur (srv-inf12)
+cat /home/stagiaire/.ssh/authorized_keys
+# → ssh-ed25519 AAAA... stagiaire@cli-inf12
+```
+
+**3. Fichier de durcissement**
+
+Le fichier `/etc/ssh/sshd_config.d/hardening.conf` doit contenir :
+
+| Directive | Valeur attendue | Vérification |
+|---|---|---|
+| `Port` | `2222` | `ss -lntp \| grep ':2222'` |
+| `PermitRootLogin` | `no` | `ssh -p 2222 root@... → Permission denied` |
+| `PasswordAuthentication` | `no` | `ssh -p 2222 -o PubkeyAuthentication=no ... → Permission denied` |
+| `MaxAuthTries` | `3` | Visible dans `sshd -T \| grep maxauth` |
+
+**4. Vérification de la syntaxe et redémarrage**
+
+```bash
+# Sur le serveur (srv-inf12)
+sudo sshd -t
+# → (aucune sortie = syntaxe correcte)
+sudo systemctl restart ssh
+ss -lntp | grep ':2222'
+# → LISTEN  0  128  0.0.0.0:2222  0.0.0.0:*  users:(("sshd",...))
+```
+
+**5. Test du refus par mot de passe**
+
+```bash
+# Sur le client (cli-inf12)
+ssh -p 2222 -o PubkeyAuthentication=no stagiaire@192.168.56.10
+# → stagiaire@192.168.56.10: Permission denied (publickey).
+```
+
+#### Erreurs fréquentes des étudiants
+
+| Erreur | Symptôme | Solution |
+|---|---|---|
+| Clé pas encore déployée + mot de passe désactivé | `Permission denied (publickey)` pour tout le monde | Accès console VM, remettre `PasswordAuthentication yes` |
+| `Include` manquant dans `sshd_config` | Le fichier `hardening.conf` est ignoré | Ajouter `Include /etc/ssh/sshd_config.d/*.conf` en tête de `sshd_config` |
+| Permissions trop ouvertes sur `~/.ssh/` | `WARNING: UNPROTECTED PRIVATE KEY FILE!` | `chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_ed25519` |
+| Port 2222 oublié dans la commande `ssh` | `Connection refused` | Rappeler `-p 2222` ou `~/.ssh/config` |
+
+### Notions approfondies — Durcissement SSH
+
+#### Architecture de la configuration SSH
+
+```text
+/etc/ssh/
+├── sshd_config              ← fichier principal (ne pas modifier)
+├── sshd_config.d/
+│   └── hardening.conf       ← nos personnalisations
+├── ssh_host_*_key           ← clés du serveur (identité de la machine)
+└── ssh_host_*_key.pub       ← clés publiques du serveur
+```
+
+Les fichiers `ssh_host_*_key` sont générés automatiquement au premier démarrage du service. C'est leur empreinte que le client vérifie à la première connexion (le fameux « Are you sure you want to continue connecting? »).
+
+#### Pourquoi ed25519 ?
+
+| Algorithme | Taille de clé | Sécurité | Recommandation |
+|---|---|---|---|
+| RSA | 2048-4096 bits | Correcte si ≥ 3072 | Acceptable, mais vieillissant |
+| ECDSA | 256-521 bits | Bonne | Préférer ed25519 |
+| Ed25519 | 256 bits | Excellente | **Recommandé** — rapide, compact, moderne |
+
+## Réponses attendues - Mission 6
+
+### 1. Différence entre DNS et DHCP
+
+Réponse attendue :
+
+- **DNS** : associe un nom à une donnée, souvent une IP ;
+- **DHCP** : attribue automatiquement une configuration réseau à un client.
+
+### 2. À quoi sert un enregistrement `A` ? un `CNAME` ?
+
+Réponse attendue :
+
+- `A` : nom vers adresse IPv4 ;
+- `CNAME` : alias d'un autre nom.
+
+### 3. Pourquoi tester la syntaxe avant de redémarrer BIND
+
+Réponse attendue :
+
+- pour éviter qu'une erreur de configuration empêche le serveur DNS de démarrer ;
+- pour isoler les fautes avant de toucher au service en production.
+
+### 4. Pourquoi limiter DHCP au réseau de TP
+
+Réponse attendue :
+
+- un DHCP répond aux clients d'un segment réseau ;
+- mal placé, il peut distribuer des adresses au mauvais réseau ;
+- cela peut perturber ou casser un réseau réel.
+
+### Point enseignant utile
+
+Sur Ubuntu récent, la documentation officielle rappelle que `isc-dhcp-server` est désormais déprécié au profit de **Kea**. Pour cette séance, on garde ISC DHCP parce qu'il est explicitement dans le cahier des charges et reste pédagogique.
+
+### Notions approfondies — DNS
+
+#### Les fichiers par défaut de BIND9
+
+Après installation, `/etc/bind/` contient des fichiers que les étudiants ne doivent **pas modifier** mais doivent comprendre :
+
+```text
+/etc/bind/
+├── named.conf                  ← point d'entrée, charge les 3 fichiers ci-dessous
+├── named.conf.options          ← options globales (forwarders, récursion…)
+├── named.conf.local            ← NOS zones personnalisées (c'est ici qu'on travaille)
+├── named.conf.default-zones    ← zones système (localhost, broadcast, RFC 1918)
+├── db.local                    ← localhost → 127.0.0.1
+├── db.127                      ← 127.0.0.1 → localhost (résolution inverse)
+├── db.0 / db.255 / db.empty   ← zones vides pour les plages réservées
+├── zones.rfc1918               ← déclare les zones inverses des réseaux privés
+├── bind.keys                   ← clés DNSSEC racine
+└── rndc.key                    ← clé pour l'outil de contrôle rndc
+```
+
+Le chaînage de configuration : `named.conf` fait un `include` de `named.conf.options`, `named.conf.local` et `named.conf.default-zones`. C'est pourquoi on ne touche qu'à `named.conf.local` pour ajouter nos zones.
+
+**Question fréquente des étudiants :** « Pourquoi il y a déjà plein de fichiers `db.*` ? » → ce sont les zones standards obligatoires pour que le serveur DNS résolve correctement `localhost` et ne propage pas de requêtes vers les plages réservées (RFC 1918). On n'y touche pas.
+
+#### Bonnes pratiques pour le placement des fichiers de zone
+
+Il existe deux conventions courantes :
+
+| Approche | Chemin | Avantage |
+|---|---|---|
+| Tout dans `/etc/bind/` | `/etc/bind/db.inf12.test` | Simple, pas de répertoire supplémentaire |
+| Sous-répertoire dédié | `/etc/bind/zones/db.inf12.test` | Sépare les zones personnalisées des fichiers par défaut |
+
+En production avec beaucoup de zones, le sous-répertoire est préférable. Pour le TP, on reste dans `/etc/bind/` pour ne pas ajouter de complexité.
+
+**Point important :** le chemin déclaré dans `named.conf.local` doit **correspondre exactement** au chemin réel du fichier. Erreur fréquente : déclarer `file "/etc/bind/db.inf12.test"` alors que le fichier est dans `/etc/bind/zones/`.
+
+#### Structure d'un fichier de zone
+
+Le fichier de zone DNS contient les enregistrements. Décomposition de celui du TP :
+
+```text
+$TTL    86400
+@       IN      SOA     srv-inf12.inf12.test. admin.inf12.test. (
+                        2026041801 ; Serial
+                        3600       ; Refresh
+                        1800       ; Retry
+                        604800     ; Expire
+                        86400 )    ; Negative Cache TTL
+```
+
+| Champ | Signification |
+|---|---|
+| `$TTL 86400` | Durée de vie par défaut des enregistrements en cache (24h) |
+| `@` | Nom de la zone elle-même (`inf12.test.`) |
+| `IN` | Classe Internet (toujours `IN` en pratique) |
+| `SOA` | Start of Authority — en-tête obligatoire de la zone |
+| `srv-inf12.inf12.test.` | Serveur DNS primaire (FQDN avec point final) |
+| `admin.inf12.test.` | Email de l'administrateur (`admin@inf12.test`, le `@` est remplacé par `.`) |
+| `Serial` | Numéro de version — **doit être incrémenté** à chaque modification |
+| `Refresh` | Intervalle entre les vérifications par un serveur secondaire |
+| `Retry` | Délai avant nouvelle tentative si le refresh échoue |
+| `Expire` | Durée maximale pendant laquelle un secondaire peut servir les données sans contact avec le primaire |
+| `Negative Cache TTL` | Durée de cache pour les réponses négatives (NXDOMAIN) |
+
+**Point important sur le Serial :** la convention `AAAAMMJJNN` (date + numéro de révision du jour) est la plus courante. Si l'étudiant modifie la zone mais oublie d'incrémenter le Serial, un serveur secondaire ne verra pas le changement.
+
+#### Types d'enregistrements DNS courants
+
+| Type | Fonction | Exemple |
+|---|---|---|
+| `A` | Nom → adresse IPv4 | `srv-inf12 IN A 192.168.56.10` |
+| `AAAA` | Nom → adresse IPv6 | `srv-inf12 IN AAAA fd00::10` |
+| `CNAME` | Alias vers un autre nom (canonique) | `intranet IN CNAME srv-inf12.inf12.test.` |
+| `NS` | Serveur de noms pour la zone | `@ IN NS srv-inf12.inf12.test.` |
+| `MX` | Serveur de messagerie | `@ IN MX 10 mail.inf12.test.` |
+| `TXT` | Texte libre (SPF, DKIM…) | `@ IN TXT "v=spf1 mx -all"` |
+| `PTR` | Adresse → nom (résolution inverse) | `10 IN PTR srv-inf12.inf12.test.` |
+| `SOA` | En-tête d'autorité de la zone | (voir ci-dessus) |
+
+**Piège `CNAME` :** un CNAME ne doit **jamais** coexister avec d'autres enregistrements pour le même nom. Par exemple, on ne peut pas avoir un `CNAME` et un `A` pour `intranet`. Le point final (`.`) après un FQDN est **obligatoire** dans les fichiers de zone — sans lui, BIND ajoute automatiquement le nom de la zone.
+
+#### `dig` — Outil de diagnostic DNS
+
+```bash
+dig @127.0.0.1 intranet.inf12.test
+```
+
+Sections de la sortie :
+
+| Section | Contenu |
+|---|---|
+| `QUESTION` | La requête envoyée |
+| `ANSWER` | La réponse (les enregistrements trouvés) |
+| `AUTHORITY` | Les serveurs de noms pour la zone |
+| `ADDITIONAL` | Informations complémentaires (glue records…) |
+| `Query time` | Temps de réponse |
+| `SERVER` | Le serveur DNS qui a répondu |
+
+### Notions approfondies — DHCP
+
+#### Le processus DORA
+
+L'attribution d'une adresse par DHCP suit 4 étapes (mnémonique : **DORA**) :
+
+| Étape | Message | Direction | Contenu |
+|---|---|---|---|
+| **D**iscover | DHCPDISCOVER | Client → Broadcast | « Y a-t-il un serveur DHCP ? » |
+| **O**ffer | DHCPOFFER | Serveur → Client | « Je te propose 192.168.56.105 » |
+| **R**equest | DHCPREQUEST | Client → Broadcast | « J'accepte cette offre » |
+| **A**ck | DHCPACK | Serveur → Client | « C'est noté, bail signé » |
+
+Le client envoie en **broadcast** (il n'a pas encore d'IP), c'est pourquoi le serveur DHCP doit être sur le même segment réseau (ou un relai DHCP doit être configuré).
+
+#### Configuration `dhcpd.conf` détaillée
+
+```ini
+option domain-name "inf12.test";           # Suffixe DNS distribué aux clients
+option domain-name-servers 192.168.56.10;  # Serveur DNS à utiliser
+default-lease-time 600;                    # Durée par défaut du bail (10 min)
+max-lease-time 7200;                       # Durée maximale du bail (2h)
+authoritative;                             # Ce serveur fait autorité sur ce réseau
+
+subnet 192.168.56.0 netmask 255.255.255.0 {
+    range 192.168.56.100 192.168.56.150;   # Plage d'adresses distribuées
+    option broadcast-address 192.168.56.255;
+}
+```
+
+| Directive | Rôle |
+|---|---|
+| `authoritative` | Le serveur envoie des DHCPNAK aux clients qui demandent une IP hors plage — **important** pour éviter les conflits si un ancien bail traîne |
+| `range` | Plage d'adresses attribuables — doit **exclure** les IP fixes (ici le serveur est en .10) |
+| `default-lease-time` | Durée du bail si le client ne demande pas de durée spécifique |
+| `max-lease-time` | Durée maximale même si le client en demande plus |
+
+#### Fichier des baux : `/var/lib/dhcp/dhcpd.leases`
+
+Ce fichier contient l'historique des baux attribués :
+
+```text
+lease 192.168.56.105 {
+  starts 4 2026/04/18 12:30:00;
+  ends 4 2026/04/18 12:40:00;
+  binding state active;
+  hardware ethernet 08:00:27:ab:cd:ef;
+  client-hostname "cli-inf12";
+}
+```
+
+L'étudiant doit pouvoir y retrouver l'IP attribuée, la durée du bail et l'adresse MAC du client.
+
+### Corrigé de l'exercice d'appropriation - Mission 6
+
+**1. Ajouter l'alias `www`**
+
+Modifier `/etc/bind/db.inf12.test` :
+
+```text
+$TTL    86400
+@       IN      SOA     srv-inf12.inf12.test. admin.inf12.test. (
+                        2026041802 ; Serial ← incrémenté de 01 à 02
+                        3600       ; Refresh
+                        1800       ; Retry
+                        604800     ; Expire
+                        86400 )    ; Negative Cache TTL
+
+@               IN      NS      srv-inf12.inf12.test.
+srv-inf12       IN      A       192.168.56.10
+intranet        IN      CNAME   srv-inf12.inf12.test.
+www             IN      CNAME   srv-inf12.inf12.test.
+```
+
+Piège fréquent : **oublier d'incrémenter le Serial**. Si le numéro ne change pas, un serveur secondaire ne rechargera pas la zone.
+
+**2. Vérifier, redémarrer, tester**
+
+```bash
+sudo named-checkzone inf12.test /etc/bind/db.inf12.test
+# zone inf12.test/IN: loaded serial 2026041802
+# OK
+
+sudo systemctl restart bind9
+
+dig @127.0.0.1 www.inf12.test
+# ;; ANSWER SECTION:
+# www.inf12.test.    86400  IN  CNAME  srv-inf12.inf12.test.
+# srv-inf12.inf12.test.  86400  IN  A  192.168.56.10
+```
+
+L'étudiant doit voir deux lignes dans l'ANSWER : le CNAME puis l'enregistrement A résolu.
+
+**3. Consulter les baux DHCP**
+
+```bash
+cat /var/lib/dhcp/dhcpd.leases
+```
+
+L'étudiant doit identifier :
+
+- l'adresse IP attribuée (dans la plage `.100-.150`) ;
+- l'adresse MAC du client (`hardware ethernet`) ;
+- les dates de début et fin du bail ;
+- le nom du client (`client-hostname`).
+
+## Réponses attendues - Mission 7
+
+### 1. Lien entre droits Linux et droits Samba
+
+Réponse attendue :
+
+- Samba ne dépasse pas ce que le système de fichiers autorise ;
+- la config Samba filtre l'accès ;
+- les droits Unix restent le socle réel.
+
+### 2. Vérifier la syntaxe de `smb.conf`
+
+Réponse attendue :
+
+- `testparm`
+
+### 3. Accéder au partage avec `smbclient`
+
+Réponse attendue :
+
+- `smbclient -L //192.168.56.10 -U stagiaire`
+- puis `smbclient //192.168.56.10/partage -U stagiaire`
+
+### Notions approfondies — Samba
+
+#### Architecture de Samba
+
+Samba implémente le protocole **SMB/CIFS** (Server Message Block / Common Internet File System), qui est le protocole de partage de fichiers natif de Windows. Cela permet à un serveur Linux de :
+
+- partager des fichiers avec des clients Windows, macOS et Linux ;
+- apparaître dans le voisinage réseau ;
+- gérer une authentification par utilisateur.
+
+Samba se compose de deux services principaux :
+
+| Service | Rôle |
+|---|---|
+| `smbd` | Gère les partages de fichiers et l'authentification |
+| `nmbd` | Gère la résolution de noms NetBIOS (optionnel, surtout pour le voisinage réseau) |
+
+#### Double couche de permissions
+
+C'est le point le plus important à faire comprendre : l'accès à un fichier partagé par Samba passe par **deux couches** de contrôle :
+
+1. **Couche Samba** (`smb.conf`) : qui a le droit de se connecter au partage, en lecture ou écriture ;
+2. **Couche Linux** (permissions du système de fichiers) : qui a le droit de lire/écrire le fichier sur le disque.
+
+Les deux doivent autoriser l'opération. Si Samba autorise l'écriture (`read only = no`) mais que les permissions Linux l'interdisent, l'écriture échoue quand même.
+
+#### Configuration `smb.conf` détaillée
+
+```ini
+[partage]
+   path = /srv/partage            # Chemin sur le système de fichiers
+   browseable = yes                # Visible dans la liste des partages
+   read only = no                  # Autorise l'écriture
+   valid users = @projetweb        # Seuls les membres du groupe projetweb
+   force group = projetweb         # Fichiers créés appartiennent au groupe projetweb
+   create mask = 0660              # Permissions des fichiers créés via Samba
+   directory mask = 2770           # Permissions des répertoires créés via Samba
+```
+
+| Directive | Explication détaillée |
+|---|---|
+| `valid users = @projetweb` | Le `@` signifie « groupe ». Seuls les membres de `projetweb` peuvent accéder |
+| `force group = projetweb` | Même si l'utilisateur a un autre groupe principal, les fichiers créés appartiendront à `projetweb` |
+| `create mask = 0660` | `rw-rw----` — lecture/écriture pour propriétaire et groupe, rien pour les autres |
+| `directory mask = 2770` | SGID + rwx pour propriétaire/groupe — cohérent avec les droits du répertoire Linux |
+
+### Corrigé de l'exercice d'appropriation - Mission 7
+
+**1. Déposer un fichier depuis le client**
+
+```bash
+# Créer un fichier de test
+echo "Déposé via Samba" > /tmp/test-samba.txt
+
+# Se connecter au partage
+smbclient //192.168.56.10/partage -U stagiaire
+# Entrer le mot de passe Samba de stagiaire
+
+# Dans le shell smbclient :
+put /tmp/test-samba.txt
+ls
+quit
+```
+
+**2. Vérifier côté serveur**
+
+```bash
+ls -l /srv/partage/test-samba.txt
+# -rw-rw---- 1 stagiaire projetweb 18 avr 18 15:00 test-samba.txt
+```
+
+L'étudiant doit identifier :
+
+- **Propriétaire** : `stagiaire` (l'utilisateur qui a déposé le fichier) ;
+- **Groupe** : `projetweb` (imposé par `force group` dans `smb.conf` et par le SGID sur le répertoire) ;
+- **Permissions** : `rw-rw----` (imposées par `create mask = 0660`).
+
+**3. Expliquer ce qui vient de Linux vs Samba**
+
+| Aspect | Vient de Linux | Vient de Samba |
+|---|---|---|
+| Propriétaire du fichier (`stagiaire`) | ✓ (identité de l'utilisateur système) | Mappé depuis l'authentification Samba |
+| Groupe du fichier (`projetweb`) | ✓ (SGID sur le répertoire) | ✓ (`force group` renforce la même chose) |
+| Permissions `rw-rw----` | ✓ (umask + SGID) | ✓ (`create mask` filtre les permissions) |
+| Accès limité aux membres de `projetweb` | ✓ (droits du répertoire `2770`) | ✓ (`valid users = @projetweb`) |
+
+Les deux couches se **renforcent mutuellement**. C'est le comportement souhaité : même si la configuration Samba est modifiée par erreur, les droits Linux restent un filet de sécurité.
+
+## Réponses attendues - Questions orales
+
+### 1. Différence entre nom de fichier et inode
+
+Réponse attendue :
+
+- le nom appartient à l'entrée de répertoire ;
+- l'inode contient les métadonnées du fichier.
+
+### 2. Pourquoi `chmod 2770` est utile sur un répertoire partagé
+
+Réponse attendue :
+
+- `2` active le **SGID** ;
+- `770` réserve l'accès au propriétaire et au groupe ;
+- les nouveaux fichiers héritent du groupe du répertoire.
+
+### 3. Pourquoi `kill -9` n'est pas la première solution
+
+Réponse attendue :
+
+- arrêt brutal ;
+- pas de nettoyage ;
+- risque d'incohérences ;
+- on privilégie arrêt propre du service.
+
+### 4. Différence entre processus et service
+
+Réponse attendue :
+
+- un processus est une exécution ;
+- un service est une fonction gérée dans la durée, souvent supervisée.
+
+### 5. Pourquoi un site web est un bon exemple pédagogique
+
+Réponse attendue :
+
+- il mobilise installation, configuration, droits, service, journaux et test ;
+- on obtient un résultat visible rapidement ;
+- il oblige à articuler système et réseau.
+
+### 6. Différence entre DNS et DHCP
+
+Réponse attendue :
+
+- DNS nomme ;
+- DHCP configure.
+
+### 7. Pourquoi Samba dépend aussi des permissions Linux
+
+Réponse attendue :
+
+- Samba sert de passerelle réseau ;
+- les accès finaux restent soumis aux permissions du système de fichiers.
+
+## Corrigé express du challenge final
+
+Un client correctement configuré doit pouvoir démontrer :
+
+1. **DHCP**
+   - IP dans la plage `192.168.56.100-150`
+2. **DNS**
+   - `getent hosts intranet.inf12.test` renvoie `192.168.56.10`
+3. **Web**
+   - `curl http://intranet.inf12.test` affiche la page d'accueil
+4. **SSH**
+   - `ssh stagiaire@192.168.56.10` ouvre la session
+5. **Samba**
+   - `smbclient -L //192.168.56.10 -U stagiaire` liste le partage
+
+## Pièges fréquents à surveiller
+
+- `apt update` confondu avec `apt upgrade`
+- oubli de `-a` dans `usermod -aG`
+- droits de répertoire compris comme des droits de fichier
+- oubli du bit `x` sur un répertoire
+- oubli de tester `nginx -t`, `named-checkconf`, `named-checkzone`, `dhcpd -t`, `testparm`
+- usage réflexe de `kill -9`
+- DHCP lancé sur la mauvaise interface
+- `INTERFACESv4` non adapté à la VM
+- alias DNS mal orthographié ou `Serial` non mis à jour lors d'une modification de zone
+- partage Samba correct côté `smb.conf` mais bloqué par les droits Linux
+
+## Repères d'animation pour 7h
+
+### Si le groupe est à l'aise
+
+- ajouter un deuxième enregistrement DNS ;
+- faire créer une seconde page Nginx ;
+- faire tester `scp` ou `ssh-copy-id` ;
+- faire déposer puis contrôler un fichier Samba côté serveur ;
+- ouvrir sur `ufw` ou NFS en mini-extension.
+
+### Si le groupe est plus lent
+
+- garder absolument :
+  - Mission 1 condensée
+  - Mission 3
+  - Mission 4
+  - Mission 5
+  - Mission 6
+- traiter Samba en démonstration guidée si besoin ;
+- garder le challenge final comme validation minimale.
+
+### Point méthodologique à marteler
+
+La vraie compétence attendue n'est pas "connaître une commande". C'est :
+
+- observer ;
+- modifier proprement ;
+- tester ;
+- diagnostiquer ;
+- expliquer.
