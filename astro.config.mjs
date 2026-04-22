@@ -36,7 +36,7 @@ export default defineConfig({
               },
           },
           social: [
-              { icon: 'github', label: 'GitHub', href: 'https://github.com/drupal-bootcamp' },
+              { icon: 'github', label: 'GitHub', href: 'https://github.com/TeeBeeCoder/drupal-bootcamp' },
           ],
           components: {
               SocialIcons: './src/components/starlight/SocialIcons.astro',
